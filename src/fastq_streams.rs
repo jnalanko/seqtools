@@ -49,3 +49,32 @@ impl FastqStream<GzDecoder<File>>{
     }
 }
 
+impl<T: std::io::Read> SeqStream for FastaStream<T>{
+
+    fn read_all(&mut self){
+        let mut sum: i64 = 0;
+        while let Some(record) = self.reader.next() {
+            let record = record.expect("Error reading record");
+            sum += record.seq().len() as i64;
+        }
+        println!("{}", sum);
+    }
+}
+
+impl FastaStream<File>{
+    pub fn new(filename: &String) -> FastaStream<File>{
+        return FastaStream::<File>{
+            reader: seqio_fasta_reader::new(File::open(&filename).unwrap())
+        };
+    }
+}
+
+impl FastaStream<GzDecoder<File>>{
+    pub fn new(filename: &String) -> FastaStream<GzDecoder<File>>{
+        return FastaStream::<GzDecoder<File>>{
+            reader: seqio_fasta_reader::new(GzDecoder::new(File::open(&filename).unwrap()))
+        };
+    }
+}
+
+
