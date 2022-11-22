@@ -18,10 +18,12 @@ pub struct RegularFastqStream{
 impl SeqStream for GzippedFastqStream{
 
     fn read_all(&mut self){
+        let mut sum: i64 = 0;
         while let Some(record) = self.file_gz_reader.next() {
             let record = record.expect("Error reading record");
-            println!("{}", record.id().unwrap());
+            sum += record.seq().len() as i64;
         }
+        println!("{}", sum);
     }
 }
 
@@ -35,10 +37,12 @@ impl GzippedFastqStream{
 
 impl SeqStream for RegularFastqStream{
     fn read_all(&mut self){
+        let mut sum: i64 = 0;
         while let Some(record) = self.file_reader.next() {
             let record = record.expect("Error reading record");
-            println!("{}", record.id().unwrap());
+            sum += record.seq().len() as i64;
         }
+        println!("{}", sum);
     }
 }
 
