@@ -16,6 +16,10 @@ struct GzippedFastqStream{
     file_gz_reader: seq_io::fastq::Reader<GzDecoder<std::fs::File>>
 }
 
+struct RegularFastqStream{
+    file_reader: seq_io::fastq::Reader<std::fs::File>
+}
+
 impl SeqStream for GzippedFastqStream{
 
     fn read_all(&mut self){
@@ -34,6 +38,24 @@ impl GzippedFastqStream{
     }
 }
 
+impl SeqStream for RegularFastqStream{
+
+    fn read_all(&mut self){
+        while let Some(record) = self.file_reader.next() {
+            let record = record.expect("Error reading record");
+            println!("{}", record.id().unwrap());
+        }
+    }
+}
+
+impl RegularFastqStream{
+    fn new(filename: &String) -> RegularFastqStream{
+        return RegularFastqStream{
+            file_reader: Reader::new(File::open(&filename).unwrap())
+        };
+    }
+}
+
 struct SeqReader {
     stream: Box<dyn SeqStream>
 }
@@ -41,7 +63,13 @@ struct SeqReader {
 impl SeqReader{
 
     pub fn new(filename: &String) -> SeqReader{
-        return SeqReader {stream: Box::new(GzippedFastqStream::new(filename))};
+        let n = filename.chars().count();
+        let gzipped = &filename[n-3..n] == ".gz";
+        if gzipped{
+            return SeqReader {stream: Box::new(GzippedFastqStream::new(filename))};
+        } else {
+            return SeqReader {stream: Box::new(RegularFastqStream::new(filename))};
+        }    
     }
     
     pub fn read_all(&mut self){
