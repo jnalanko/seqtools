@@ -3,27 +3,53 @@ extern crate flate2;
 use std::io;
 use flate2::read::GzDecoder;
 use seq_io::fastq::{Reader,Record};
+use std::fs::File;
+use std::env;
 
 struct SeqReader {
     gzipped: bool,
-    reader: seq_io::fastq::Reader<std::io::Stdin>,
-    gz_reader: seq_io::fastq::Reader<GzDecoder<std::io::Stdin>>
+    from_file: bool,
+    stdin_reader: seq_io::fastq::Reader<std::io::Stdin>,
+    stdin_gz_reader: seq_io::fastq::Reader<GzDecoder<std::io::Stdin>>,
+    file_reader: seq_io::fastq::Reader<std::fs::File>,
+    file_gz_reader: seq_io::fastq::Reader<GzDecoder<std::fs::File>>
 }
 
 impl SeqReader{
 
-    pub fn new(gzipped: bool) -> SeqReader{
-        SeqReader {gzipped: gzipped, reader: Reader::new(io::stdin()), gz_reader: Reader::new(GzDecoder::new(io::stdin()))}
+    pub fn new(filename: &String, gzipped: bool) -> SeqReader{
+        let file_stream: File = File::open(filename).unwrap();
+        let file_gz_stream: GzDecoder<File> = GzDecoder::new(File::open(filename).unwrap());
+        SeqReader {gzipped: gzipped, 
+                   from_file: (filename.chars().count() > 0),
+                   stdin_reader: Reader::new(io::stdin()), 
+                   stdin_gz_reader: Reader::new(GzDecoder::new(io::stdin())),
+                   file_reader: Reader::new(File::open(filename).unwrap()),
+                   file_gz_reader: Reader::new(GzDecoder::new(File::open(filename).unwrap()))
+        }
     }
     
     fn read_all(&mut self){
-        if self.gzipped {
-            while let Some(record) = self.reader.next() {
+        if self.gzipped && self.from_file {
+            while let Some(record) = self.file_gz_reader.next() {
                 let record = record.expect("Error reading record");
                 println!("{}", record.id().unwrap());
             }
-        } else{
-            while let Some(record) = self.gz_reader.next() {
+        }
+        if self.gzipped && !self.from_file {
+            while let Some(record) = self.stdin_gz_reader.next() {
+                let record = record.expect("Error reading record");
+                println!("{}", record.id().unwrap());
+            }
+        }
+        if !self.gzipped && self.from_file {
+            while let Some(record) = self.file_reader.next() {
+                let record = record.expect("Error reading record");
+                println!("{}", record.id().unwrap());
+            }
+        }
+        if !self.gzipped && !self.from_file {
+            while let Some(record) = self.stdin_reader.next() {
                 let record = record.expect("Error reading record");
                 println!("{}", record.id().unwrap());
             }
@@ -35,7 +61,14 @@ impl SeqReader{
 
 fn main(){
 
-    let mut reader = SeqReader::new(true);
+    let args: Vec<String> = env::args().collect();
+    let filename: String = args[1].clone();
+    let n = filename.chars().count();
+    println!("{}", n);
+    let gzipped = &filename[n-3..n] == ".gz";
+    println!("{}", filename);
+    println!("{}", gzipped);
+    let mut reader = SeqReader::new(&filename, gzipped);
     reader.read_all();
 
 //    let mut reader = Reader::from_path("/home/niklas/data/SRR19749835_prefix.fastq").unwrap();
