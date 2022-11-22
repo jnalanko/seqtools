@@ -7,11 +7,11 @@ pub trait SeqStream{
     fn read_all(&mut self);
 }
 
-pub struct TemplateTest<T: std::io::Read>{
+pub struct FastqStream<T: std::io::Read>{
     reader: seq_io::fastq::Reader<T>
 }
 
-impl<T: std::io::Read> SeqStream for TemplateTest<T>{
+impl<T: std::io::Read> SeqStream for FastqStream<T>{
 
     fn read_all(&mut self){
         let mut sum: i64 = 0;
@@ -23,17 +23,17 @@ impl<T: std::io::Read> SeqStream for TemplateTest<T>{
     }
 }
 
-impl TemplateTest<File>{
-    pub fn new(filename: &String) -> TemplateTest<File>{
-        return TemplateTest::<File>{
+impl FastqStream<File>{
+    pub fn new(filename: &String) -> FastqStream<File>{
+        return FastqStream::<File>{
             reader: Reader::new(File::open(&filename).unwrap())
         };
     }
 }
 
-impl TemplateTest<GzDecoder<File>>{
-    pub fn new(filename: &String) -> TemplateTest<GzDecoder<File>>{
-        return TemplateTest::<GzDecoder<File>>{
+impl FastqStream<GzDecoder<File>>{
+    pub fn new(filename: &String) -> FastqStream<GzDecoder<File>>{
+        return FastqStream::<GzDecoder<File>>{
             reader: Reader::new(GzDecoder::new(File::open(&filename).unwrap()))
         };
     }
