@@ -1,6 +1,6 @@
 extern crate flate2;
 
-use crate::fastq_streams::{SeqStream,GzippedFastqStream,RegularFastqStream};
+use crate::fastq_streams::{SeqStream,GzippedFastqStream,RegularFastqStream,TemplateTest};
 
 mod fastq_streams;
 
@@ -22,7 +22,7 @@ impl SeqReader{
         if gzipped{
             return SeqReader {stream: Box::new(GzippedFastqStream::new(filename))};
         } else {
-            return SeqReader {stream: Box::new(RegularFastqStream::new(filename))};
+            return SeqReader {stream: Box::new(TemplateTest::<File>::new(filename))};
         }    
     }
     
