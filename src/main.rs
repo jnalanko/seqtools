@@ -6,7 +6,6 @@ mod fastq_streams;
 
 use std::io;
 use flate2::read::GzDecoder;
-use seq_io::fastq::{Reader,Record};
 use std::fs::File;
 use std::env;
 

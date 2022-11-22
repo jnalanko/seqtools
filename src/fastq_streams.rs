@@ -1,14 +1,24 @@
 use std::io;
 use flate2::read::GzDecoder;
-use seq_io::fastq::{Reader,Record};
+use seq_io::fastq::Reader as seqio_fastq_reader;
+use seq_io::fastq::Record;
+use seq_io::fasta::Reader as seqio_fasta_reader;
+//use seq_io::fasta::Record;
 use std::fs::File;
 
+// Fasta or fastq stream
 pub trait SeqStream{
     fn read_all(&mut self);
 }
 
+// Template class for a fastq stream that takes the raw data stream as a template parameter
 pub struct FastqStream<T: std::io::Read>{
-    reader: seq_io::fastq::Reader<T>
+    reader: seqio_fastq_reader<T>
+}
+
+// Template class for a fasta stream that takes the raw data stream as a template parameter
+pub struct FastaStream<T: std::io::Read>{
+    reader: seqio_fasta_reader<T>
 }
 
 impl<T: std::io::Read> SeqStream for FastqStream<T>{
@@ -26,7 +36,7 @@ impl<T: std::io::Read> SeqStream for FastqStream<T>{
 impl FastqStream<File>{
     pub fn new(filename: &String) -> FastqStream<File>{
         return FastqStream::<File>{
-            reader: Reader::new(File::open(&filename).unwrap())
+            reader: seqio_fastq_reader::new(File::open(&filename).unwrap())
         };
     }
 }
@@ -34,7 +44,7 @@ impl FastqStream<File>{
 impl FastqStream<GzDecoder<File>>{
     pub fn new(filename: &String) -> FastqStream<GzDecoder<File>>{
         return FastqStream::<GzDecoder<File>>{
-            reader: Reader::new(GzDecoder::new(File::open(&filename).unwrap()))
+            reader: seqio_fastq_reader::new(GzDecoder::new(File::open(&filename).unwrap()))
         };
     }
 }
