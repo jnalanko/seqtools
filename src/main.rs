@@ -20,7 +20,7 @@ impl SeqReader{
         let n = filename.chars().count();
         let gzipped = &filename[n-3..n] == ".gz";
         if gzipped{
-            return SeqReader {stream: Box::new(GzippedFastqStream::new(filename))};
+            return SeqReader {stream: Box::new(TemplateTest::<GzDecoder<File>>::new(filename))};
         } else {
             return SeqReader {stream: Box::new(TemplateTest::<File>::new(filename))};
         }    
