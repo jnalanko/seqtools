@@ -34,7 +34,6 @@ impl GzippedFastqStream{
 }
 
 impl SeqStream for RegularFastqStream{
-
     fn read_all(&mut self){
         while let Some(record) = self.file_reader.next() {
             let record = record.expect("Error reading record");
