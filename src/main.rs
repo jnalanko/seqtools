@@ -1,6 +1,6 @@
 extern crate flate2;
 
-use crate::fastq_streams::{SeqStream,FastqStream};
+use crate::fastq_streams::{SeqStream,FastqStream,FastaStream};
 
 mod fastq_streams;
 
@@ -20,14 +20,15 @@ impl SeqReader{
     pub fn new(filename: &String) -> SeqReader{
 
         if filename.ends_with("fastq.gz"){
-            println!("A");
             return SeqReader {stream: Box::new(FastqStream::<GzDecoder<File>>::new(filename))};
         } else if filename.ends_with("fastq"){
-            println!("B");
             return SeqReader {stream: Box::new(FastqStream::<File>::new(filename))};
+        } else if filename.ends_with("fna.gz"){
+            return SeqReader {stream: Box::new(FastaStream::<GzDecoder<File>>::new(filename))};
+        } else if filename.ends_with("fna"){
+            return SeqReader {stream: Box::new(FastaStream::<File>::new(filename))};
         } else{
-            println!("C");
-            return SeqReader {stream: Box::new(FastqStream::<File>::new(filename))}; // TODO
+            panic!("Could not determine the format of file {}", filename);
         }
     }
     
