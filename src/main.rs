@@ -8,6 +8,14 @@ use std::io;
 use flate2::read::GzDecoder;
 use std::fs::File;
 use std::env;
+use std::path::Path;
+use std::ffi::OsStr;
+
+fn get_extension_from_filename(filename: &str) -> Option<&str> {
+    Path::new(filename)
+        .extension()
+        .and_then(OsStr::to_str)
+}
 
 struct SeqReader {
     stream: Box<dyn SeqStream>
@@ -16,8 +24,9 @@ struct SeqReader {
 impl SeqReader{
 
     pub fn new(filename: &String) -> SeqReader{
-        let n = filename.chars().count();
-        let gzipped = &filename[n-3..n] == ".gz";
+        let extension = get_extension_from_filename(filename).unwrap();
+        let gzipped = extension == "gz";
+        println!("{} {}", extension, gzipped);
         if gzipped{
             return SeqReader {stream: Box::new(FastqStream::<GzDecoder<File>>::new(filename))};
         } else {
