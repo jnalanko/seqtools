@@ -10,7 +10,7 @@ struct SeqReader {
     gzipped: bool,
     from_file: bool,
     stdin_reader: seq_io::fastq::Reader<std::io::Stdin>,
-    //stdin_gz_reader: seq_io::fastq::Reader<GzDecoder<std::io::Stdin>>,
+    stdin_gz_reader: seq_io::fastq::Reader<GzDecoder<std::io::Stdin>>,
     file_reader: seq_io::fastq::Reader<std::fs::File>,
     file_gz_reader: seq_io::fastq::Reader<GzDecoder<std::fs::File>>
 }
@@ -22,7 +22,7 @@ impl SeqReader{
         SeqReader {gzipped: gzipped, 
                    from_file: (filename.chars().count() > 0),
                    stdin_reader: Reader::new(io::stdin()),
-//                   stdin_gz_reader: Reader::new(GzDecoder::new(io::stdin()))
+                   stdin_gz_reader: Reader::new(GzDecoder::new(io::stdin())),
                    file_reader: Reader::new(File::open(&filename).unwrap()),
                    file_gz_reader: Reader::new(GzDecoder::new(File::open(&filename).unwrap()))
         }
@@ -38,14 +38,14 @@ impl SeqReader{
             }
         }
         
-        /*
+        
         if self.gzipped && !self.from_file {
             println!("B");
             while let Some(record) = self.stdin_gz_reader.next() {
                 let record = record.expect("Error reading record");
                 println!("{}", record.id().unwrap());
             }
-        }*/
+        }
         
         if !self.gzipped && self.from_file {
             println!("C");
