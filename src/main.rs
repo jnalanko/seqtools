@@ -11,12 +11,6 @@ use std::env;
 use std::path::Path;
 use std::ffi::OsStr;
 
-fn get_extension_from_filename(filename: &str) -> Option<&str> {
-    Path::new(filename)
-        .extension()
-        .and_then(OsStr::to_str)
-}
-
 struct SeqReader {
     stream: Box<dyn SeqStream>
 }
@@ -24,14 +18,17 @@ struct SeqReader {
 impl SeqReader{
 
     pub fn new(filename: &String) -> SeqReader{
-        let extension = get_extension_from_filename(filename).unwrap();
-        let gzipped = extension == "gz";
-        println!("{} {}", extension, gzipped);
-        if gzipped{
+
+        if filename.ends_with("fastq.gz"){
+            println!("A");
             return SeqReader {stream: Box::new(FastqStream::<GzDecoder<File>>::new(filename))};
-        } else {
+        } else if filename.ends_with("fastq"){
+            println!("B");
             return SeqReader {stream: Box::new(FastqStream::<File>::new(filename))};
-        }    
+        } else{
+            println!("C");
+            return SeqReader {stream: Box::new(FastqStream::<File>::new(filename))}; // TODO
+        }
     }
     
     pub fn read_all(&mut self){
