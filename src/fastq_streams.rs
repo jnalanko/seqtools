@@ -1,9 +1,9 @@
 use std::io;
 use flate2::read::GzDecoder;
 use seq_io::fastq::Reader as seqio_fastq_reader;
-use seq_io::fastq::Record;
+use seq_io::fastq::Record as seqio_fastq_record;
 use seq_io::fasta::Reader as seqio_fasta_reader;
-//use seq_io::fasta::Record;
+use seq_io::fasta::Record as seqio_fasta_record;
 use std::fs::File;
 
 // Fasta or fastq stream
