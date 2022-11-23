@@ -58,12 +58,18 @@ impl SeqReader{
 fn main(){
 
     let args: Vec<String> = env::args().collect();
-    let filename: String = args[1].clone();
-    let n = filename.chars().count();
-    let gzipped = &filename[n-3..n] == ".gz";
     
-    let mut reader = SeqReader::new(&filename);
-    reader.read_all();
+    dbg!(args.len());
+    if args.len() == 1{
+        // From Stdin
+        let mut reader = SeqReader::new_from_stdin(false, true);
+        reader.read_all();
+    } else{
+        // From file
+        let filename: String = args[1].clone();
+        let mut reader = SeqReader::new(&filename);
+        reader.read_all();
+    }
 
 //    let mut reader = Reader::from_path("/home/niklas/data/SRR19749835_prefix.fastq").unwrap();
 
