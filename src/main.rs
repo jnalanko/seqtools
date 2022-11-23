@@ -35,19 +35,17 @@ impl SeqReader{
     
     // New from stdin
     pub fn new_from_stdin(fastq: bool, gzipped: bool) -> SeqReader{
-        return SeqReader {stream: Box::new(FastqStream::<std::io::Stdin>::new())};
-    /*
         if fastq && gzipped {
-            return SeqReader {stream: Box::new(FastqStream::<GzDecoder<std::io::Stdin>>::new(io::stdin()))};
+            return SeqReader {stream: Box::new(FastqStream::<GzDecoder<std::io::Stdin>>::new())};
         } else if fastq && !gzipped{
-            return SeqReader {stream: Box::new(FastqStream::<std::io::Stdin>::new(io::stdin()))};
+            return SeqReader {stream: Box::new(FastqStream::<std::io::Stdin>::new())};
         } else if !fastq && gzipped{
-            return SeqReader {stream: Box::new(FastaStream::<GzDecoder<std::io::Stdin>>::new(io::stdin()))};
+            return SeqReader {stream: Box::new(FastaStream::<GzDecoder<std::io::Stdin>>::new())};
         } else if !fastq && !gzipped{
-            return SeqReader {stream: Box::new(FastaStream::<std::io::Stdin>::new(io::stdin()))};
+            return SeqReader {stream: Box::new(FastaStream::<std::io::Stdin>::new())};
         } else{
             panic!("This line should never be reached");
-        }*/
+        }
     }
     
     pub fn read_all(&mut self){
@@ -96,7 +94,7 @@ fn main(){
             std::process::exit(-1)
         }
         if !is_fasta && !is_fastq {
-            println!("Error: must give --fasta or --fastq if reading from stdin.");
+            println!("Error: must give --fasta or --fastq and possibly --gzip if reading from stdin.");
             std::process::exit(-1)
         }
         let mut reader = SeqReader::new_from_stdin(is_fastq, is_gzip);
