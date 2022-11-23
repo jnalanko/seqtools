@@ -4,7 +4,6 @@ use seq_io::fasta::Record as seqio_fasta_record;
 use seq_io::fastq::Reader as seqio_fastq_reader;
 use seq_io::fastq::Record as seqio_fastq_record;
 use std::fs::File;
-use std::io;
 
 // Fasta or fastq stream
 pub trait SeqStream {

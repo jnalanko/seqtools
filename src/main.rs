@@ -6,11 +6,8 @@ mod fastq_streams;
 
 use clap::{Arg, ArgAction, Command};
 use flate2::read::GzDecoder;
-use std::env;
-use std::ffi::OsStr;
 use std::fs::File;
 use std::io;
-use std::path::Path;
 
 struct SeqReader {
     stream: Box<dyn SeqStream>,
