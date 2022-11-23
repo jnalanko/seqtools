@@ -81,11 +81,9 @@ fn main(){
         .get_matches();
         
     if let Some(infile) = matches.get_one::<String>("input"){
-        println!("inputfile: {:?}", infile);    
         let mut reader = SeqReader::new(&infile);
         reader.read_all();
     } else{
-        println!("No input file -> read from stdin.");
         let is_fasta = matches.get_flag("fasta");
         let is_fastq = matches.get_flag("fastq");
         let is_gzip = matches.get_flag("gzip");
