@@ -70,29 +70,36 @@ fn main(){
                  .long("fasta")
                  .action(ArgAction::SetTrue)
                  .help("Parse in fasta format"))
+        .arg(Arg::new("fastq")
+                 .short('q')
+                 .long("fastq")
+                 .action(ArgAction::SetTrue)
+                 .help("Parse in fastq format"))
+        .arg(Arg::new("gzip")
+                 .short('g')
+                 .long("gzip")
+                 .action(ArgAction::SetTrue)
+                 .help("Read gzipped input"))
         .get_matches();
         
     if let Some(infile) = matches.get_one::<String>("input"){
         println!("inputfile: {:?}", infile);    
-    } else{
-        println!("No input file");
-    }
-
-    println!("fasta flag: {:?}", matches.get_flag("fasta"));
-
-    let args: Vec<String> = env::args().collect();
-    
-    dbg!(args.len());
-    if args.len() == 1{
-        // From Stdin
-        let mut reader = SeqReader::new_from_stdin(false, true);
+        let mut reader = SeqReader::new(&infile);
         reader.read_all();
     } else{
-        // From file
-        let filename: String = args[1].clone();
-        let mut reader = SeqReader::new(&filename);
+        println!("No input file -> read from stdin.");
+        let is_fasta = matches.get_flag("fasta");
+        let is_fastq = matches.get_flag("fastq");
+        let is_gzip = matches.get_flag("gzip");
+        if is_fasta && is_fastq {
+            println!("Error: can't give both fasta and fastq flags.");
+            std::process::exit(-1)
+        }
+        if !is_fasta && !is_fastq {
+            println!("Error: must give --fasta or --fastq if reading from stdin.");
+            std::process::exit(-1)
+        }
+        let mut reader = SeqReader::new_from_stdin(is_fastq, is_gzip);
         reader.read_all();
     }
-
-
 }
