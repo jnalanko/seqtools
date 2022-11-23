@@ -10,6 +10,7 @@ use std::fs::File;
 use std::env;
 use std::path::Path;
 use std::ffi::OsStr;
+use clap::{Arg,Command,ArgAction};
 
 struct SeqReader {
     stream: Box<dyn SeqStream>
@@ -56,6 +57,28 @@ impl SeqReader{
 
 
 fn main(){
+    let matches = Command::new("Fasta/fastq parsing")
+        .version("0.1.0")
+        .author("Jarno N. Alanko <alanko.jarno@gmail.com>")
+        .about("Fasta/fastq parsing")
+        .arg(Arg::new("input")
+                 .short('i')
+                 .long("input")
+                 .help("Input filename"))
+        .arg(Arg::new("fasta")
+                 .short('a')
+                 .long("fasta")
+                 .action(ArgAction::SetTrue)
+                 .help("Parse in fasta format"))
+        .get_matches();
+        
+    if let Some(infile) = matches.get_one::<String>("input"){
+        println!("inputfile: {:?}", infile);    
+    } else{
+        println!("No input file");
+    }
+
+    println!("fasta flag: {:?}", matches.get_flag("fasta"));
 
     let args: Vec<String> = env::args().collect();
     
@@ -71,16 +94,5 @@ fn main(){
         reader.read_all();
     }
 
-//    let mut reader = Reader::from_path("/home/niklas/data/SRR19749835_prefix.fastq").unwrap();
 
-/*
-    let stdin = io::stdin();
-    let d = GzDecoder::new(stdin);
-    let mut reader = Reader::new(d);
-
-    while let Some(record) = reader.next() {
-        let record = record.expect("Error reading record");
-        println!("{}", record.id().unwrap());
-    }
-*/
 }
