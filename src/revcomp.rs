@@ -15,9 +15,13 @@ use std::path::Path;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    //let mut m_args = args.clone();
-    let seq = args[1].clone(); // Take a shallow copy of the string
-    let mut bytes = seq.into_bytes(); // Turn the string into a byte vector (consumes string)
+
+    // Turn the string into a byte vector. The clone makes a new copy
+    // so that we don't modify directly in args, which is immutable.
+    // into_bytes transforms the clone into a byte array, consuming the clone,
+    // so that we can use the same memory and there is no redundant copy.
+    let mut bytes = args[1].clone().into_bytes();
+
     let n = bytes.len();
 
     // Complement
