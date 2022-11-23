@@ -21,7 +21,6 @@ pub struct FastaStream<T: std::io::Read>{
     reader: seqio_fasta_reader<T>
 }
 
-// impl<T: std::io::Read> SeqStream for FastaStream<T>{
 impl<T: std::io::Read> FastqStream<T>{
     pub fn new(stream: T) -> FastqStream<T>{
         return FastqStream::<T>{
@@ -30,7 +29,6 @@ impl<T: std::io::Read> FastqStream<T>{
     }
 }
 
-// impl<T: std::io::Read> SeqStream for FastaStream<T>{
 impl<T: std::io::Read> FastaStream<T>{
     pub fn new(stream: T) -> FastaStream<T>{
         return FastaStream::<T>{
@@ -61,42 +59,6 @@ impl FastqStream<File>{
     }
 
 }
-
-/*
-
-impl FastqStream<std::io::Stdin>{
-    pub fn new() -> FastqStream<std::io::Stdin>{
-        return FastqStream::<std::io::Stdin>{
-            reader: seqio_fastq_reader::new(io::stdin())
-        };
-    }
-}
-
-impl FastqStream<GzDecoder<std::io::Stdin>>{
-    pub fn new() -> FastqStream<GzDecoder<std::io::Stdin>>{
-        return FastqStream::<GzDecoder<std::io::Stdin>>{
-            reader: seqio_fastq_reader::new(GzDecoder::new(io::stdin()))
-        };
-    }
-}
-
-impl FastaStream<std::io::Stdin>{
-    pub fn new() -> FastaStream<std::io::Stdin>{
-        return FastaStream::<std::io::Stdin>{
-            reader: seqio_fasta_reader::new(io::stdin())
-        };
-    }
-}
-
-impl FastaStream<GzDecoder<std::io::Stdin>>{
-    pub fn new() -> FastaStream<GzDecoder<std::io::Stdin>>{
-        return FastaStream::<GzDecoder<std::io::Stdin>>{
-            reader: seqio_fasta_reader::new(GzDecoder::new(io::stdin()))
-        };
-    }
-}
-*/
-
 
 impl FastqStream<GzDecoder<File>>{
     pub fn new_from_file(filename: &String) -> FastqStream<GzDecoder<File>>{
