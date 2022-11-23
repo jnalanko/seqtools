@@ -21,13 +21,13 @@ impl SeqReader{
     // New from file
     pub fn new(filename: &String) -> SeqReader{
         if filename.ends_with("fastq.gz"){
-            return SeqReader {stream: Box::new(FastqStream::<GzDecoder<File>>::new(filename))};
+            return SeqReader {stream: Box::new(FastqStream::<GzDecoder<File>>::new_from_file(filename))};
         } else if filename.ends_with("fastq"){
-            return SeqReader {stream: Box::new(FastqStream::<File>::new(filename))};
+            return SeqReader {stream: Box::new(FastqStream::<File>::new_from_file(filename))};
         } else if filename.ends_with("fna.gz"){
-            return SeqReader {stream: Box::new(FastaStream::<GzDecoder<File>>::new(filename))};
+            return SeqReader {stream: Box::new(FastaStream::<GzDecoder<File>>::new_from_file(filename))};
         } else if filename.ends_with("fna"){
-            return SeqReader {stream: Box::new(FastaStream::<File>::new(filename))};
+            return SeqReader {stream: Box::new(FastaStream::<File>::new_from_file(filename))};
         } else{
             panic!("Could not determine the format of file {}", filename);
         }
@@ -36,13 +36,13 @@ impl SeqReader{
     // New from stdin
     pub fn new_from_stdin(fastq: bool, gzipped: bool) -> SeqReader{
         if fastq && gzipped {
-            return SeqReader {stream: Box::new(FastqStream::<GzDecoder<std::io::Stdin>>::new())};
+            return SeqReader {stream: Box::new(FastqStream::<GzDecoder<std::io::Stdin>>::new(GzDecoder::new(io::stdin())))};
         } else if fastq && !gzipped{
-            return SeqReader {stream: Box::new(FastqStream::<std::io::Stdin>::new())};
+            return SeqReader {stream: Box::new(FastqStream::<std::io::Stdin>::new(io::stdin()))};
         } else if !fastq && gzipped{
-            return SeqReader {stream: Box::new(FastaStream::<GzDecoder<std::io::Stdin>>::new())};
+            return SeqReader {stream: Box::new(FastaStream::<GzDecoder<std::io::Stdin>>::new(GzDecoder::new(io::stdin())))};
         } else if !fastq && !gzipped{
-            return SeqReader {stream: Box::new(FastaStream::<std::io::Stdin>::new())};
+            return SeqReader {stream: Box::new(FastaStream::<std::io::Stdin>::new(io::stdin()))};
         } else{
             panic!("This line should never be reached");
         }

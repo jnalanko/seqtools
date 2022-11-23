@@ -21,6 +21,25 @@ pub struct FastaStream<T: std::io::Read>{
     reader: seqio_fasta_reader<T>
 }
 
+// impl<T: std::io::Read> SeqStream for FastaStream<T>{
+impl<T: std::io::Read> FastqStream<T>{
+    pub fn new(stream: T) -> FastqStream<T>{
+        return FastqStream::<T>{
+            reader: seqio_fastq_reader::<T>::new(stream)
+        };
+    }
+}
+
+// impl<T: std::io::Read> SeqStream for FastaStream<T>{
+impl<T: std::io::Read> FastaStream<T>{
+    pub fn new(stream: T) -> FastaStream<T>{
+        return FastaStream::<T>{
+            reader: seqio_fasta_reader::<T>::new(stream)
+        };
+    }
+}
+
+
 impl<T: std::io::Read> SeqStream for FastqStream<T>{
 
     fn read_all(&mut self){
@@ -33,13 +52,17 @@ impl<T: std::io::Read> SeqStream for FastqStream<T>{
     }
 }
 
+
 impl FastqStream<File>{
-    pub fn new(filename: &String) -> FastqStream<File>{
+    pub fn new_from_file(filename: &String) -> FastqStream<File>{
         return FastqStream::<File>{
             reader: seqio_fastq_reader::new(File::open(&filename).unwrap())
         };
     }
+
 }
+
+/*
 
 impl FastqStream<std::io::Stdin>{
     pub fn new() -> FastqStream<std::io::Stdin>{
@@ -72,9 +95,11 @@ impl FastaStream<GzDecoder<std::io::Stdin>>{
         };
     }
 }
+*/
+
 
 impl FastqStream<GzDecoder<File>>{
-    pub fn new(filename: &String) -> FastqStream<GzDecoder<File>>{
+    pub fn new_from_file(filename: &String) -> FastqStream<GzDecoder<File>>{
         return FastqStream::<GzDecoder<File>>{
             reader: seqio_fastq_reader::new(GzDecoder::new(File::open(&filename).unwrap()))
         };
@@ -93,8 +118,9 @@ impl<T: std::io::Read> SeqStream for FastaStream<T>{
     }
 }
 
+
 impl FastaStream<File>{
-    pub fn new(filename: &String) -> FastaStream<File>{
+    pub fn new_from_file(filename: &String) -> FastaStream<File>{
         return FastaStream::<File>{
             reader: seqio_fasta_reader::new(File::open(&filename).unwrap())
         };
@@ -102,7 +128,7 @@ impl FastaStream<File>{
 }
 
 impl FastaStream<GzDecoder<File>>{
-    pub fn new(filename: &String) -> FastaStream<GzDecoder<File>>{
+    pub fn new_from_file(filename: &String) -> FastaStream<GzDecoder<File>>{
         return FastaStream::<GzDecoder<File>>{
             reader: seqio_fasta_reader::new(GzDecoder::new(File::open(&filename).unwrap()))
         };
