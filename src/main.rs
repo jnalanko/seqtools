@@ -17,8 +17,8 @@ struct SeqReader {
 
 impl SeqReader{
 
+    // New from file
     pub fn new(filename: &String) -> SeqReader{
-
         if filename.ends_with("fastq.gz"){
             return SeqReader {stream: Box::new(FastqStream::<GzDecoder<File>>::new(filename))};
         } else if filename.ends_with("fastq"){
@@ -30,6 +30,23 @@ impl SeqReader{
         } else{
             panic!("Could not determine the format of file {}", filename);
         }
+    }
+    
+    // New from stdin
+    pub fn new_from_stdin(fastq: bool, gzipped: bool) -> SeqReader{
+        return SeqReader {stream: Box::new(FastqStream::<std::io::Stdin>::new())};
+    /*
+        if fastq && gzipped {
+            return SeqReader {stream: Box::new(FastqStream::<GzDecoder<std::io::Stdin>>::new(io::stdin()))};
+        } else if fastq && !gzipped{
+            return SeqReader {stream: Box::new(FastqStream::<std::io::Stdin>::new(io::stdin()))};
+        } else if !fastq && gzipped{
+            return SeqReader {stream: Box::new(FastaStream::<GzDecoder<std::io::Stdin>>::new(io::stdin()))};
+        } else if !fastq && !gzipped{
+            return SeqReader {stream: Box::new(FastaStream::<std::io::Stdin>::new(io::stdin()))};
+        } else{
+            panic!("This line should never be reached");
+        }*/
     }
     
     pub fn read_all(&mut self){

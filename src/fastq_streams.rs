@@ -41,6 +41,14 @@ impl FastqStream<File>{
     }
 }
 
+impl FastqStream<std::io::Stdin>{
+    pub fn new() -> FastqStream<std::io::Stdin>{
+        return FastqStream::<std::io::Stdin>{
+            reader: seqio_fastq_reader::new(io::stdin())
+        };
+    }
+}
+
 impl FastqStream<GzDecoder<File>>{
     pub fn new(filename: &String) -> FastqStream<GzDecoder<File>>{
         return FastqStream::<GzDecoder<File>>{
