@@ -20,6 +20,20 @@ fn main() {
     let mut bytes = seq.into_bytes(); // Turn the string into a byte vector (consumes string)
     let n = bytes.len();
 
+    // Complement
+    for i in 0..n {
+        bytes[i] = match bytes[i]{
+            b'A' => b'T',
+            b'C' => b'G',
+            b'G' => b'C',
+            b'T' => b'A',
+            _ => {
+                println!("Warning: non-ACGT character: '{}'", bytes[i] as char); 
+                bytes[i]
+            }
+        };
+    }
+
     // Reverse
     for i in 0..(n/2){
         let temp = bytes[i];
@@ -27,24 +41,5 @@ fn main() {
         bytes[n-1-i] = temp;
     }
 
-    // Complement
-    for i in 0..n {
-        if bytes[i] == (b'A'){
-            bytes[i] = b'T';
-        }
-        else if bytes[i] == (b'C'){
-            bytes[i] = b'G';
-        }
-        else if bytes[i] == (b'G'){
-            bytes[i] = b'C';
-        }
-        else if bytes[i] == (b'T'){
-            bytes[i] = b'A';
-        }
-        else { 
-            println!("Error: non-ACGT character: '{}'", bytes[i] as char);
-            return;
-        }
-    }
     println!("{}", std::str::from_utf8(bytes.as_slice()).expect(""));
 }
