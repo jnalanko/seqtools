@@ -72,6 +72,7 @@ impl SeqReader {
 
 }
 
+/*
 fn print_all_to_stdout(reader: &mut SeqReader){
     loop{
         let next = reader.read_next();
@@ -91,9 +92,10 @@ fn print_all_to_stdout(reader: &mut SeqReader){
         }
     }
 }
+*/
 
 fn print_stats(reader: &mut SeqReader){
-    let mut total_length: usize = 0; // i32 to test what happens with overflow
+    let mut total_length: usize = 0;
     loop{
         match reader.read_next() {
             Some(rec) => total_length += rec.seq.len(),
@@ -143,26 +145,27 @@ fn main() {
         )
         .get_matches();
 
+    let mut reader = 
     if let Some(infile) = matches.get_one::<String>("input") {
-        let mut reader = SeqReader::new(&infile);
-        print_all_to_stdout(&mut reader);
+        SeqReader::new(&infile)
     } else {
         let is_fasta = matches.get_flag("fasta");
         let is_fastq = matches.get_flag("fastq");
         let is_gzip = matches.get_flag("gzip");
         if is_fasta && is_fastq {
             println!("Error: can't give both fasta and fastq flags.");
-            std::process::exit(-1)
+            std::process::exit(-1);
         }
         if !is_fasta && !is_fastq {
             println!(
                 "Error: must give --fasta or --fastq and possibly --gzip if reading from stdin."
             );
-            std::process::exit(-1)
-        }
-        let mut reader = SeqReader::new_from_stdin(is_fastq, is_gzip);
-        if matches.get_flag("stats") {
-            print_stats(&mut reader);
-        }
-    }
+            std::process::exit(-1);
+        };
+        SeqReader::new_from_stdin(is_fastq, is_gzip)
+    };
+
+    if matches.get_flag("stats") {
+        print_stats(&mut reader);
+    };
 }
