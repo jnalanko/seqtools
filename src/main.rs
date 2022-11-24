@@ -84,7 +84,7 @@ fn print_all_to_stdout(reader: &mut SeqReader){
                 std::io::stdout().write_all(rec.seq.as_slice()).ok();
                 std::io::stdout().write_all(b"\n").ok();
                 std::io::stdout().write_all(b"Quality: ").ok();
-                std::io::stdout().write_all(match rec.qual {Some(x) => x, None => Vec::<u8>::new()}.as_slice()).ok();
+                std::io::stdout().write_all(match rec.qual {Some(x) => x, None => b"Not available".to_vec()}.as_slice()).ok();
                 std::io::stdout().write_all(b"\n").ok();
             }
             None => break
