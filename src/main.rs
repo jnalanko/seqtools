@@ -92,6 +92,17 @@ fn print_all_to_stdout(reader: &mut SeqReader){
     }
 }
 
+fn print_stats(reader: &mut SeqReader){
+    let mut total_length: usize = 0; // i32 to test what happens with overflow
+    loop{
+        match reader.read_next() {
+            Some(rec) => total_length += rec.seq.len(),
+            None => break
+        }
+    }
+    println!("Number of nucleotides: {}", total_length);
+}
+
 fn main() {
     let matches = Command::new("Fasta/fastq parsing")
         .version("0.1.0")
@@ -123,6 +134,12 @@ fn main() {
                 .long("gzip")
                 .action(ArgAction::SetTrue)
                 .help("Read gzipped input"),
+        ).arg(
+            Arg::new("stats")
+                .short('s')
+                .long("stats")
+                .action(ArgAction::SetTrue)
+                .help("Print stats about the input."),
         )
         .get_matches();
 
@@ -144,6 +161,8 @@ fn main() {
             std::process::exit(-1)
         }
         let mut reader = SeqReader::new_from_stdin(is_fastq, is_gzip);
-        print_all_to_stdout(&mut reader);
+        if matches.get_flag("stats") {
+            print_stats(&mut reader);
+        }
     }
 }
