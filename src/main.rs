@@ -184,7 +184,6 @@ fn main() {
             Arg::new("length-histogram")
                 .short('l')
                 .long("length-histogram")
-                .action(ArgAction::SetTrue)
                 .help("Print a histogram of lengths of the sequences."),
         )
         .get_matches();
@@ -212,7 +211,10 @@ fn main() {
     if matches.get_flag("stats") {
         print_stats(&mut reader);
     };
-    if matches.get_flag("length-histogram") {
-        print_length_histogram(&mut reader, 200, 800, 100);
+    if let Some(mut params) = matches.get_many::<usize>("length-histogram") {
+        let min = *params.next().expect("Error: min length missing");
+        let max = *params.next().expect("Error: max length missing");
+        let n_bins = *params.next().expect("Error: n_bins missing");
+        print_length_histogram(&mut reader, min as i64, max as i64, n_bins as i64);
     };
 }
