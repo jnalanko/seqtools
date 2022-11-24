@@ -76,6 +76,26 @@ impl SeqReader {
 
 }
 
+fn print_all_to_stdout(reader: &mut SeqReader){
+    loop{
+        let next = reader.read_next();
+        match next {
+            Some(rec) => {
+                std::io::stdout().write_all(b"Header: ").ok();
+                std::io::stdout().write_all(rec.header.as_slice()).ok();
+                std::io::stdout().write_all(b"\n").ok();
+                std::io::stdout().write_all(b"Sequence: ").ok();
+                std::io::stdout().write_all(rec.seq.as_slice()).ok();
+                std::io::stdout().write_all(b"\n").ok();
+                std::io::stdout().write_all(b"Quality: ").ok();
+                std::io::stdout().write_all(match rec.qual {Some(x) => x, None => Vec::<u8>::new()}.as_slice()).ok();
+                std::io::stdout().write_all(b"\n").ok();
+            }
+            None => break
+        }
+    }
+}
+
 fn main() {
     let matches = Command::new("Fasta/fastq parsing")
         .version("0.1.0")
@@ -112,7 +132,7 @@ fn main() {
 
     if let Some(infile) = matches.get_one::<String>("input") {
         let mut reader = SeqReader::new(&infile);
-        reader.read_all();
+        print_all_to_stdout(&mut reader);
     } else {
         let is_fasta = matches.get_flag("fasta");
         let is_fastq = matches.get_flag("fastq");
@@ -128,22 +148,6 @@ fn main() {
             std::process::exit(-1)
         }
         let mut reader = SeqReader::new_from_stdin(is_fastq, is_gzip);
-        loop{
-            let next = reader.read_next();
-            match next {
-                Some(rec) => {
-                    std::io::stdout().write_all(b"Header: ").ok();
-                    std::io::stdout().write_all(rec.header.as_slice()).ok();
-                    std::io::stdout().write_all(b"\n").ok();
-                    std::io::stdout().write_all(b"Sequence: ").ok();
-                    std::io::stdout().write_all(rec.seq.as_slice()).ok();
-                    std::io::stdout().write_all(b"\n").ok();
-                    std::io::stdout().write_all(b"Quality: ").ok();
-                    std::io::stdout().write_all(match rec.qual {Some(x) => x, None => Vec::<u8>::new()}.as_slice()).ok();
-                    std::io::stdout().write_all(b"\n").ok();
-                }
-                None => break
-            }
-        }
+        print_all_to_stdout(&mut reader);
     }
 }
