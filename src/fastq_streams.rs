@@ -6,9 +6,9 @@ use seq_io::fastq::Record as seqio_fastq_record;
 use std::fs::File;
 
 pub struct MyRecord{
-    seq: Vec<u8>,
-    header: Vec<u8>,
-    qual: Option<Vec<u8>>
+    pub seq: Vec<u8>,
+    pub header: Vec<u8>,
+    pub qual: Option<Vec<u8>>
 }
 
 // Fasta or fastq stream
@@ -41,7 +41,7 @@ impl<T: std::io::Read> SeqStream for FastqStream<T> {
     fn next_record(&mut self) -> Option<MyRecord>{
         let opt = self.reader.next();
         return match opt{
-            Some(res) => match(res){
+            Some(res) => match res {
                 Ok(rec) => Some(MyRecord{seq: rec.seq().to_vec(), 
                                          header: rec.head().to_vec(), 
                                          qual: Some(rec.qual().to_vec())}),
@@ -103,7 +103,7 @@ impl<T: std::io::Read> SeqStream for FastaStream<T> {
     fn next_record(&mut self) -> Option<MyRecord>{
         let opt = self.reader.next();
         return match opt{
-            Some(res) => match(res){
+            Some(res) => match res {
                 Ok(rec) => Some(MyRecord{seq: rec.seq().to_vec(), 
                                          header: rec.head().to_vec(), 
                                          qual: None}),

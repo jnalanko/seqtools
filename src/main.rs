@@ -5,9 +5,10 @@ use crate::fastq_streams::{FastaStream, FastqStream, SeqStream};
 mod fastq_streams;
 
 use clap::{Arg, ArgAction, Command};
+use fastq_streams::MyRecord;
 use flate2::read::GzDecoder;
 use std::fs::File;
-use std::io;
+use std::io::{self, Write};
 
 struct SeqReader {
     stream: Box<dyn SeqStream>,
@@ -67,7 +68,12 @@ impl SeqReader {
     pub fn read_all(&mut self) {
         self.stream.read_all();
     }
-    
+
+    // Returns None if no more records
+    pub fn read_next(&mut self) -> Option<MyRecord>{
+        return self.stream.next_record()
+    }
+
 }
 
 fn main() {
@@ -122,6 +128,22 @@ fn main() {
             std::process::exit(-1)
         }
         let mut reader = SeqReader::new_from_stdin(is_fastq, is_gzip);
-        reader.read_all();
+        loop{
+            let next = reader.read_next();
+            match next {
+                Some(rec) => {
+                    std::io::stdout().write_all(b"Header: ").ok();
+                    std::io::stdout().write_all(rec.header.as_slice()).ok();
+                    std::io::stdout().write_all(b"\n").ok();
+                    std::io::stdout().write_all(b"Sequence: ").ok();
+                    std::io::stdout().write_all(rec.seq.as_slice()).ok();
+                    std::io::stdout().write_all(b"\n").ok();
+                    std::io::stdout().write_all(b"Quality: ").ok();
+                    std::io::stdout().write_all(match rec.qual {Some(x) => x, None => Vec::<u8>::new()}.as_slice()).ok();
+                    std::io::stdout().write_all(b"\n").ok();
+                }
+                None => break
+            }
+        }
     }
 }
