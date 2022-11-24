@@ -185,7 +185,7 @@ fn main() {
                 .short('l')
                 .long("length-histogram")
                 .num_args(3)
-                .help("Print a histogram of lengths of the sequences."),
+                .help("Print a histogram of lengths of the sequences. Takes parameters min, max, n_bins."),
         )
         .get_matches();
 
