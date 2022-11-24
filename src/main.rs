@@ -131,7 +131,15 @@ fn print_length_histogram(reader: &mut SeqReader, min: i64, max: i64, n_bins: i6
         }
     }
 
-    dbg!(counters);
+    let max_counter: i64 = *counters.iter().max().unwrap();
+    let n_columns: i64 = 40;
+
+    for (i, c) in counters.iter().enumerate(){
+        let n_chars = ((*c as f64 / max_counter as f64) * n_columns as f64) as i64;
+        print!("{}\t", i*(bin_width as usize));
+        std::io::stdout().write_all(vec![b'#'; n_chars as usize].as_slice()).ok();
+        println!();
+    }
 }
 
 fn main() {
@@ -205,6 +213,6 @@ fn main() {
         print_stats(&mut reader);
     };
     if matches.get_flag("length-histogram") {
-        print_length_histogram(&mut reader, 0, 1000, 100);
+        print_length_histogram(&mut reader, 200, 800, 100);
     };
 }
