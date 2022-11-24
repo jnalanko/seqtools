@@ -96,13 +96,18 @@ fn print_all_to_stdout(reader: &mut SeqReader){
 
 fn print_stats(reader: &mut SeqReader){
     let mut total_length: usize = 0;
+    let mut number_of_sequences: usize = 0;
     loop{
         match reader.read_next() {
-            Some(rec) => total_length += rec.seq.len(),
+            Some(rec) => {
+                total_length += rec.seq.len();
+                number_of_sequences += 1;  
+            },
             None => break
         }
     }
     println!("Number of nucleotides: {}", total_length);
+    println!("Number of sequences: {}", number_of_sequences);
 }
 
 fn main() {
