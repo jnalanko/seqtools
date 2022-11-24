@@ -13,7 +13,6 @@ pub struct MyRecord{
 
 // Fasta or fastq stream
 pub trait SeqStream {
-    fn read_all(&mut self);
     fn next_record(&mut self) -> Option<MyRecord>;
 }
 
@@ -29,14 +28,6 @@ pub struct FastqStream<T: std::io::Read> {
 }
 
 impl<T: std::io::Read> SeqStream for FastqStream<T> {
-    fn read_all(&mut self) {
-        let mut sum: i64 = 0;
-        while let Some(record) = self.reader.next() {
-            let record = record.expect("Error reading record");
-            sum += record.seq().len() as i64;
-        }
-        println!("{}", sum);
-    }
 
     fn next_record(&mut self) -> Option<MyRecord>{
         let opt = self.reader.next();
@@ -91,14 +82,6 @@ impl<T: std::io::Read> FastaStream<T> {
 }
 
 impl<T: std::io::Read> SeqStream for FastaStream<T> {
-    fn read_all(&mut self) {
-        let mut sum: i64 = 0;
-        while let Some(record) = self.reader.next() {
-            let record = record.expect("Error reading record");
-            sum += record.seq().len() as i64;
-        }
-        println!("{}", sum);
-    }
 
     fn next_record(&mut self) -> Option<MyRecord>{
         let opt = self.reader.next();

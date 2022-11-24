@@ -65,10 +65,6 @@ impl SeqReader {
         }
     }
 
-    pub fn read_all(&mut self) {
-        self.stream.read_all();
-    }
-
     // Returns None if no more records
     pub fn read_next(&mut self) -> Option<MyRecord>{
         return self.stream.next_record()
