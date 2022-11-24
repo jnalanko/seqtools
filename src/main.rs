@@ -184,7 +184,7 @@ fn main() {
             Arg::new("length-histogram")
                 .short('l')
                 .long("length-histogram")
-                .num_args(3)
+                .value_names(["min","max","number of bins"])
                 .help("Print a histogram of lengths of the sequences. Takes parameters min, max, n_bins."),
         )
         .get_matches();
