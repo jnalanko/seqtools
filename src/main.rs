@@ -9,6 +9,7 @@ use fastq_streams::MyRecord;
 use flate2::read::GzDecoder;
 use std::fs::File;
 use std::io::{self, Write};
+use std::env;
 
 struct SeqReader {
     stream: Box<dyn SeqStream>,
@@ -110,7 +111,31 @@ fn print_stats(reader: &mut SeqReader){
     println!("Number of sequences: {}", number_of_sequences);
 }
 
+fn print_length_histogram(reader: &mut SeqReader, min: i64, max: i64, n_bins: i64){
+
+    let mut counters: Vec<i64> = vec![0; n_bins as usize];
+    let bin_width = (max-min+1) / n_bins;
+    loop{
+        match reader.read_next() {
+            Some(rec) => {
+                let len = rec.seq.len() as i64;
+                let mut bin = (len - min as i64) / bin_width;
+
+                // Clamp to [0, n_bins-1]
+                bin = std::cmp::max(0, bin);
+                bin = std::cmp::min(n_bins-1, bin);
+
+                counters[bin as usize] += 1;
+            },
+            None => break
+        }
+    }
+
+    dbg!(counters);
+}
+
 fn main() {
+
     let matches = Command::new("Fasta/fastq parsing")
         .version("0.1.0")
         .author("Jarno N. Alanko <alanko.jarno@gmail.com>")
@@ -147,6 +172,12 @@ fn main() {
                 .long("stats")
                 .action(ArgAction::SetTrue)
                 .help("Print stats about the input."),
+        ).arg(
+            Arg::new("length-histogram")
+                .short('l')
+                .long("length-histogram")
+                .action(ArgAction::SetTrue)
+                .help("Print a histogram of lengths of the sequences."),
         )
         .get_matches();
 
@@ -172,5 +203,8 @@ fn main() {
 
     if matches.get_flag("stats") {
         print_stats(&mut reader);
+    };
+    if matches.get_flag("length-histogram") {
+        print_length_histogram(&mut reader, 0, 1000, 100);
     };
 }
