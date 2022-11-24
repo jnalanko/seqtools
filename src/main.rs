@@ -67,6 +67,7 @@ impl SeqReader {
     pub fn read_all(&mut self) {
         self.stream.read_all();
     }
+    
 }
 
 fn main() {

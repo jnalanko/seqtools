@@ -5,35 +5,27 @@ use seq_io::fastq::Reader as seqio_fastq_reader;
 use seq_io::fastq::Record as seqio_fastq_record;
 use std::fs::File;
 
+pub struct MyRecord{
+    seq: Vec<u8>,
+    header: Vec<u8>,
+    qual: Option<Vec<u8>>
+}
+
 // Fasta or fastq stream
 pub trait SeqStream {
     fn read_all(&mut self);
+    fn next_record(&mut self) -> Option<MyRecord>;
 }
+
+//
+//
+// FASTQ START
+//
+//
 
 // Template class for a fastq stream that takes the raw data stream as a template parameter
 pub struct FastqStream<T: std::io::Read> {
     reader: seqio_fastq_reader<T>,
-}
-
-// Template class for a fasta stream that takes the raw data stream as a template parameter
-pub struct FastaStream<T: std::io::Read> {
-    reader: seqio_fasta_reader<T>,
-}
-
-impl<T: std::io::Read> FastqStream<T> {
-    pub fn new(stream: T) -> FastqStream<T> {
-        return FastqStream::<T> {
-            reader: seqio_fastq_reader::<T>::new(stream),
-        };
-    }
-}
-
-impl<T: std::io::Read> FastaStream<T> {
-    pub fn new(stream: T) -> FastaStream<T> {
-        return FastaStream::<T> {
-            reader: seqio_fasta_reader::<T>::new(stream),
-        };
-    }
 }
 
 impl<T: std::io::Read> SeqStream for FastqStream<T> {
@@ -44,6 +36,19 @@ impl<T: std::io::Read> SeqStream for FastqStream<T> {
             sum += record.seq().len() as i64;
         }
         println!("{}", sum);
+    }
+
+    fn next_record(&mut self) -> Option<MyRecord>{
+        let opt = self.reader.next();
+        return match opt{
+            Some(res) => match(res){
+                Ok(rec) => Some(MyRecord{seq: rec.seq().to_vec(), 
+                                         header: rec.head().to_vec(), 
+                                         qual: Some(rec.qual().to_vec())}),
+                Err(e) => panic!("Error reading fastq file: {}", e.to_string())
+            },
+            None => None
+        };
     }
 }
 
@@ -63,6 +68,28 @@ impl FastqStream<GzDecoder<File>> {
     }
 }
 
+impl<T: std::io::Read> FastqStream<T> {
+    pub fn new(stream: T) -> FastqStream<T> {
+        return FastqStream::<T> {
+            reader: seqio_fastq_reader::<T>::new(stream),
+        };
+    }
+}
+
+//
+//
+// FASTQ START
+//
+//
+
+impl<T: std::io::Read> FastaStream<T> {
+    pub fn new(stream: T) -> FastaStream<T> {
+        return FastaStream::<T> {
+            reader: seqio_fasta_reader::<T>::new(stream),
+        };
+    }
+}
+
 impl<T: std::io::Read> SeqStream for FastaStream<T> {
     fn read_all(&mut self) {
         let mut sum: i64 = 0;
@@ -71,6 +98,19 @@ impl<T: std::io::Read> SeqStream for FastaStream<T> {
             sum += record.seq().len() as i64;
         }
         println!("{}", sum);
+    }
+
+    fn next_record(&mut self) -> Option<MyRecord>{
+        let opt = self.reader.next();
+        return match opt{
+            Some(res) => match(res){
+                Ok(rec) => Some(MyRecord{seq: rec.seq().to_vec(), 
+                                         header: rec.head().to_vec(), 
+                                         qual: None}),
+                Err(e) => panic!("Error reading fastq file: {}", e.to_string())
+            },
+            None => None
+        };
     }
 }
 
@@ -88,4 +128,10 @@ impl FastaStream<GzDecoder<File>> {
             reader: seqio_fasta_reader::new(GzDecoder::new(File::open(&filename).unwrap())),
         };
     }
+}
+
+
+// Template class for a fasta stream that takes the raw data stream as a template parameter
+pub struct FastaStream<T: std::io::Read> {
+    reader: seqio_fasta_reader<T>,
 }
