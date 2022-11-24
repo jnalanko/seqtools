@@ -186,6 +186,11 @@ fn main() {
                 .long("length-histogram")
                 .value_names(["min","max","number of bins"])
                 .help("Print a histogram of lengths of the sequences. Takes parameters min, max, n_bins."),
+        ).group(clap::ArgGroup::new("operation")
+                .args(["stats", "length-histogram"])
+                .multiple(false)
+                // Only one operation command at a time because if we are 
+                // reading from stdin we can stream the data only once
         )
         .get_matches();
 
