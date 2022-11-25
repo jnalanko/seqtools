@@ -174,22 +174,31 @@ fn main() {
                 .long("gzip")
                 .action(ArgAction::SetTrue)
                 .help("Read gzipped input"),
-        ).arg(
+        ).subcommand(Command::new("length-histogram")
+            .about("Print the length histogram of the sequences")
+            .arg(
+                Arg::new("min")
+                    //.action(ArgAction::Append)
+                    .default_value("0")
+                    .help("Minimum value")
+            ).arg(
+                Arg::new("max")
+                    //.action(ArgAction::Append)
+                    .default_value("1000")
+                    .help("Maximum value")
+            ).arg(
+                Arg::new("nbins")
+                    //.action(ArgAction::Append)
+                    .default_value("20")
+                    .help("Number of bins")
+            )
+        )
+        .arg(
             Arg::new("stats")
                 .short('s')
                 .long("stats")
                 .action(ArgAction::SetTrue)
                 .help("Print stats about the input."),
-        ).arg(
-            Arg::new("length-histogram")
-                .short('l')
-                .long("length-histogram")
-                .value_names(["min","max","number of bins"])
-                .default_values(["0", "1000", "20"])
-                .help("Print a histogram of lengths of the sequences."),
-        ).group(clap::ArgGroup::new("operation") // Only one operation command at a time because if we are reading from stdin we can stream the data only once
-                .args(["stats", "length-histogram"])
-                .multiple(false)
         )
         .get_matches();
 
@@ -216,10 +225,16 @@ fn main() {
     if matches.get_flag("stats") {
         print_stats(&mut reader);
     };
-    if let Some(mut params) = matches.get_many::<String>("length-histogram") {
-        let min: i64 = params.next().expect("Error: min length missing").parse::<i64>().expect("Error parsing integer");
-        let max: i64 = params.next().expect("Error: max length missing").parse::<i64>().expect("Error parsing integer");
-        let n_bins: i64 = params.next().expect("Error: n_bins missing").parse::<i64>().expect("Error parsing integer");
-        print_length_histogram(&mut reader, min as i64, max as i64, n_bins as i64);
+
+    // Comes here --length-histogram was given. The value source check was needed because otherwise
+    // always come here because the parameter has default values.
+    match matches.subcommand() {
+        Some(("length-histogram", sub_matches)) => { 
+            let min: i64 = sub_matches.get_one::<String>("min").unwrap().parse::<i64>().unwrap();
+            let max: i64 = sub_matches.get_one::<String>("max").unwrap().parse::<i64>().unwrap();
+            let nbins: i64 = sub_matches.get_one::<String>("nbins").unwrap().parse::<i64>().unwrap();
+            print_length_histogram(&mut reader, min as i64, max as i64, nbins as i64);
+        }
+        _ => {}
     };
 }
