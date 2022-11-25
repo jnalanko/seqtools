@@ -152,28 +152,32 @@ fn main() {
             Arg::new("input")
                 .short('i')
                 .long("input")
-                .help("Input filename"),
+                .help("Input filename")
+                .global(true),
         )
         .arg(
             Arg::new("fasta")
                 .short('a')
                 .long("fasta")
                 .action(ArgAction::SetTrue)
-                .help("Parse in fasta format"),
+                .help("Parse in fasta format")
+                .global(true),
         )
         .arg(
             Arg::new("fastq")
                 .short('q')
                 .long("fastq")
                 .action(ArgAction::SetTrue)
-                .help("Parse in fastq format"),
+                .help("Parse in fastq format")
+                .global(true),
         )
         .arg(
             Arg::new("gzip")
                 .short('g')
                 .long("gzip")
                 .action(ArgAction::SetTrue)
-                .help("Read gzipped input"),
+                .help("Read gzipped input")
+                .global(true),
         ).subcommand(Command::new("length-histogram")
             .about("Print the length histogram of the sequences")
             .arg(
