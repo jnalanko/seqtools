@@ -179,7 +179,7 @@ fn main() {
                 .help("Read gzipped input")
                 .global(true),
         ).subcommand(Command::new("length-histogram")
-            .about("Print the length histogram of the sequences")
+            .about("Print the length histogram of the sequences.")
             .arg(
                 Arg::new("min")
                     .default_value("0")
