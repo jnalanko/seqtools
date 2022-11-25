@@ -232,8 +232,6 @@ fn main() {
         get_reader(ReaderInput::FromStdIn{is_fastq: is_fastq, is_gzipped: is_gzip})
     };
 
-    // Comes here --length-histogram was given. The value source check was needed because otherwise
-    // always come here because the parameter has default values.
     match matches.subcommand() {
         Some(("length-histogram", sub_matches)) => { 
             let min: i64 = sub_matches.get_one::<String>("min").unwrap().parse::<i64>().unwrap();
