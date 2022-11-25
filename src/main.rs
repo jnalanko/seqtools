@@ -182,27 +182,19 @@ fn main() {
             .about("Print the length histogram of the sequences")
             .arg(
                 Arg::new("min")
-                    //.action(ArgAction::Append)
                     .default_value("0")
                     .help("Minimum value")
             ).arg(
                 Arg::new("max")
-                    //.action(ArgAction::Append)
                     .default_value("1000")
                     .help("Maximum value")
             ).arg(
                 Arg::new("nbins")
-                    //.action(ArgAction::Append)
                     .default_value("20")
                     .help("Number of bins")
             )
-        )
-        .arg(
-            Arg::new("stats")
-                .short('s')
-                .long("stats")
-                .action(ArgAction::SetTrue)
-                .help("Print stats about the input."),
+        ).subcommand(Command::new("stats")
+            .about("Print stats about the input.")
         )
         .get_matches();
 
@@ -226,10 +218,6 @@ fn main() {
         SeqReader::new_from_stdin(is_fastq, is_gzip)
     };
 
-    if matches.get_flag("stats") {
-        print_stats(&mut reader);
-    };
-
     // Comes here --length-histogram was given. The value source check was needed because otherwise
     // always come here because the parameter has default values.
     match matches.subcommand() {
@@ -238,6 +226,9 @@ fn main() {
             let max: i64 = sub_matches.get_one::<String>("max").unwrap().parse::<i64>().unwrap();
             let nbins: i64 = sub_matches.get_one::<String>("nbins").unwrap().parse::<i64>().unwrap();
             print_length_histogram(&mut reader, min as i64, max as i64, nbins as i64);
+        }
+        Some(("stats", sub_matches)) => { 
+            print_stats(&mut reader);
         }
         _ => {}
     };
