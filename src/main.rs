@@ -142,6 +142,18 @@ fn print_length_histogram(reader: &mut SeqReader, min: i64, max: i64, n_bins: i6
     }
 }
 
+enum ReaderInput{
+    FromFile{filename: String},
+    FromStdIn{is_fastq: bool, is_gzipped: bool} // Is fasta if not fastq
+}
+
+fn get_reader(input: ReaderInput) -> SeqReader{
+    match input{
+        ReaderInput::FromFile{filename} => SeqReader::new(&filename),
+        ReaderInput::FromStdIn{is_fastq, is_gzipped} => SeqReader::new_from_stdin(is_fastq, is_gzipped)
+    }
+}
+
 fn main() {
 
     let matches = Command::new("Fasta/fastq parsing")
@@ -198,10 +210,14 @@ fn main() {
         )
         .get_matches();
 
-    let mut reader = 
-    if let Some(infile) = matches.get_one::<String>("input") {
-        SeqReader::new(&infile)
+    let mut from_stdin = false;
+
+    // Flag consitency check
+    let mut reader = if let Some(infile) = matches.get_one::<String>("input") {
+        get_reader(ReaderInput::FromFile{filename: infile.clone()})
     } else {
+        // From stdin
+        from_stdin = true;
         let is_fasta = matches.get_flag("fasta");
         let is_fastq = matches.get_flag("fastq");
         let is_gzip = matches.get_flag("gzip");
@@ -215,7 +231,7 @@ fn main() {
             );
             std::process::exit(-1);
         };
-        SeqReader::new_from_stdin(is_fastq, is_gzip)
+        get_reader(ReaderInput::FromStdIn{is_fastq: is_fastq, is_gzipped: is_gzip})
     };
 
     // Comes here --length-histogram was given. The value source check was needed because otherwise
