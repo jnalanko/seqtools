@@ -210,14 +210,12 @@ fn main() {
         )
         .get_matches();
 
-    let mut from_stdin = false;
 
-    // Flag consitency check
+    // Flag consistency check
     let mut reader = if let Some(infile) = matches.get_one::<String>("input") {
         get_reader(ReaderInput::FromFile{filename: infile.clone()})
     } else {
         // From stdin
-        from_stdin = true;
         let is_fasta = matches.get_flag("fasta");
         let is_fastq = matches.get_flag("fastq");
         let is_gzip = matches.get_flag("gzip");
