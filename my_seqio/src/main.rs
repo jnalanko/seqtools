@@ -55,9 +55,10 @@ impl<R: io::BufRead> FastXReader<R>{
         self.input.read_until(b'\n', &mut self.plus_buf); // Read plus-line
         self.input.read_until(b'\n', &mut self.qual_buf); // Read the quality line
 
-        return Some(SeqRecord{seq: self.seq_buf.as_slice(),
-                              head: self.head_buf.as_slice(), 
-                              qual: Some(self.qual_buf.as_slice())});
+
+        return Some(SeqRecord{seq: self.seq_buf.split_last().unwrap().1, // split_last trims trailing newline
+                              head: self.head_buf.split_last().unwrap().1, 
+                              qual: Some(self.qual_buf.split_last().unwrap().1)});
     }
 
     fn new(input: R, mode: InputMode) -> Self{
@@ -68,6 +69,7 @@ impl<R: io::BufRead> FastXReader<R>{
                     qual_buf: Vec::<u8>::new(),
                     plus_buf: Vec::<u8>::new()}
     }
+
 }
 
 // Todo: Use the lending iterator crate
