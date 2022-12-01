@@ -57,7 +57,7 @@ impl<R: io::BufRead> FastXReader<R>{
 
         return Some(SeqRecord{head: self.head_buf.as_slice().strip_prefix(b"@").unwrap().strip_suffix(b"\n").unwrap(), 
                               seq: self.seq_buf.as_slice().strip_suffix(b"\n").unwrap(),
-                              qual: Some(self.seq_buf.as_slice().strip_suffix(b"\n").unwrap())})
+                              qual: Some(self.qual_buf.as_slice().strip_suffix(b"\n").unwrap())})
     }
 
     fn new(input: R, mode: InputMode) -> Self{
