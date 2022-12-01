@@ -1,5 +1,6 @@
 use std::io;
 use std::fs::File;
+use std::io::BufReader;
 
 enum InputMode{
     FASTA,
@@ -15,6 +16,7 @@ struct FastXReader<R: io::BufRead>{
     plus_buf: Vec<u8>, // For the fastq plus-line
 }
 
+#[derive(Debug)]
 struct SeqRecord<'a>{
     seq: &'a [u8],
     head: &'a [u8],
@@ -39,7 +41,15 @@ impl<R: io::BufRead> FastXReader<R>{
         return Some(SeqRecord{seq: self.seq_buf.as_slice(),
                               head: self.head_buf.as_slice(), 
                               qual: Some(self.qual_buf.as_slice())});
+    }
 
+    fn new(input: R, mode: InputMode) -> Self{
+        FastXReader{inputmode: mode,
+                    input: input,
+                    seq_buf: Vec::<u8>::new(),
+                    head_buf: Vec::<u8>::new(),
+                    qual_buf: Vec::<u8>::new(),
+                    plus_buf: Vec::<u8>::new()}
     }
 }
 
@@ -47,5 +57,11 @@ impl<R: io::BufRead> FastXReader<R>{
 
 
 fn main() {
-    let f = File::open(&"reads.fastq").unwrap();
+    let input = BufReader::new(File::open(&"reads.fastq").unwrap());
+    let mut reader = FastXReader::new(input, InputMode::FASTA);
+    loop{
+        if let Some(record) = reader.next(){
+            dbg!(record);
+        } else { break };
+    }
 }
