@@ -1,6 +1,8 @@
 use std::io;
 use std::fs::File;
 use std::io::BufReader;
+use std::fmt;
+use std::str;
 
 enum InputMode{
     FASTA,
@@ -21,6 +23,21 @@ struct SeqRecord<'a>{
     seq: &'a [u8],
     head: &'a [u8],
     qual: Option<&'a [u8]>, // If FASTA, this is None
+}
+
+impl<'a> fmt::Display for SeqRecord<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f,
+               "SeqRecord{{\n  Head: {}\n  Seq: {}\n  Qual: {}\n}}", 
+               str::from_utf8(self.head).unwrap(),
+               str::from_utf8(self.seq).unwrap(),
+               match self.qual{
+                   Some(q) => str::from_utf8(q).unwrap(),
+                   None => "", // No quality values
+               }
+               
+        )
+    }
 }
 
 impl<R: io::BufRead> FastXReader<R>{
@@ -61,7 +78,7 @@ fn main() {
     let mut reader = FastXReader::new(input, InputMode::FASTA);
     loop{
         if let Some(record) = reader.next(){
-            dbg!(record);
+            println!("{}", record);
         } else { break };
     }
 }
