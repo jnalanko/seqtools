@@ -51,7 +51,14 @@ impl<R: io::BufRead> FastXReader<R>{
         let bytes_read = self.input.read_until(b'\n', &mut self.head_buf); // Read header line
         if bytes_read.unwrap() == 0 {return None} // End of stream
 
-        self.input.read_until(b'\n', &mut self.seq_buf); // Read sequence line
+        // Read sequence line
+        match self.input.read_until(b'\n', &mut self.seq_buf){
+            Err(e) => panic!("{}",e),
+            Ok(count) => match count{ 
+                0 => panic!("File ended in the middle of FASTQ record"),
+                _ => ()
+            }
+        }
         self.input.read_until(b'\n', &mut self.plus_buf); // Read plus-line
         self.input.read_until(b'\n', &mut self.qual_buf); // Read the quality line
 
