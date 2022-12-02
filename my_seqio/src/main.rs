@@ -49,11 +49,12 @@ impl<R: io::BufRead> FastXReader<R>{
         self.plus_buf.clear();
 
         let bytes_read = self.input.read_until(b'\n', &mut self.head_buf); // Read header line
-        if bytes_read.unwrap() == 0 {return None} // End of stream
+        if bytes_read.expect("I/O error") == 0 {return None} // End of stream
 
+        self.read_line_checked(&mut self.seq_buf);
         // Read sequence line
         match self.input.read_until(b'\n', &mut self.seq_buf){
-            Err(e) => panic!("{}",e),
+            Err(e) => panic!("{}",e), // I/O error
             Ok(count) => match count{ 
                 0 => panic!("File ended in the middle of FASTQ record"),
                 _ => ()
@@ -75,13 +76,27 @@ impl<R: io::BufRead> FastXReader<R>{
                     qual_buf: Vec::<u8>::new(),
                     plus_buf: Vec::<u8>::new()}
     }
+
+    // Stores the line into the given buffer (clear the buffer before storing)
+    #[inline]
+    fn read_line_checked(&mut self, buf: &mut Vec<u8>){
+        buf.clear();
+        match self.input.read_until(b'\n', buf){
+            Err(e) => panic!("{}",e), // I/O error
+            Ok(count) => match count{ 
+                0 => panic!("File ended in the middle of FASTQ record"),
+                _ => ()
+            }
+        }
+    }
+
 }
 
 // Todo: Use the lending iterator crate
 
 
 fn main() {
-    let input = BufReader::new(File::open(&"reads.fastq").unwrap());
+    let input = BufReader::new(File::open(&"reads_trunc.fastq").unwrap());
     let mut reader = FastXReader::new(input, InputMode::FASTA);
     loop{
         if let Some(record) = reader.next(){
