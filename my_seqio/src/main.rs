@@ -16,7 +16,7 @@ struct FastXReader<R: io::BufRead>{
     head_buf: Vec<u8>,
     qual_buf: Vec<u8>,
     plus_buf: Vec<u8>, // For the fastq plus-line
-    fasta_header_stash: Option<Vec<u8>>, // fasta header from previous iteration
+    fasta_temp_buf: Vec<u8>, // Stores the fasta header read in the previous iteration
 }
 
 #[derive(Debug)]
@@ -44,6 +44,8 @@ impl<'a> fmt::Display for SeqRecord<'a> {
 impl<R: io::BufRead> FastXReader<R>{
     fn next(&mut self) -> Option<SeqRecord>{
         if(matches!(self.inputmode, InputMode::FASTQ)){
+            // FASTQ format
+
             self.seq_buf.clear();
             self.head_buf.clear();
             self.qual_buf.clear();
@@ -84,36 +86,39 @@ impl<R: io::BufRead> FastXReader<R>{
             self.head_buf.clear();
 
             // Read header line
-            if matches!(self.fasta_header_stash, None){
+            if self.fasta_temp_buf.len() == 0 {
                 // This is the first record -> read header from input
                 let bytes_read = self.input.read_until(b'\n', &mut self.head_buf);
                 if bytes_read.expect("I/O error.") == 0 {return None} // End of stream
             } else{
                 // Take stashed header from previous iteration
-                self.head_buf = self.fasta_header_stash.take().unwrap();
-                // We need to call take() in the middle to put a None into fasta_header_stash
-                // So that there is only one reference to the vector at a time.
+                self.head_buf.append(&mut self.fasta_temp_buf); // Also clears the temp buf
             }
 
             // Read sequence line
             loop{
-                let bytes_read = self.input.read_until(b'\n', &mut self.seq_buf);
+                let bytes_read = self.input.read_until(b'\n', &mut self.fasta_temp_buf);
                 match bytes_read{
-                    Err(e) => panic!("I/O error"), // File can't end here
+                    Err(e) => panic!("{}",e), // File can't end here
                     Ok(bytes_read) => {
                         if bytes_read == 0{
-                            if self.seq_buf.len() == 0{
+                            // No more bytes left to read
+                            if self.fasta_temp_buf.len() == 0{
+                                // Stream ends with an empty sequence
                                 panic!("Empty sequence in FASTA file");
-                            } 
-                            break; // Last record of the file
+                            }
+                            break; // Ok, last record of the file
                         }
 
                         // Check if we read the header of the next read
                         let start = self.seq_buf.len() as isize - bytes_read as isize;
                         if self.seq_buf[start as usize] != b'>'{
-                            // Stash the header for next iteration
-                            self.fasta_header_stash = Some(self.head_buf);
-                        };
+                            // Found a header. Leave it to the buffer for the next iteration.
+                            break;
+                        } else{
+                            // Found more sequence -> Append to self.seq_buf
+                            self.seq_buf.append(&mut self.fasta_temp_buf); // Also clears the temp buf
+                        }
                     }
                 }
             }
@@ -131,7 +136,7 @@ impl<R: io::BufRead> FastXReader<R>{
                     head_buf: Vec::<u8>::new(),
                     qual_buf: Vec::<u8>::new(),
                     plus_buf: Vec::<u8>::new(),
-                    fasta_header_stash: None}
+                    fasta_temp_buf: Vec::<u8>::new(),}
     }
 
 }
