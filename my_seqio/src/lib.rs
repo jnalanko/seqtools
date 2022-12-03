@@ -1,3 +1,4 @@
+
 use std::io;
 use std::fs::File;
 use std::io::BufReader;
@@ -243,6 +244,7 @@ mod tests {
 }
 
 
+/*
 fn main() {
     let input = BufReader::new(File::open(&"reads_trunc.fastq").unwrap());
     let mut reader = FastXReader::new(input, InputMode::FASTA);
@@ -252,3 +254,4 @@ fn main() {
         } else { break };
     }
 }
+*/

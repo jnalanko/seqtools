@@ -1,11 +1,8 @@
 extern crate flate2;
 
-use crate::fastq_streams::{FastaStream, FastqStream, SeqStream};
-
-mod fastq_streams;
+use my_seqio;
 
 use clap::{Arg, ArgAction, Command};
-use fastq_streams::MyRecord;
 use flate2::read::GzDecoder;
 use std::fs::File;
 use std::io::{self, Write};
