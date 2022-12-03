@@ -118,13 +118,14 @@ impl<R: io::BufRead> FastXReader<R>{
                         } else{
                             // Found more sequence -> Append to self.seq_buf
                             self.seq_buf.append(&mut self.fasta_temp_buf); // Also clears the temp buf
+                            self.seq_buf.strip_suffix(b"\n").unwrap(); // Trim newline
                         }
                     }
                 }
             }
 
             return Some(SeqRecord{head: self.head_buf.as_slice().strip_prefix(b">").unwrap().strip_suffix(b"\n").unwrap(), 
-                                seq: self.seq_buf.as_slice().strip_suffix(b"\n").unwrap(),
+                                seq: self.seq_buf.as_slice(), // Newline are already trimmed before
                                 qual: None});
         }
     }
