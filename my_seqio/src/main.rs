@@ -90,7 +90,9 @@ impl<R: io::BufRead> FastXReader<R>{
                 if bytes_read.expect("I/O error.") == 0 {return None} // End of stream
             } else{
                 // Take stashed header from previous iteration
-                self.head_buf = *(self.fasta_header_stash.unwrap().as_ref());
+                self.head_buf = self.fasta_header_stash.take().unwrap();
+                // We need to call take() in the middle to put a None into fasta_header_stash
+                // So that there is only one reference to the vector at a time.
             }
 
             // Read sequence line
