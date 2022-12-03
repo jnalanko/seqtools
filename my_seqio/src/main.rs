@@ -101,6 +101,7 @@ impl<R: io::BufRead> FastXReader<R>{
                 match bytes_read{
                     Err(e) => panic!("{}",e), // File can't end here
                     Ok(bytes_read) => {
+                        dbg!(&self.fasta_temp_buf);
                         if bytes_read == 0{
                             // No more bytes left to read
                             if self.fasta_temp_buf.len() == 0{
@@ -125,7 +126,7 @@ impl<R: io::BufRead> FastXReader<R>{
             }
 
             return Some(SeqRecord{head: self.head_buf.as_slice().strip_prefix(b">").unwrap().strip_suffix(b"\n").unwrap(), 
-                                seq: self.seq_buf.as_slice(), // Newline are already trimmed before
+                                seq: self.seq_buf.as_slice(), // Newlines are already trimmed before
                                 qual: None});
         }
     }
@@ -205,8 +206,8 @@ mod tests {
         fn split_seq_to_lines(seq: &String, line_length: usize) -> Vec<String>{
             let mut i: usize = 0;
             let mut lines = Vec::<String>::new();
-            while 3*i < seq.len(){
-                lines.push(seq[3*i .. min(3*(i+1), seq.len())].to_owned());
+            while line_length*i < seq.len(){
+                lines.push(seq[line_length*i .. min(line_length*(i+1), seq.len())].to_owned());
                 i += 1;
             }
             lines
@@ -223,12 +224,15 @@ mod tests {
             }
         }
 
+        dbg!(&fasta_data);
+
         let input = BufReader::new(fasta_data.as_bytes());
         let mut reader = FastXReader::new(input, InputMode::FASTA);
 
         let mut seqs_read = 0;
         loop{
             if let Some(record) = reader.next(){
+                dbg!(&record);
                 assert_eq!(record.head, headers[seqs_read].as_bytes());
                 assert_eq!(record.seq, seqs[seqs_read].as_bytes());
                 assert_eq!(record.qual, None);
