@@ -40,6 +40,19 @@ impl<'a> fmt::Display for SeqRecord<'a> {
     }
 }
 
+// Stores the line into the given buffer (clear the buffer before storing)
+#[inline]
+fn read_line_checked<R: io::BufRead>(input: &mut R, buf: &mut Vec<u8>){
+    buf.clear();
+    match input.read_until(b'\n', buf){
+        Err(e) => panic!("{}",e), // I/O error
+        Ok(count) => match count{ 
+            0 => panic!("File ended in the middle of FASTQ record"),
+            _ => ()
+        }
+    }
+}
+
 impl<R: io::BufRead> FastXReader<R>{
     fn next(&mut self) -> Option<SeqRecord>{
         // Just single-line FASTQ for now
@@ -51,21 +64,28 @@ impl<R: io::BufRead> FastXReader<R>{
         let bytes_read = self.input.read_until(b'\n', &mut self.head_buf); // Read header line
         if bytes_read.expect("I/O error") == 0 {return None} // End of stream
 
-        self.read_line_checked(&mut self.seq_buf);
         // Read sequence line
+        read_line_checked(&mut self.input, &mut self.seq_buf);
+        
+
         match self.input.read_until(b'\n', &mut self.seq_buf){
             Err(e) => panic!("{}",e), // I/O error
             Ok(count) => match count{ 
                 0 => panic!("File ended in the middle of FASTQ record"),
                 _ => ()
             }
-        }
-        self.input.read_until(b'\n', &mut self.plus_buf); // Read plus-line
-        self.input.read_until(b'\n', &mut self.qual_buf); // Read the quality line
+        };
 
+        // read +-line
+        read_line_checked(&mut self.input, &mut self.plus_buf);
+
+        // read qual-line
+        read_line_checked(&mut self.input, &mut self.qual_buf);
+        
         return Some(SeqRecord{head: self.head_buf.as_slice().strip_prefix(b"@").unwrap().strip_suffix(b"\n").unwrap(), 
                               seq: self.seq_buf.as_slice().strip_suffix(b"\n").unwrap(),
                               qual: Some(self.qual_buf.as_slice().strip_suffix(b"\n").unwrap())})
+        
     }
 
     fn new(input: R, mode: InputMode) -> Self{
@@ -75,19 +95,6 @@ impl<R: io::BufRead> FastXReader<R>{
                     head_buf: Vec::<u8>::new(),
                     qual_buf: Vec::<u8>::new(),
                     plus_buf: Vec::<u8>::new()}
-    }
-
-    // Stores the line into the given buffer (clear the buffer before storing)
-    #[inline]
-    fn read_line_checked(&mut self, buf: &mut Vec<u8>){
-        buf.clear();
-        match self.input.read_until(b'\n', buf){
-            Err(e) => panic!("{}",e), // I/O error
-            Ok(count) => match count{ 
-                0 => panic!("File ended in the middle of FASTQ record"),
-                _ => ()
-            }
-        }
     }
 
 }
