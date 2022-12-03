@@ -204,9 +204,9 @@ mod tests {
         fn split_seq_to_lines(seq: &String, line_length: usize) -> Vec<String>{
             let mut i: usize = 0;
             let mut lines = Vec::<String>::new();
-            while i < seq.len(){
+            while 3*i < seq.len(){
                 lines.push(seq[3*i .. min(3*(i+1), seq.len())].to_owned());
-                i += line_length;
+                i += 1;
             }
             lines
         }
