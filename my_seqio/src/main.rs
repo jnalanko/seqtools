@@ -65,7 +65,7 @@ impl<R: io::BufRead> FastXReader<R>{
         }
 
         // read qual-line
-        let bytes_read = self.input.read_until(b'\n', &mut self.plus_buf);
+        let bytes_read = self.input.read_until(b'\n', &mut self.qual_buf);
         let bytes_read = bytes_read.expect("I/O error.");
         if bytes_read == 0{ // File can't end here
             panic!("FASTQ quality line missing."); 
@@ -94,7 +94,7 @@ impl<R: io::BufRead> FastXReader<R>{
 
 
 fn main() {
-    let input = BufReader::new(File::open(&"reads_trunc.fastq").unwrap());
+    let input = BufReader::new(File::open(&"reads.fastq").unwrap());
     let mut reader = FastXReader::new(input, InputMode::FASTA);
     loop{
         if let Some(record) = reader.next(){
