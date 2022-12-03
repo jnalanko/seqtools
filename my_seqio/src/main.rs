@@ -103,7 +103,7 @@ impl<R: io::BufRead> FastXReader<R>{
                     Ok(bytes_read) => {
                         if bytes_read == 0{
                             // No more bytes left to read
-                            if self.fasta_temp_buf.len() == 0{
+                            if self.seq_buf.len() == 0{
                                 // Stream ends with an empty sequence
                                 panic!("Empty sequence in FASTA file");
                             }
