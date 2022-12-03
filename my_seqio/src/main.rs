@@ -223,7 +223,7 @@ mod tests {
         }
 
         let input = BufReader::new(fasta_data.as_bytes());
-        let mut reader = FastXReader::new(input, InputMode::FASTQ);
+        let mut reader = FastXReader::new(input, InputMode::FASTA);
 
         let mut seqs_read = 0;
         loop{
