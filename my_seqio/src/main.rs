@@ -16,6 +16,7 @@ struct FastXReader<R: io::BufRead>{
     head_buf: Vec<u8>,
     qual_buf: Vec<u8>,
     plus_buf: Vec<u8>, // For the fastq plus-line
+    fasta_header_stash: Option<Vec<u8>>, // fasta header from previous iteration
 }
 
 #[derive(Debug)]
@@ -42,41 +43,83 @@ impl<'a> fmt::Display for SeqRecord<'a> {
 
 impl<R: io::BufRead> FastXReader<R>{
     fn next(&mut self) -> Option<SeqRecord>{
-        // Just single-line FASTQ for now
-        self.seq_buf.clear();
-        self.head_buf.clear();
-        self.qual_buf.clear();
-        self.plus_buf.clear();
+        if(matches!(self.inputmode, InputMode::FASTQ)){
+            self.seq_buf.clear();
+            self.head_buf.clear();
+            self.qual_buf.clear();
+            self.plus_buf.clear();
 
-        // Read header line
-        let bytes_read = self.input.read_until(b'\n', &mut self.head_buf);
-        if bytes_read.expect("I/O error.") == 0 {return None} // End of stream
+            // Read header line
+            let bytes_read = self.input.read_until(b'\n', &mut self.head_buf);
+            if bytes_read.expect("I/O error.") == 0 {return None} // End of stream
 
-        // Read sequence line
-        let bytes_read = self.input.read_until(b'\n', &mut self.seq_buf);
-        if bytes_read.expect("I/O error.") == 0 {
-            panic!("FASTQ sequence line missing."); // File can't end here
+            // Read sequence line
+            let bytes_read = self.input.read_until(b'\n', &mut self.seq_buf);
+            if bytes_read.expect("I/O error.") == 0 {
+                panic!("FASTQ sequence line missing."); // File can't end here
+            }
+            
+            // read +-line
+            let bytes_read = self.input.read_until(b'\n', &mut self.plus_buf);
+            if bytes_read.expect("I/O error.") == 0 {
+                panic!("FASTQ + line missing."); // File can't end here
+            }
+
+            // read qual-line
+            let bytes_read = self.input.read_until(b'\n', &mut self.qual_buf);
+            let bytes_read = bytes_read.expect("I/O error.");
+            if bytes_read == 0{ // File can't end here
+                panic!("FASTQ quality line missing."); 
+            } else if bytes_read != self.seq_buf.len(){
+                panic!("FASTQ quality line has different length than sequence line")
+            }
+
+            return Some(SeqRecord{head: self.head_buf.as_slice().strip_prefix(b"@").unwrap().strip_suffix(b"\n").unwrap(), 
+                                seq: self.seq_buf.as_slice().strip_suffix(b"\n").unwrap(),
+                                qual: Some(self.qual_buf.as_slice().strip_suffix(b"\n").unwrap())})
         }
-        
-        // read +-line
-        let bytes_read = self.input.read_until(b'\n', &mut self.plus_buf);
-        if bytes_read.expect("I/O error.") == 0 {
-            panic!("FASTQ + line missing."); // File can't end here
-        }
+        else{
+            // FASTA format
+            self.seq_buf.clear();
+            self.head_buf.clear();
 
-        // read qual-line
-        let bytes_read = self.input.read_until(b'\n', &mut self.qual_buf);
-        let bytes_read = bytes_read.expect("I/O error.");
-        if bytes_read == 0{ // File can't end here
-            panic!("FASTQ quality line missing."); 
-        } else if bytes_read != self.seq_buf.len(){
-            panic!("FASTQ quality line has different length than sequence line")
-        }
+            // Read header line
+            if matches!(self.fasta_header_stash, None){
+                // This is the first record -> read header from input
+                let bytes_read = self.input.read_until(b'\n', &mut self.head_buf);
+                if bytes_read.expect("I/O error.") == 0 {return None} // End of stream
+            } else{
+                // Take stashed header from previous iteration
+                self.head_buf = *(self.fasta_header_stash.unwrap().as_ref());
+            }
 
-        return Some(SeqRecord{head: self.head_buf.as_slice().strip_prefix(b"@").unwrap().strip_suffix(b"\n").unwrap(), 
-                              seq: self.seq_buf.as_slice().strip_suffix(b"\n").unwrap(),
-                              qual: Some(self.qual_buf.as_slice().strip_suffix(b"\n").unwrap())})
-        
+            // Read sequence line
+            loop{
+                let bytes_read = self.input.read_until(b'\n', &mut self.seq_buf);
+                match bytes_read{
+                    Err(e) => panic!("I/O error"), // File can't end here
+                    Ok(bytes_read) => {
+                        if bytes_read == 0{
+                            if self.seq_buf.len() == 0{
+                                panic!("Empty sequence in FASTA file");
+                            } 
+                            break; // Last record of the file
+                        }
+
+                        // Check if we read the header of the next read
+                        let start = self.seq_buf.len() as isize - bytes_read as isize;
+                        if self.seq_buf[start as usize] != b'>'{
+                            // Stash the header for next iteration
+                            self.fasta_header_stash = Some(self.head_buf);
+                        };
+                    }
+                }
+            }
+
+            return Some(SeqRecord{head: self.head_buf.as_slice().strip_prefix(b">").unwrap().strip_suffix(b"\n").unwrap(), 
+                                seq: self.seq_buf.as_slice().strip_suffix(b"\n").unwrap(),
+                                qual: None});
+        }
     }
 
     fn new(input: R, mode: InputMode) -> Self{
@@ -85,7 +128,8 @@ impl<R: io::BufRead> FastXReader<R>{
                     seq_buf: Vec::<u8>::new(),
                     head_buf: Vec::<u8>::new(),
                     qual_buf: Vec::<u8>::new(),
-                    plus_buf: Vec::<u8>::new()}
+                    plus_buf: Vec::<u8>::new(),
+                    fasta_header_stash: None}
     }
 
 }
