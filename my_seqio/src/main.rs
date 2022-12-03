@@ -40,19 +40,6 @@ impl<'a> fmt::Display for SeqRecord<'a> {
     }
 }
 
-// Stores the line into the given buffer (clear the buffer before storing)
-#[inline]
-fn read_line_checked<R: io::BufRead>(input: &mut R, buf: &mut Vec<u8>){
-    buf.clear();
-    match input.read_until(b'\n', buf){
-        Err(e) => panic!("{}",e), // I/O error
-        Ok(count) => match count{ 
-            0 => panic!("File ended in the middle of FASTQ record"),
-            _ => ()
-        }
-    }
-}
-
 impl<R: io::BufRead> FastXReader<R>{
     fn next(&mut self) -> Option<SeqRecord>{
         // Just single-line FASTQ for now
@@ -61,27 +48,31 @@ impl<R: io::BufRead> FastXReader<R>{
         self.qual_buf.clear();
         self.plus_buf.clear();
 
-        let bytes_read = self.input.read_until(b'\n', &mut self.head_buf); // Read header line
-        if bytes_read.expect("I/O error") == 0 {return None} // End of stream
+        // Read header line
+        let bytes_read = self.input.read_until(b'\n', &mut self.head_buf);
+        if bytes_read.expect("I/O error.") == 0 {return None} // End of stream
 
         // Read sequence line
-        read_line_checked(&mut self.input, &mut self.seq_buf);
+        let bytes_read = self.input.read_until(b'\n', &mut self.seq_buf);
+        if bytes_read.expect("I/O error.") == 0 {
+            panic!("FASTQ sequence line missing."); // File can't end here
+        }
         
-
-        match self.input.read_until(b'\n', &mut self.seq_buf){
-            Err(e) => panic!("{}",e), // I/O error
-            Ok(count) => match count{ 
-                0 => panic!("File ended in the middle of FASTQ record"),
-                _ => ()
-            }
-        };
-
         // read +-line
-        read_line_checked(&mut self.input, &mut self.plus_buf);
+        let bytes_read = self.input.read_until(b'\n', &mut self.plus_buf);
+        if bytes_read.expect("I/O error.") == 0 {
+            panic!("FASTQ + line missing."); // File can't end here
+        }
 
         // read qual-line
-        read_line_checked(&mut self.input, &mut self.qual_buf);
-        
+        let bytes_read = self.input.read_until(b'\n', &mut self.plus_buf);
+        let bytes_read = bytes_read.expect("I/O error.");
+        if bytes_read == 0{ // File can't end here
+            panic!("FASTQ quality line missing."); 
+        } else if bytes_read != self.seq_buf.len(){
+            panic!("FASTQ quality line has different length than sequence line")
+        }
+
         return Some(SeqRecord{head: self.head_buf.as_slice().strip_prefix(b"@").unwrap().strip_suffix(b"\n").unwrap(), 
                               seq: self.seq_buf.as_slice().strip_suffix(b"\n").unwrap(),
                               qual: Some(self.qual_buf.as_slice().strip_suffix(b"\n").unwrap())})
