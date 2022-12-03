@@ -92,9 +92,56 @@ impl<R: io::BufRead> FastXReader<R>{
 
 // Todo: Use the lending iterator crate
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fastq() {
+        let headers = vec!(
+            "SRR403017.1 HWUSI-EAS108E_0007:3:1:3797:973/1",
+            "SRR403017.2 HWUSI-EAS108E_0007:3:1:10327:976/1",
+            "SRR403017.3 HWUSI-EAS108E_0007:3:1:13569:972/1");
+        let seqs = vec!(
+            "TTGGACCGGCGCAAGACGGACCAGNGCGAAAGCATTTGCCAAGAANNNN",
+            "CAACTTTCTATCTGGCATTCCCTGNGGAGGAAATAGAATGCGCGCNNNN",
+            "GATCGGAAGAGCACACGTCTGAACNCCAGTCACTTAGGCATCTCGNNNN",
+        );
+        let quals = vec!(
+            "#################################################",
+            "#################################################",
+            "#################################################"
+        );
+
+        let n_seqs = headers.len();
+        let mut fastq_data: String = "".to_owned();
+        for i in 0..n_seqs{
+            fastq_data.push_str(format!("@{}\n", headers[i]).as_str());
+            fastq_data.push_str(format!("{}\n", seqs[i]).as_str());
+            fastq_data.push_str("+\n");
+            fastq_data.push_str(format!("{}\n", quals[i]).as_str());
+        }
+
+        let input = BufReader::new(fastq_data.as_bytes());
+        let mut reader = FastXReader::new(input, InputMode::FASTQ);
+
+        let mut seqs_read = 0;
+        loop{
+            if let Some(record) = reader.next(){
+                assert_eq!(record.head, headers[seqs_read].as_bytes());
+                assert_eq!(record.seq, seqs[seqs_read].as_bytes());
+                assert_eq!(record.qual.unwrap(), quals[seqs_read].as_bytes());
+                seqs_read += 1;
+            } else { break };
+        }
+        assert_eq!(seqs_read, n_seqs);
+
+    }
+}
+
 
 fn main() {
-    let input = BufReader::new(File::open(&"reads.fastq").unwrap());
+    let input = BufReader::new(File::open(&"reads_trunc.fastq").unwrap());
     let mut reader = FastXReader::new(input, InputMode::FASTA);
     loop{
         if let Some(record) = reader.next(){
