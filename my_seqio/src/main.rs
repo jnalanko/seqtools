@@ -111,8 +111,8 @@ impl<R: io::BufRead> FastXReader<R>{
                         }
 
                         // Check if we read the header of the next read
-                        let start = self.seq_buf.len() as isize - bytes_read as isize;
-                        if self.seq_buf[start as usize] != b'>'{
+                        let start = self.fasta_temp_buf.len() as isize - bytes_read as isize;
+                        if self.fasta_temp_buf[start as usize] != b'>'{
                             // Found a header. Leave it to the buffer for the next iteration.
                             break;
                         } else{
