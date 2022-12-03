@@ -101,7 +101,6 @@ impl<R: io::BufRead> FastXReader<R>{
                 match bytes_read{
                     Err(e) => panic!("{}",e), // File can't end here
                     Ok(bytes_read) => {
-                        dbg!(&self.fasta_temp_buf);
                         if bytes_read == 0{
                             // No more bytes left to read
                             if self.fasta_temp_buf.len() == 0{
@@ -113,13 +112,13 @@ impl<R: io::BufRead> FastXReader<R>{
 
                         // Check if we read the header of the next read
                         let start = self.fasta_temp_buf.len() as isize - bytes_read as isize;
-                        if self.fasta_temp_buf[start as usize] != b'>'{
+                        if self.fasta_temp_buf[start as usize] == b'>'{
                             // Found a header. Leave it to the buffer for the next iteration.
                             break;
                         } else{
                             // Found more sequence -> Append to self.seq_buf
                             self.seq_buf.append(&mut self.fasta_temp_buf); // Also clears the temp buf
-                            self.seq_buf.strip_suffix(b"\n").unwrap(); // Trim newline
+                            self.seq_buf.pop(); // Trim newline (TODO: what if there is none?)
                         }
                     }
                 }
