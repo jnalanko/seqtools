@@ -109,9 +109,9 @@ mod tests {
             "GATCGGAAGAGCACACGTCTGAACNCCAGTCACTTAGGCATCTCGNNNN",
         );
         let quals = vec!(
-            "#################################################",
-            "#################################################",
-            "#################################################"
+            "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQ",
+            "RSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~####",
+            "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
         );
 
         let n_seqs = headers.len();
