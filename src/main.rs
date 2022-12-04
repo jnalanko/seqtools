@@ -1,78 +1,11 @@
 extern crate flate2;
 
-use my_seqio::{FastXReader,SeqRecord,InputMode};
-
-use flate2::read::MultiGzDecoder;
-use std::fs::File;
-use std::io::{self, Write};
-use std::io::Read;
+use my_seqio::{DynamicFastXReader};
+use std::io::{Write};
 
 mod cli;
 
-// Fasta or fastq stream
-pub trait SeqStream {
-    fn next(&mut self) -> Option<SeqRecord>;
-}
-
-// Implement common SeqStream trait for all
-// FastXReaders over the generic parameter R.
-impl<R: Read> SeqStream for FastXReader<R>{
-    fn next(&mut self) -> Option<SeqRecord>{
-        self.next()
-    }
-}
-
-struct SeqReader {
-    stream: Box<dyn SeqStream>,
-}
-
-// Sequence reader that figures out the file type and contains a dynamic
-// trait object representing a stream from that kind of a file.
-impl SeqReader {
-
-    // Need to constrain + 'static because boxed things always need to have a static
-    // lifetime.
-    pub fn new_from_input_stream<R: Read + 'static>(r: R, mode: InputMode) -> Self{
-        let reader = FastXReader::<R>::new(r, mode);
-        SeqReader {stream: Box::new(reader)}
-    }
-
-    // New from file
-    pub fn new_from_file(filename: &String) -> Self {
-        let input = File::open(&filename).unwrap();
-        if filename.ends_with("fastq.gz") {
-            let gzdecoder = MultiGzDecoder::<File>::new(input);
-            SeqReader::new_from_input_stream(gzdecoder, InputMode::FASTQ)
-        } else if filename.ends_with("fastq") {
-            SeqReader::new_from_input_stream(input, InputMode::FASTQ)
-        } else if filename.ends_with("fna.gz") {
-            let gzdecoder = MultiGzDecoder::<File>::new(input);
-            SeqReader::new_from_input_stream(gzdecoder, InputMode::FASTA)
-        } else if filename.ends_with("fna") {
-            SeqReader::new_from_input_stream(input, InputMode::FASTA)
-        } else {
-            panic!("Could not determine the format of file {}", filename);
-        }
-    }
-
-    // New from stdin
-    pub fn new_from_stdin(fastq: bool, gzipped: bool) -> Self {
-        let mode = if fastq {InputMode::FASTQ} else {InputMode::FASTA};
-        if gzipped {
-            SeqReader::new_from_input_stream(MultiGzDecoder::new(io::stdin()), mode)
-        } else {
-            SeqReader::new_from_input_stream(io::stdin(), mode)
-        }
-    }
-
-    // Returns None if no more records
-    pub fn read_next(&mut self) -> Option<SeqRecord>{
-        return self.stream.next()
-    }
-
-}
-
-fn print_stats(reader: &mut SeqReader){
+fn print_stats(reader: &mut DynamicFastXReader){
     let mut total_length: usize = 0;
     let mut number_of_sequences: usize = 0;
     loop{
@@ -88,7 +21,7 @@ fn print_stats(reader: &mut SeqReader){
     println!("Number of sequences: {}", number_of_sequences);
 }
 
-fn print_length_histogram(reader: &mut SeqReader, min: i64, max: i64, n_bins: i64){
+fn print_length_histogram(reader: &mut DynamicFastXReader, min: i64, max: i64, n_bins: i64){
 
     let mut counters: Vec<i64> = vec![0; n_bins as usize];
     let bin_width = (max-min+1) / n_bins;
@@ -124,10 +57,10 @@ enum ReaderInput{
     FromStdIn{is_fastq: bool, is_gzipped: bool} // Is fasta if not fastq
 }
 
-fn get_reader(input: ReaderInput) -> SeqReader{
+fn get_reader(input: ReaderInput) -> DynamicFastXReader{
     match input{
-        ReaderInput::FromFile{filename} => SeqReader::new_from_file(&filename),
-        ReaderInput::FromStdIn{is_fastq, is_gzipped} => SeqReader::new_from_stdin(is_fastq, is_gzipped)
+        ReaderInput::FromFile{filename} => DynamicFastXReader::new_from_file(&filename),
+        ReaderInput::FromStdIn{is_fastq, is_gzipped} => DynamicFastXReader::new_from_stdin(is_fastq, is_gzipped)
     }
 }
 

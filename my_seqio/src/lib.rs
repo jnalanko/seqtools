@@ -4,6 +4,8 @@ use std::io::BufReader;
 use std::io::BufRead;
 use std::fmt;
 use std::str;
+use std::fs::File;
+use flate2::read::MultiGzDecoder;
 
 pub enum InputMode{
     FASTA,
@@ -139,6 +141,69 @@ impl<R: io::Read> FastXReader<R>{
                     qual_buf: Vec::<u8>::new(),
                     plus_buf: Vec::<u8>::new(),
                     fasta_temp_buf: Vec::<u8>::new(),}
+    }
+
+}
+
+// Trait for a stream returning SeqRecord objects.
+pub trait SeqRecordProducer {
+    fn next(&mut self) -> Option<SeqRecord>;
+}
+
+// Implement common SeqStream trait for all
+// FastXReaders over the generic parameter R.
+impl<R: io::Read> SeqRecordProducer for FastXReader<R>{
+    fn next(&mut self) -> Option<SeqRecord>{
+        self.next()
+    }
+}
+
+pub struct DynamicFastXReader {
+    stream: Box<dyn SeqRecordProducer>,
+}
+
+// A class that contains a dynamic trait object for different
+// types of input streams.
+impl DynamicFastXReader {
+
+    // Need to constrain + 'static because boxed things always need to have a static
+    // lifetime.
+    pub fn new_from_input_stream<R: io::Read + 'static>(r: R, mode: InputMode) -> Self{
+        let reader = FastXReader::<R>::new(r, mode);
+        DynamicFastXReader {stream: Box::new(reader)}
+    }
+
+    // New from file
+    pub fn new_from_file(filename: &String) -> Self {
+        let input = File::open(&filename).unwrap();
+        if filename.ends_with("fastq.gz") {
+            let gzdecoder = MultiGzDecoder::<File>::new(input);
+            Self::new_from_input_stream(gzdecoder, InputMode::FASTQ)
+        } else if filename.ends_with("fastq") {
+            Self::new_from_input_stream(input, InputMode::FASTQ)
+        } else if filename.ends_with("fna.gz") {
+            let gzdecoder = MultiGzDecoder::<File>::new(input);
+            Self::new_from_input_stream(gzdecoder, InputMode::FASTA)
+        } else if filename.ends_with("fna") {
+            Self::new_from_input_stream(input, InputMode::FASTA)
+        } else {
+            panic!("Could not determine the format of file {}", filename);
+        }
+    }
+
+    // New from stdin
+    pub fn new_from_stdin(fastq: bool, gzipped: bool) -> Self {
+        let mode = if fastq {InputMode::FASTQ} else {InputMode::FASTA};
+        if gzipped {
+            Self::new_from_input_stream(MultiGzDecoder::new(io::stdin()), mode)
+        } else {
+            Self::new_from_input_stream(io::stdin(), mode)
+        }
+    }
+
+    // Returns None if no more records
+    pub fn read_next(&mut self) -> Option<SeqRecord>{
+        return self.stream.next()
     }
 
 }

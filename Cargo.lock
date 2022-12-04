@@ -173,6 +173,9 @@ dependencies = [
 [[package]]
 name = "my_seqio"
 version = "0.1.0"
+dependencies = [
+ "flate2",
+]
 
 [[package]]
 name = "once_cell"
