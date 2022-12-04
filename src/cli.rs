@@ -5,6 +5,7 @@ pub fn build_cli() -> Command {
         .version("0.1.0")
         .author("Jarno N. Alanko <alanko.jarno@gmail.com>")
         .about("Fasta/fastq parsing")
+        .arg_required_else_help(true)
         .arg(
             Arg::new("input")
                 .short('i')
@@ -39,12 +40,14 @@ pub fn build_cli() -> Command {
         .subcommand(
             Command::new("length-histogram")
                 .about("Print the length histogram of the sequences.")
+                .arg_required_else_help(true)
                 .arg(Arg::new("min").default_value("0").help("Minimum value"))
                 .arg(Arg::new("max").default_value("1000").help("Maximum value"))
                 .arg(Arg::new("nbins").default_value("20").help("Number of bins")),
         ).subcommand(
             Command::new("subsample")
                 .about("Subsample a random fraction of sequences.")
+                .arg_required_else_help(true)
                 .arg(Arg::new("fraction")
                     .short('f')
                     .long("fraction")
