@@ -12,6 +12,12 @@ pub fn build_cli() -> Command {
                 .long("input")
                 .help("Input filename")
                 .global(true),
+        ).arg(
+            Arg::new("output")
+                .short('o')
+                .long("output")
+                .help("Output filename")
+                .global(true),
         )
         .arg(
             Arg::new("fasta-in")
