@@ -364,10 +364,24 @@ mod tests {
         }
 
         writer.flush();
-        //dbg!(String::from_utf8(writer.output.into_inner().unwrap()));
+        let written_data = writer.output.into_inner().unwrap();
 
-        assert_eq!(String::from_utf8(writer.output.into_inner().unwrap()).unwrap(),
-                   fasta_data);
+        // This written data may not exactly equal the original data,
+        // because the length of FASTA sequence lines is not fixed.
+        // Read the records back from written data and compare to originals.
+
+        let mut reader2 = FastXReader::new(written_data.as_slice(), InputMode::FASTA);
+        let mut seqs_read2 = 0;
+        loop{
+            if let Some(record) = reader2.next(){
+                dbg!(&record);
+                assert_eq!(record.head, headers[seqs_read].as_bytes());
+                assert_eq!(record.seq, seqs[seqs_read].as_bytes());
+                assert_eq!(record.qual, None);
+                seqs_read2 += 1;
+            } else { break };
+        }
+        assert_eq!(seqs_read2, n_seqs);
 
     }
 }
