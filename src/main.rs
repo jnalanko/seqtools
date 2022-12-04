@@ -2,7 +2,6 @@ extern crate flate2;
 
 use my_seqio::{FastXReader,SeqRecord,InputMode};
 
-use clap::{Arg, ArgAction, Command};
 use flate2::read::MultiGzDecoder;
 use std::fs::File;
 use std::io::{self, Write};
