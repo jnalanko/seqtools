@@ -146,7 +146,7 @@ fn main() {
             let mut input1 = get_reader(&matches);
             let mut input2 = get_reader(&matches);
             let frac: f64 = sub_matches.get_one::<String>("fraction")
-                .expect("--fraction missing").parse::<f64>().unwrap();
+                .unwrap().parse::<f64>().unwrap();
             random_subsample(&mut input1, &mut input2, frac);
         }
         _ => {}

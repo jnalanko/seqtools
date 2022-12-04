@@ -51,6 +51,7 @@ pub fn build_cli() -> Command {
                 .arg(Arg::new("fraction")
                     .short('f')
                     .long("fraction")
+                    .required(true)
                 ),
         )
         .subcommand(Command::new("stats").about("Print stats about the input."))
