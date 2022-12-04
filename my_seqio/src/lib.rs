@@ -18,7 +18,7 @@ pub enum FileType{
 }
 
 pub struct FastXReader<R: io::Read>{
-    inputmode: FileType,
+    filetype: FileType,
     input: BufReader<R>,
     seq_buf: Vec<u8>,
     head_buf: Vec<u8>,
@@ -94,7 +94,7 @@ impl<'a> fmt::Display for SeqRecord<'a> {
 
 impl<R: io::Read> FastXReader<R>{
     pub fn next(&mut self) -> Option<SeqRecord>{
-        if matches!(self.inputmode, FileType::FASTQ){
+        if matches!(self.filetype, FileType::FASTQ){
             // FASTQ format
 
             self.seq_buf.clear();
@@ -181,8 +181,8 @@ impl<R: io::Read> FastXReader<R>{
         }
     }
 
-    pub fn new(input: R, mode: FileType) -> Self{
-        FastXReader{inputmode: mode,
+    pub fn new(input: R, filetype: FileType) -> Self{
+        FastXReader{filetype: filetype,
                     input: BufReader::new(input),
                     seq_buf: Vec::<u8>::new(),
                     head_buf: Vec::<u8>::new(),
@@ -196,7 +196,7 @@ impl<R: io::Read> FastXReader<R>{
 // Trait for a stream returning SeqRecord objects.
 pub trait SeqRecordProducer {
     fn next(&mut self) -> Option<SeqRecord>;
-    fn inputmode(&self )-> FileType; 
+    fn filetype(&self )-> FileType; 
 }
 
 // Implement common SeqStream trait for all
@@ -206,8 +206,8 @@ impl<R: io::Read> SeqRecordProducer for FastXReader<R>{
         self.next()
     }
 
-    fn inputmode(&self)-> FileType{
-        self.inputmode
+    fn filetype(&self)-> FileType{
+        self.filetype
     } 
 
 }
@@ -239,8 +239,8 @@ impl DynamicFastXReader {
 
     // Need to constrain + 'static because boxed things always need to have a static
     // lifetime.
-    pub fn new_from_input_stream<R: io::Read + 'static>(r: R, mode: FileType) -> Self{
-        let reader = FastXReader::<R>::new(r, mode);
+    pub fn new_from_input_stream<R: io::Read + 'static>(r: R, filetype: FileType) -> Self{
+        let reader = FastXReader::<R>::new(r, filetype);
         DynamicFastXReader {stream: Box::new(reader)}
     }
 
@@ -266,11 +266,11 @@ impl DynamicFastXReader {
     }
 
     // New from stdin
-    pub fn new_from_stdin(mode: FileType, gzipped: bool) -> Self {
+    pub fn new_from_stdin(filetype: FileType, gzipped: bool) -> Self {
         if gzipped {
-            Self::new_from_input_stream(MultiGzDecoder::new(io::stdin()), mode)
+            Self::new_from_input_stream(MultiGzDecoder::new(io::stdin()), filetype)
         } else {
-            Self::new_from_input_stream(io::stdin(), mode)
+            Self::new_from_input_stream(io::stdin(), filetype)
         }
     }
 
@@ -279,8 +279,8 @@ impl DynamicFastXReader {
         return self.stream.next()
     }
 
-    pub fn inputmode(&self)-> FileType{
-        self.stream.inputmode()
+    pub fn filetype(&self)-> FileType{
+        self.stream.filetype()
     } 
 
 }
@@ -334,7 +334,7 @@ mod tests {
 
         // Test writer
         let out_buf: Vec<u8> = vec![];
-        let mut writer = FastXWriter::<Vec<u8>>::new(out_buf, OutputMode::FASTQ);
+        let mut writer = FastXWriter::<Vec<u8>>::new(out_buf, FileType::FASTQ);
 
         for rec in owned_records.iter() {
             writer.write(rec);
@@ -413,7 +413,7 @@ mod tests {
 
         // Test writer
         let out_buf: Vec<u8> = vec![];
-        let mut writer = FastXWriter::<Vec<u8>>::new(out_buf, OutputMode::FASTA);
+        let mut writer = FastXWriter::<Vec<u8>>::new(out_buf, FileType::FASTA);
 
         for rec in owned_records.iter() {
             writer.write(rec);
@@ -454,7 +454,7 @@ mod tests {
 }
 
 pub struct FastXWriter<W: Write>{
-    pub outputmode: FileType,
+    pub filetype: FileType,
     pub output: BufWriter<W>,
 }
 
@@ -475,8 +475,8 @@ impl DynamicFastXWriter{
         self.stream.write(rec.head(), rec.seq(), rec.qual());
     }
 
-    pub fn new_to_stream<W: Write + 'static>(stream: W, mode: FileType) -> Self{
-        let writer = FastXWriter::<W>::new(stream, mode);
+    pub fn new_to_stream<W: Write + 'static>(stream: W, filetype: FileType) -> Self{
+        let writer = FastXWriter::<W>::new(stream, filetype);
         DynamicFastXWriter {stream: Box::new(writer)}
     }
 
@@ -501,18 +501,18 @@ impl DynamicFastXWriter{
         }
     }
 
-    pub fn new_to_stdout(mode: FileType, gzipped: bool) -> Self {
+    pub fn new_to_stdout(filetype: FileType, gzipped: bool) -> Self {
         if gzipped {
-            Self::new_to_stream(GzEncoder::new(io::stdout(), Compression::fast()), mode)
+            Self::new_to_stream(GzEncoder::new(io::stdout(), Compression::fast()), filetype)
         } else {
-            Self::new_to_stream(io::stdout(), mode)
+            Self::new_to_stream(io::stdout(), filetype)
         }
     }
 }
 
 impl<W: Write> FastXWriter<W>{
     pub fn write<Rec: Record>(&mut self, rec: &Rec){
-        match &self.outputmode{
+        match &self.filetype{
             FileType::FASTA => {
                 self.output.write(b">").expect("Error writing output");
                 self.output.write(rec.head()).expect("Error writing output");
@@ -532,9 +532,9 @@ impl<W: Write> FastXWriter<W>{
         }
     }
 
-    pub fn new(output: W, mode: FileType) -> Self{
+    pub fn new(output: W, filetype: FileType) -> Self{
         Self{
-            outputmode: mode,
+            filetype: filetype,
             output: BufWriter::<W>::new(output)
         }
     }
