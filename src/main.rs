@@ -3,7 +3,7 @@ extern crate flate2;
 use my_seqio::{FastXReader,SeqRecord,InputMode};
 
 use clap::{Arg, ArgAction, Command};
-use flate2::read::GzDecoder;
+use flate2::read::MultiGzDecoder;
 use std::fs::File;
 use std::io::{self, Write};
 use std::io::BufReader;
@@ -42,12 +42,12 @@ impl SeqReader {
     pub fn new_from_file(filename: &String) -> Self {
         let input = File::open(&filename).unwrap();
         if filename.ends_with("fastq.gz") {
-            let gzdecoder = GzDecoder::<File>::new(input);
+            let gzdecoder = MultiGzDecoder::<File>::new(input);
             SeqReader::new_from_input_stream(gzdecoder, InputMode::FASTQ)
         } else if filename.ends_with("fastq") {
             SeqReader::new_from_input_stream(input, InputMode::FASTQ)
         } else if filename.ends_with("fna.gz") {
-            let gzdecoder = GzDecoder::<File>::new(input);
+            let gzdecoder = MultiGzDecoder::<File>::new(input);
             SeqReader::new_from_input_stream(gzdecoder, InputMode::FASTA)
         } else if filename.ends_with("fna") {
             SeqReader::new_from_input_stream(input, InputMode::FASTA)
@@ -58,9 +58,9 @@ impl SeqReader {
 
     // New from stdin
     pub fn new_from_stdin(fastq: bool, gzipped: bool) -> Self {
-        let mode = if(fastq) {InputMode::FASTQ} else {InputMode::FASTA};
+        let mode = if fastq {InputMode::FASTQ} else {InputMode::FASTA};
         if gzipped {
-            SeqReader::new_from_input_stream(GzDecoder::new(io::stdin()), mode)
+            SeqReader::new_from_input_stream(MultiGzDecoder::new(io::stdin()), mode)
         } else {
             SeqReader::new_from_input_stream(io::stdin(), mode)
         }
