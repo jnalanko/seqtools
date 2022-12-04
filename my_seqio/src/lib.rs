@@ -1,7 +1,7 @@
 
 use std::io;
-use std::fs::File;
 use std::io::BufReader;
+use std::io::BufRead;
 use std::fmt;
 use std::str;
 
@@ -10,9 +10,9 @@ pub enum InputMode{
     FASTQ,
 }
 
-pub struct FastXReader<R: io::BufRead>{
+pub struct FastXReader<R: io::Read>{
     inputmode: InputMode,
-    input: R,
+    input: BufReader<R>,
     seq_buf: Vec<u8>,
     head_buf: Vec<u8>,
     qual_buf: Vec<u8>,
@@ -44,7 +44,7 @@ impl<'a> fmt::Display for SeqRecord<'a> {
 
 impl<R: io::BufRead> FastXReader<R>{
     pub fn next(&mut self) -> Option<SeqRecord>{
-        if(matches!(self.inputmode, InputMode::FASTQ)){
+        if matches!(self.inputmode, InputMode::FASTQ){
             // FASTQ format
 
             self.seq_buf.clear();
@@ -133,7 +133,7 @@ impl<R: io::BufRead> FastXReader<R>{
 
     pub fn new(input: R, mode: InputMode) -> Self{
         FastXReader{inputmode: mode,
-                    input: input,
+                    input: BufReader::new(input),
                     seq_buf: Vec::<u8>::new(),
                     head_buf: Vec::<u8>::new(),
                     qual_buf: Vec::<u8>::new(),
@@ -142,8 +142,6 @@ impl<R: io::BufRead> FastXReader<R>{
     }
 
 }
-
-// Todo: Use the lending iterator crate
 
 #[cfg(test)]
 mod tests {
