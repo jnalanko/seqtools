@@ -96,10 +96,26 @@ enum ReaderInput{
     FromStdIn{is_fastq: bool, is_gzipped: bool} // Is fasta if not fastq
 }
 
-fn get_reader(input: ReaderInput) -> DynamicFastXReader{
-    match input{
-        ReaderInput::FromFile{filename} => DynamicFastXReader::new_from_file(&filename),
-        ReaderInput::FromStdIn{is_fastq, is_gzipped} => DynamicFastXReader::new_from_stdin(is_fastq, is_gzipped)
+fn get_reader(args: &clap::ArgMatches) -> DynamicFastXReader{
+    let filename = args.get_one::<String>("input");
+
+    if let Some(infile) = filename {
+        // From file
+        DynamicFastXReader::new_from_file(&infile)
+    } else {
+        // From stdin
+        let is_fasta = args.get_flag("fasta");
+        let is_fastq = args.get_flag("fastq");
+        let is_gzip = args.get_flag("gzip");
+        if is_fasta && is_fastq {
+            panic!("Error: can't give both fasta and fastq flags.");
+        }
+        if !is_fasta && !is_fastq {
+            panic!(
+                "Error: must give --fasta or --fastq and possibly --gzip if reading from stdin."
+            );
+        };
+        DynamicFastXReader::new_from_stdin(is_fastq, is_gzip)
     }
 }
 
@@ -109,44 +125,28 @@ fn main() {
 
     let filename = matches.get_one::<String>("input");
 
-    // Flag consistency check
-    let mut reader = if let Some(infile) = filename {
-        // From file
-        get_reader(ReaderInput::FromFile{filename: infile.clone()})
-    } else {
-        // From stdin
-        let is_fasta = matches.get_flag("fasta");
-        let is_fastq = matches.get_flag("fastq");
-        let is_gzip = matches.get_flag("gzip");
-        if is_fasta && is_fastq {
-            println!("Error: can't give both fasta and fastq flags.");
-            std::process::exit(-1);
-        }
-        if !is_fasta && !is_fastq {
-            println!(
-                "Error: must give --fasta or --fastq and possibly --gzip if reading from stdin."
-            );
-            std::process::exit(-1);
-        };
-        get_reader(ReaderInput::FromStdIn{is_fastq: is_fastq, is_gzipped: is_gzip})
-    };
-
     match matches.subcommand() {
         Some(("length-histogram", sub_matches)) => { 
+            let mut reader = get_reader(&matches);
             let min: i64 = sub_matches.get_one::<String>("min").unwrap().parse::<i64>().unwrap();
             let max: i64 = sub_matches.get_one::<String>("max").unwrap().parse::<i64>().unwrap();
             let nbins: i64 = sub_matches.get_one::<String>("nbins").unwrap().parse::<i64>().unwrap();
             print_length_histogram(&mut reader, min as i64, max as i64, nbins as i64);
         }
         Some(("stats", _)) => { 
+            let mut reader = get_reader(&matches);
             print_stats(&mut reader);
         }
         Some(("subsample", sub_matches)) => {
-            // Todo: we have to create two readers here because we need
-            // to pass over the data twice. Make this part smarter.
-            let mut input1 = DynamicFastXReader::new_from_file(filename.unwrap());
-            let mut input2 = DynamicFastXReader::new_from_file(filename.unwrap());
-            let frac: f64 = sub_matches.get_one::<String>("fraction").unwrap().parse::<f64>().unwrap();
+            if matches.get_one::<String>("input") == None {
+                panic!("Can not subsample from stdin because we need to pass over the data twice.");
+            }
+
+            // Get two readers for two passes over the data
+            let mut input1 = get_reader(&matches);
+            let mut input2 = get_reader(&matches);
+            let frac: f64 = sub_matches.get_one::<String>("fraction")
+                .expect("--fraction missing").parse::<f64>().unwrap();
             random_subsample(&mut input1, &mut input2, frac);
         }
         _ => {}
