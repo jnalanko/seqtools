@@ -114,7 +114,7 @@ fn get_reader(args: &clap::ArgMatches) -> DynamicFastXReader{
                 "Error: must give --fasta or --fastq and possibly --gzip if reading from stdin."
             );
         };
-        let filetype = if(is_fastq) {my_seqio::FileType::FASTQ} else {my_seqio::FileType::FASTA};
+        let filetype = if is_fastq {my_seqio::FileType::FASTQ} else {my_seqio::FileType::FASTA};
         DynamicFastXReader::new_from_stdin(filetype, is_gzip)
     }
 }
@@ -122,8 +122,6 @@ fn get_reader(args: &clap::ArgMatches) -> DynamicFastXReader{
 fn main() {
 
     let matches = cli::build_cli().get_matches();
-
-    let filename = matches.get_one::<String>("input");
 
     match matches.subcommand() {
         Some(("length-histogram", sub_matches)) => { 

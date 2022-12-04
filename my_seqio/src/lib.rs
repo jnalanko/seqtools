@@ -471,6 +471,10 @@ pub struct DynamicFastXWriter {
 
 impl DynamicFastXWriter{
 
+    pub fn write<Rec: Record>(&mut self, rec: Rec){
+        self.stream.write(rec.head(), rec.seq(), rec.qual());
+    }
+
     pub fn new_to_stream<W: Write + 'static>(stream: W, mode: FileType) -> Self{
         let writer = FastXWriter::<W>::new(stream, mode);
         DynamicFastXWriter {stream: Box::new(writer)}
