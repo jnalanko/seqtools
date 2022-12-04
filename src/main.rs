@@ -69,6 +69,15 @@ fn random_subsample(input1: &mut DynamicFastXReader, input2: &mut DynamicFastXRe
 
     dbg!(&v);
 
+    let mut keep_marks: Vec<u8> = vec![0u8; v.len()];
+    let howmany: usize = (v.len() as f64 * fraction) as usize;
+
+    for (_, id) in v.iter().take(howmany){
+        keep_marks[*id as usize] = 1;
+    }
+
+    dbg!(&keep_marks);
+
     let mut output = FastXWriter::<std::io::Stdout>{
         outputmode: match input1.inputmode(){
             my_seqio::InputMode::FASTA => my_seqio::OutputMode::FASTA,
@@ -77,15 +86,12 @@ fn random_subsample(input1: &mut DynamicFastXReader, input2: &mut DynamicFastXRe
         output: BufWriter::<std::io::Stdout>::new(std::io::stdout()),
     };
 
-    let mut howmany: usize = (v.len() as f64 * fraction) as usize;
-    dbg!(howmany);
+    let mut seq_idx = 0;
     while let Some(rec) = input2.read_next(){
-        if howmany > 0{
+        if keep_marks[seq_idx] == 1{
             output.write(&rec);
-        } else {
-            break;
         }
-        howmany -= 1;
+        seq_idx += 1;
     }
 }
 
