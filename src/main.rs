@@ -1,12 +1,28 @@
 extern crate flate2;
 
-use my_seqio;
+use my_seqio::{FastXReader,SeqRecord,InputMode};
 
 use clap::{Arg, ArgAction, Command};
 use flate2::read::GzDecoder;
 use std::fs::File;
 use std::io::{self, Write};
 use std::env;
+use std::io::BufReader;
+use std::io::BufRead;
+
+
+// Fasta or fastq stream
+pub trait SeqStream {
+    fn next(&mut self) -> Option<SeqRecord>;
+}
+
+// Implement common SeqStream trait for all
+// FastXReaders over the generic parameter R.
+impl<R: BufRead> SeqStream for FastXReader<R>{
+    fn next(&mut self) -> Option<SeqRecord>{
+        self.next()
+    }
+}
 
 struct SeqReader {
     stream: Box<dyn SeqStream>,
@@ -15,28 +31,30 @@ struct SeqReader {
 impl SeqReader {
     // New from file
     pub fn new(filename: &String) -> SeqReader {
+        let input = File::open(&filename).unwrap();
         if filename.ends_with("fastq.gz") {
-            return SeqReader {
-                stream: Box::new(FastqStream::<GzDecoder<File>>::new_from_file(filename)),
-            };
+            let gzdecoder = BufReader::new(GzDecoder::<File>::new(input));
+            let reader = FastXReader::<BufReader<GzDecoder<File>>>::new(gzdecoder, InputMode::FASTQ);
+            return SeqReader {stream: Box::new(reader)};
         } else if filename.ends_with("fastq") {
-            return SeqReader {
-                stream: Box::new(FastqStream::<File>::new_from_file(filename)),
-            };
+            let bufreader = BufReader::new(input);
+            let reader = FastXReader::<BufReader<File>>::new(bufreader, InputMode::FASTQ);
+            return SeqReader {stream: Box::new(reader)};
         } else if filename.ends_with("fna.gz") {
-            return SeqReader {
-                stream: Box::new(FastaStream::<GzDecoder<File>>::new_from_file(filename)),
-            };
+            let gzdecoder = BufReader::new(GzDecoder::<File>::new(input));
+            let reader = FastXReader::<BufReader<GzDecoder<File>>>::new(gzdecoder, InputMode::FASTA);
+            return SeqReader {stream: Box::new(reader)};
         } else if filename.ends_with("fna") {
-            return SeqReader {
-                stream: Box::new(FastaStream::<File>::new_from_file(filename)),
-            };
+            let bufreader = BufReader::new(input);
+            let reader = FastXReader::<BufReader<File>>::new(bufreader, InputMode::FASTA);
+            return SeqReader {stream: Box::new(reader)};
         } else {
             panic!("Could not determine the format of file {}", filename);
         }
     }
 
     // New from stdin
+    /* 
     pub fn new_from_stdin(fastq: bool, gzipped: bool) -> SeqReader {
         if fastq && gzipped {
             return SeqReader {
@@ -61,11 +79,11 @@ impl SeqReader {
         } else {
             panic!("This line should never be reached");
         }
-    }
+    } */
 
     // Returns None if no more records
-    pub fn read_next(&mut self) -> Option<MyRecord>{
-        return self.stream.next_record()
+    pub fn read_next(&mut self) -> Option<SeqRecord>{
+        return self.stream.next()
     }
 
 }
@@ -147,7 +165,10 @@ enum ReaderInput{
 fn get_reader(input: ReaderInput) -> SeqReader{
     match input{
         ReaderInput::FromFile{filename} => SeqReader::new(&filename),
-        ReaderInput::FromStdIn{is_fastq, is_gzipped} => SeqReader::new_from_stdin(is_fastq, is_gzipped)
+        ReaderInput::FromStdIn{is_fastq, is_gzipped} => {
+            panic!("Not implemented");
+            //SeqReader::new_from_stdin(is_fastq, is_gzipped)
+        }
     }
 }
 

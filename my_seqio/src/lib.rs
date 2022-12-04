@@ -5,12 +5,12 @@ use std::io::BufReader;
 use std::fmt;
 use std::str;
 
-enum InputMode{
+pub enum InputMode{
     FASTA,
     FASTQ,
 }
 
-struct FastXReader<R: io::BufRead>{
+pub struct FastXReader<R: io::BufRead>{
     inputmode: InputMode,
     input: R,
     seq_buf: Vec<u8>,
@@ -21,10 +21,10 @@ struct FastXReader<R: io::BufRead>{
 }
 
 #[derive(Debug)]
-struct SeqRecord<'a>{
-    head: &'a [u8],    
-    seq: &'a [u8],
-    qual: Option<&'a [u8]>, // If FASTA, this is None
+pub struct SeqRecord<'a>{
+    pub head: &'a [u8],    
+    pub seq: &'a [u8],
+    pub qual: Option<&'a [u8]>, // If FASTA, this is None
 }
 
 impl<'a> fmt::Display for SeqRecord<'a> {
@@ -43,7 +43,7 @@ impl<'a> fmt::Display for SeqRecord<'a> {
 }
 
 impl<R: io::BufRead> FastXReader<R>{
-    fn next(&mut self) -> Option<SeqRecord>{
+    pub fn next(&mut self) -> Option<SeqRecord>{
         if(matches!(self.inputmode, InputMode::FASTQ)){
             // FASTQ format
 
@@ -131,7 +131,7 @@ impl<R: io::BufRead> FastXReader<R>{
         }
     }
 
-    fn new(input: R, mode: InputMode) -> Self{
+    pub fn new(input: R, mode: InputMode) -> Self{
         FastXReader{inputmode: mode,
                     input: input,
                     seq_buf: Vec::<u8>::new(),
