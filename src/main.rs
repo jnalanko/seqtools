@@ -55,7 +55,7 @@ fn print_length_histogram(reader: &mut DynamicFastXReader, min: i64, max: i64, n
 
 // Needs two input reader to the same data because needs
 // to pass over the data twice.
-fn random_subsample(input1: &mut DynamicFastXReader, input2: &mut DynamicFastXReader, fraction: f64){
+fn random_subsample(input1: &mut DynamicFastXReader, input2: &mut DynamicFastXReader, out: &mut DynamicFastXWriter, fraction: f64){
     let mut v: Vec<(f64, usize)> = vec![]; // Random number from 0 to 1, seq id
     let mut rng = rand::thread_rng();
     let mut seq_idx = 0;
@@ -79,15 +79,10 @@ fn random_subsample(input1: &mut DynamicFastXReader, input2: &mut DynamicFastXRe
         keep_marks[*id as usize] = 1;
     }
 
-    let mut output = FastXWriter::<std::io::Stdout>{
-        outputmode: input1.inputmode(),
-        output: BufWriter::<std::io::Stdout>::new(std::io::stdout()),
-    };
-
     let mut seq_idx = 0;
     while let Some(rec) = input2.read_next(){
         if keep_marks[seq_idx] == 1{
-            output.write(&rec);
+            out.write(rec);
         }
         seq_idx += 1;
     }
@@ -168,9 +163,10 @@ fn main() {
             // Get two readers for two passes over the data
             let mut input1 = get_reader(&matches);
             let mut input2 = get_reader(&matches);
+            let mut output = get_writer(&matches);
             let frac: f64 = sub_matches.get_one::<String>("fraction")
                 .unwrap().parse::<f64>().unwrap();
-            random_subsample(&mut input1, &mut input2, frac);
+            random_subsample(&mut input1, &mut input2, &mut output, frac);
         }
         _ => {}
     };
