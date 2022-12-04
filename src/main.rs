@@ -60,7 +60,7 @@ fn random_subsample(input1: &mut DynamicFastXReader, input2: &mut DynamicFastXRe
     let mut rng = rand::thread_rng();
     let mut seq_idx = 0;
 
-    eprintln!("Counting the number of sequences...");
+    eprintln!("Assigning random numbers to sequences...");
     while let Some(_) = input1.read_next(){
         let r = rng.gen_range(0.0..1.0);
         v.push((r, seq_idx));
