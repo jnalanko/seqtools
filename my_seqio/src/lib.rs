@@ -291,16 +291,46 @@ mod tests {
         let input = BufReader::new(fastq_data.as_bytes());
         let mut reader = FastXReader::new(input, InputMode::FASTQ);
 
+        let mut owned_records: Vec<OwnedSeqRecord> = vec![];
         let mut seqs_read = 0;
         loop{
             if let Some(record) = reader.next(){
                 assert_eq!(record.head, headers[seqs_read].as_bytes());
                 assert_eq!(record.seq, seqs[seqs_read].as_bytes());
                 assert_eq!(record.qual.unwrap(), quals[seqs_read].as_bytes());
+                owned_records.push(record.to_owned());
                 seqs_read += 1;
             } else { break };
         }
         assert_eq!(seqs_read, n_seqs);
+
+        // Test writer
+        let out_buf: Vec<u8> = vec![];
+        let mut writer = FastXWriter::<Vec<u8>>::new(out_buf, OutputMode::FASTQ);
+
+        for rec in owned_records.iter() {
+            writer.write(rec);
+        }
+
+        writer.flush();
+        let written_data = writer.output.into_inner().unwrap();
+
+        // This written data may not exactly equal the original data,
+        // because the length of FASTA sequence lines is not fixed.
+        // Read the records back from written data and compare to originals.
+
+        let mut reader2 = FastXReader::new(written_data.as_slice(), InputMode::FASTQ);
+        let mut seqs_read2 = 0;
+        loop{
+            if let Some(record) = reader2.next(){
+                dbg!(&record);
+                assert_eq!(record.head, headers[seqs_read2].as_bytes());
+                assert_eq!(record.seq, seqs[seqs_read2].as_bytes());
+                assert_eq!(record.qual.unwrap(), quals[seqs_read2].as_bytes());
+                seqs_read2 += 1;
+            } else { break };
+        }
+        assert_eq!(seqs_read2, n_seqs);
     }
 
     #[test]
