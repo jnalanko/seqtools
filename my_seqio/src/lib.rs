@@ -382,6 +382,9 @@ impl<W: Write> FastXWriter<W>{
     }
 
     pub fn new(output: W, mode: OutputMode) -> Self{
-        Self{outputmode: mode,
-             output: BufWriter::<W>::new(output)}
+        Self{
+            outputmode: mode,
+            output: BufWriter::<W>::new(output)
+        }
+    }
 }
