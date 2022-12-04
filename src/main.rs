@@ -75,8 +75,6 @@ fn random_subsample(input1: &mut DynamicFastXReader, input2: &mut DynamicFastXRe
     v.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     let mut keep_marks: Vec<u8> = vec![0u8; v.len()];
-    let howmany: usize = (v.len() as f64 * fraction) as usize;
-
     for (_, id) in v.iter().take(howmany){
         keep_marks[*id as usize] = 1;
     }
