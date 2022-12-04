@@ -87,7 +87,7 @@ fn random_subsample(input1: &mut DynamicFastXReader, input2: &mut DynamicFastXRe
         seq_idx += 1;
     }
 
-    eprintln!("Done...");
+    eprintln!("Done");
 }
 
 fn get_reader(args: &clap::ArgMatches) -> DynamicFastXReader{
