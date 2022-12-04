@@ -35,7 +35,7 @@ pub fn build_cli() -> Command {
         )
         .arg(
             Arg::new("gzip-in")
-                .long("gzip")
+                .long("gzip-in")
                 .action(ArgAction::SetTrue)
                 .help("Read gzipped input")
                 .global(true),
