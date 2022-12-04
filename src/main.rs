@@ -27,6 +27,8 @@ struct SeqReader {
     stream: Box<dyn SeqStream>,
 }
 
+// Sequence reader that figures out the file type and contains a dynamic
+// trait object representing a stream from that kind of a file.
 impl SeqReader {
 
     // Need to constrain + 'static because boxed things always need to have a static
@@ -37,7 +39,7 @@ impl SeqReader {
     }
 
     // New from file
-    pub fn new(filename: &String) -> Self {
+    pub fn new_from_file(filename: &String) -> Self {
         let input = File::open(&filename).unwrap();
         if filename.ends_with("fastq.gz") {
             let gzdecoder = GzDecoder::<File>::new(input);
@@ -55,32 +57,14 @@ impl SeqReader {
     }
 
     // New from stdin
-    /* 
-    pub fn new_from_stdin(fastq: bool, gzipped: bool) -> SeqReader {
-        if fastq && gzipped {
-            return SeqReader {
-                stream: Box::new(FastqStream::<GzDecoder<std::io::Stdin>>::new(
-                    GzDecoder::new(io::stdin()),
-                )),
-            };
-        } else if fastq && !gzipped {
-            return SeqReader {
-                stream: Box::new(FastqStream::<std::io::Stdin>::new(io::stdin())),
-            };
-        } else if !fastq && gzipped {
-            return SeqReader {
-                stream: Box::new(FastaStream::<GzDecoder<std::io::Stdin>>::new(
-                    GzDecoder::new(io::stdin()),
-                )),
-            };
-        } else if !fastq && !gzipped {
-            return SeqReader {
-                stream: Box::new(FastaStream::<std::io::Stdin>::new(io::stdin())),
-            };
+    pub fn new_from_stdin(fastq: bool, gzipped: bool) -> Self {
+        let mode = if(fastq) {InputMode::FASTQ} else {InputMode::FASTA};
+        if fastq {
+            SeqReader::new_from_input_stream(GzDecoder::new(io::stdin()), mode)
         } else {
-            panic!("This line should never be reached");
+            SeqReader::new_from_input_stream(io::stdin(), mode)
         }
-    } */
+    }
 
     // Returns None if no more records
     pub fn read_next(&mut self) -> Option<SeqRecord>{
@@ -165,11 +149,8 @@ enum ReaderInput{
 
 fn get_reader(input: ReaderInput) -> SeqReader{
     match input{
-        ReaderInput::FromFile{filename} => SeqReader::new(&filename),
-        ReaderInput::FromStdIn{is_fastq, is_gzipped} => {
-            panic!("Not implemented");
-            //SeqReader::new_from_stdin(is_fastq, is_gzipped)
-        }
+        ReaderInput::FromFile{filename} => SeqReader::new_from_file(&filename),
+        ReaderInput::FromStdIn{is_fastq, is_gzipped} => SeqReader::new_from_stdin(is_fastq, is_gzipped)
     }
 }
 
