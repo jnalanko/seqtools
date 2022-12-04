@@ -364,7 +364,10 @@ mod tests {
         }
 
         writer.flush();
-        dbg!(writer.output.into_inner().unwrap());
+        //dbg!(String::from_utf8(writer.output.into_inner().unwrap()));
+
+        assert_eq!(String::from_utf8(writer.output.into_inner().unwrap()).unwrap(),
+                   fasta_data);
 
     }
 }
