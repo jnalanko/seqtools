@@ -125,7 +125,7 @@ impl<R: io::Read> FastXReader<R>{
             if bytes_read == 0{ // File can't end here
                 panic!("FASTQ quality line missing."); 
             } else if bytes_read != self.seq_buf.len(){
-                panic!("FASTQ quality line has different length than sequence line")
+                panic!("FASTQ quality line has different length than sequence line ({} vs {})", bytes_read, self.seq_buf.len())
             }
 
             return Some(SeqRecord{head: self.head_buf.as_slice().strip_prefix(b"@").unwrap().strip_suffix(b"\n").unwrap(), 
@@ -438,6 +438,7 @@ impl<W: Write> FastXWriter<W>{
                 self.output.write(rec.seq()).expect("Error writing output");
                 self.output.write(b"\n+\n").expect("Error writing output");
                 self.output.write(rec.qual().expect("Quality values missing")).expect("Error writing output");
+                self.output.write(b"\n").expect("Error writing output");
             }
         }
     }
