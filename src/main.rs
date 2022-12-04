@@ -63,12 +63,17 @@ fn random_subsample(input: &mut DynamicFastXReader){
         output: BufWriter::<std::io::Stdout>::new(std::io::stdout()),
     };
 
-    let v: Vec<(u64, f64)> = vec![]; // Random number from 0 to 1, seq id
+    let mut v: Vec<(f64, u64)> = vec![]; // Random number from 0 to 1, seq id
     let mut rng = rand::thread_rng();
+    let mut seq_idx = 0u64;
     while let Some(rec) = input.read_next(){
         let r = rng.gen_range(0.0..1.0);
-        dbg!(r);
+        v.push((r, seq_idx));
+        seq_idx += 1;
     }
+    v.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+    dbg!(v);
 }
 
 enum ReaderInput{
