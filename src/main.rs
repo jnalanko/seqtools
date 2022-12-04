@@ -46,7 +46,7 @@ fn print_length_histogram(reader: &mut DynamicFastXReader, min: i64, max: i64, n
 
     for (i, c) in counters.iter().enumerate(){
         let n_chars = ((*c as f64 / max_counter as f64) * n_columns as f64) as i64;
-        print!("{}\t", i*(bin_width as usize));
+        print!("{}\t", (min + (i as i64)*bin_width) as usize);
         std::io::stdout().write_all(vec![b'#'; n_chars as usize].as_slice()).ok();
         println!();
     }
