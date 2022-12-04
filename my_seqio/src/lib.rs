@@ -375,8 +375,8 @@ mod tests {
         loop{
             if let Some(record) = reader2.next(){
                 dbg!(&record);
-                assert_eq!(record.head, headers[seqs_read].as_bytes());
-                assert_eq!(record.seq, seqs[seqs_read].as_bytes());
+                assert_eq!(record.head, headers[seqs_read2].as_bytes());
+                assert_eq!(record.seq, seqs[seqs_read2].as_bytes());
                 assert_eq!(record.qual, None);
                 seqs_read2 += 1;
             } else { break };
