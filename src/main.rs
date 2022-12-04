@@ -28,23 +28,27 @@ struct SeqReader {
 }
 
 impl SeqReader {
+
+    // Need to constrain + 'static because boxed things always need to have a static
+    // lifetime
+    pub fn new_from_input_stream<R: Read + 'static>(r: R, mode: InputMode) -> Self{
+        let reader = FastXReader::<R>::new(r, mode);
+        SeqReader {stream: Box::new(reader)}
+    }
+
     // New from file
-    pub fn new(filename: &String) -> SeqReader {
+    pub fn new(filename: &String) -> Self {
         let input = File::open(&filename).unwrap();
         if filename.ends_with("fastq.gz") {
             let gzdecoder = GzDecoder::<File>::new(input);
-            let reader = FastXReader::<GzDecoder<File>>::new(gzdecoder, InputMode::FASTQ);
-            return SeqReader {stream: Box::new(reader)};
+            SeqReader::new_from_input_stream(gzdecoder, InputMode::FASTQ)
         } else if filename.ends_with("fastq") {
-            let reader = FastXReader::<File>::new(input, InputMode::FASTQ);
-            return SeqReader {stream: Box::new(reader)};
+            SeqReader::new_from_input_stream(input, InputMode::FASTQ)
         } else if filename.ends_with("fna.gz") {
             let gzdecoder = GzDecoder::<File>::new(input);
-            let reader = FastXReader::<GzDecoder<File>>::new(gzdecoder, InputMode::FASTA);
-            return SeqReader {stream: Box::new(reader)};
+            SeqReader::new_from_input_stream(gzdecoder, InputMode::FASTA)
         } else if filename.ends_with("fna") {
-            let reader = FastXReader::<File>::new(input, InputMode::FASTQ);
-            return SeqReader {stream: Box::new(reader)};
+            SeqReader::new_from_input_stream(input, InputMode::FASTA)
         } else {
             panic!("Could not determine the format of file {}", filename);
         }
