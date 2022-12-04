@@ -6,9 +6,8 @@ use clap::{Arg, ArgAction, Command};
 use flate2::read::GzDecoder;
 use std::fs::File;
 use std::io::{self, Write};
-use std::env;
 use std::io::BufReader;
-use std::io::BufRead;
+use std::io::Read;
 
 
 // Fasta or fastq stream
@@ -18,7 +17,7 @@ pub trait SeqStream {
 
 // Implement common SeqStream trait for all
 // FastXReaders over the generic parameter R.
-impl<R: BufRead> SeqStream for FastXReader<R>{
+impl<R: Read> SeqStream for FastXReader<R>{
     fn next(&mut self) -> Option<SeqRecord>{
         self.next()
     }
@@ -33,20 +32,18 @@ impl SeqReader {
     pub fn new(filename: &String) -> SeqReader {
         let input = File::open(&filename).unwrap();
         if filename.ends_with("fastq.gz") {
-            let gzdecoder = BufReader::new(GzDecoder::<File>::new(input));
-            let reader = FastXReader::<BufReader<GzDecoder<File>>>::new(gzdecoder, InputMode::FASTQ);
+            let gzdecoder = GzDecoder::<File>::new(input);
+            let reader = FastXReader::<GzDecoder<File>>::new(gzdecoder, InputMode::FASTQ);
             return SeqReader {stream: Box::new(reader)};
         } else if filename.ends_with("fastq") {
-            let bufreader = BufReader::new(input);
-            let reader = FastXReader::<BufReader<File>>::new(bufreader, InputMode::FASTQ);
+            let reader = FastXReader::<File>::new(input, InputMode::FASTQ);
             return SeqReader {stream: Box::new(reader)};
         } else if filename.ends_with("fna.gz") {
-            let gzdecoder = BufReader::new(GzDecoder::<File>::new(input));
-            let reader = FastXReader::<BufReader<GzDecoder<File>>>::new(gzdecoder, InputMode::FASTA);
+            let gzdecoder = GzDecoder::<File>::new(input);
+            let reader = FastXReader::<GzDecoder<File>>::new(gzdecoder, InputMode::FASTA);
             return SeqReader {stream: Box::new(reader)};
         } else if filename.ends_with("fna") {
-            let bufreader = BufReader::new(input);
-            let reader = FastXReader::<BufReader<File>>::new(bufreader, InputMode::FASTA);
+            let reader = FastXReader::<File>::new(input, InputMode::FASTQ);
             return SeqReader {stream: Box::new(reader)};
         } else {
             panic!("Could not determine the format of file {}", filename);

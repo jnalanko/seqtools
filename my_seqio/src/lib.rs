@@ -42,7 +42,7 @@ impl<'a> fmt::Display for SeqRecord<'a> {
     }
 }
 
-impl<R: io::BufRead> FastXReader<R>{
+impl<R: io::Read> FastXReader<R>{
     pub fn next(&mut self) -> Option<SeqRecord>{
         if matches!(self.inputmode, InputMode::FASTQ){
             // FASTQ format
