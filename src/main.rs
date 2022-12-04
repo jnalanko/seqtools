@@ -56,10 +56,10 @@ fn print_length_histogram(reader: &mut DynamicFastXReader, min: i64, max: i64, n
 // Needs two input reader to the same data because needs
 // to pass over the data twice.
 fn random_subsample(input1: &mut DynamicFastXReader, input2: &mut DynamicFastXReader, fraction: f64){
-    let mut v: Vec<(f64, u64)> = vec![]; // Random number from 0 to 1, seq id
+    let mut v: Vec<(f64, usize)> = vec![]; // Random number from 0 to 1, seq id
     let mut rng = rand::thread_rng();
-    let mut seq_idx = 0u64;
-    while let Some(rec) = input1.read_next(){
+    let mut seq_idx = 0;
+    while let Some(_) = input1.read_next(){
         let r = rng.gen_range(0.0..1.0);
         v.push((r, seq_idx));
         seq_idx += 1;
@@ -67,16 +67,12 @@ fn random_subsample(input1: &mut DynamicFastXReader, input2: &mut DynamicFastXRe
 
     v.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-    dbg!(&v);
-
     let mut keep_marks: Vec<u8> = vec![0u8; v.len()];
     let howmany: usize = (v.len() as f64 * fraction) as usize;
 
     for (_, id) in v.iter().take(howmany){
         keep_marks[*id as usize] = 1;
     }
-
-    dbg!(&keep_marks);
 
     let mut output = FastXWriter::<std::io::Stdout>{
         outputmode: match input1.inputmode(){
