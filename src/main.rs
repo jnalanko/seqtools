@@ -77,13 +77,15 @@ fn random_subsample(input1: &mut DynamicFastXReader, input2: &mut DynamicFastXRe
         output: BufWriter::<std::io::Stdout>::new(std::io::stdout()),
     };
 
-    let howmany: usize = (v.len() as f64 * fraction) as usize;
-    while let Some(rec) = input1.read_next(){
+    let mut howmany: usize = (v.len() as f64 * fraction) as usize;
+    dbg!(howmany);
+    while let Some(rec) = input2.read_next(){
         if howmany > 0{
             output.write(&rec);
         } else {
             break;
         }
+        howmany -= 1;
     }
 }
 
