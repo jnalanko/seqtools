@@ -315,8 +315,6 @@ mod tests {
         writer.flush();
         let written_data = writer.output.into_inner().unwrap();
 
-        // This written data may not exactly equal the original data,
-        // because the length of FASTA sequence lines is not fixed.
         // Read the records back from written data and compare to originals.
 
         let mut reader2 = FastXReader::new(written_data.as_slice(), InputMode::FASTQ);
