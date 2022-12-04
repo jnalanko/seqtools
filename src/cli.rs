@@ -42,6 +42,13 @@ pub fn build_cli() -> Command {
                 .arg(Arg::new("min").default_value("0").help("Minimum value"))
                 .arg(Arg::new("max").default_value("1000").help("Maximum value"))
                 .arg(Arg::new("nbins").default_value("20").help("Number of bins")),
+        ).subcommand(
+            Command::new("subsample")
+                .about("Subsample a random fraction of sequences.")
+                .arg(Arg::new("fraction")
+                    .short('f')
+                    .long("fraction")
+                ),
         )
         .subcommand(Command::new("stats").about("Print stats about the input."))
 }

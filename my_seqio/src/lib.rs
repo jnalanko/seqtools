@@ -9,10 +9,13 @@ use std::str;
 use std::fs::File;
 use flate2::read::MultiGzDecoder;
 
+#[derive(Copy, Clone)]
 pub enum InputMode{
     FASTA,
     FASTQ,
 }
+
+#[derive(Copy, Clone)]
 pub enum OutputMode{
     FASTA,
     FASTQ,
@@ -197,6 +200,7 @@ impl<R: io::Read> FastXReader<R>{
 // Trait for a stream returning SeqRecord objects.
 pub trait SeqRecordProducer {
     fn next(&mut self) -> Option<SeqRecord>;
+    fn inputmode(&self )-> InputMode; 
 }
 
 // Implement common SeqStream trait for all
@@ -205,6 +209,11 @@ impl<R: io::Read> SeqRecordProducer for FastXReader<R>{
     fn next(&mut self) -> Option<SeqRecord>{
         self.next()
     }
+
+    fn inputmode(&self)-> InputMode{
+        self.inputmode
+    } 
+
 }
 
 pub struct DynamicFastXReader {
@@ -254,6 +263,10 @@ impl DynamicFastXReader {
     pub fn read_next(&mut self) -> Option<SeqRecord>{
         return self.stream.next()
     }
+
+    pub fn inputmode(&self)-> InputMode{
+        self.stream.inputmode()
+    } 
 
 }
 
@@ -415,8 +428,8 @@ mod tests {
 }
 
 pub struct FastXWriter<W: Write>{
-    outputmode: OutputMode,
-    output: BufWriter<W>,
+    pub outputmode: OutputMode,
+    pub output: BufWriter<W>,
 }
 
 impl<W: Write> FastXWriter<W>{

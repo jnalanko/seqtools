@@ -19,6 +19,7 @@ path = "src/revcomp.rs"
 flate2 = "1.0.24"
 clap = { version = "4.0.26", features = ["derive"] }
 clap_complete = "4.0.6"
+rand = "*"
 my_seqio = { path = "my_seqio" }
 
 [build-dependencies]

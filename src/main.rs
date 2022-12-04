@@ -1,7 +1,8 @@
 extern crate flate2;
 
-use my_seqio::{DynamicFastXReader};
-use std::io::{Write};
+use my_seqio::{DynamicFastXReader,FastXWriter};
+use std::io::{Write,BufWriter};
+use rand::Rng;
 
 mod cli;
 
@@ -52,6 +53,24 @@ fn print_length_histogram(reader: &mut DynamicFastXReader, min: i64, max: i64, n
     }
 }
 
+// Writing to just stdout for now
+fn random_subsample(input: &mut DynamicFastXReader){
+    let output = FastXWriter::<std::io::Stdout>{
+        outputmode: match input.inputmode(){
+            my_seqio::InputMode::FASTA => my_seqio::OutputMode::FASTA,
+            my_seqio::InputMode::FASTQ => my_seqio::OutputMode::FASTQ,
+        },
+        output: BufWriter::<std::io::Stdout>::new(std::io::stdout()),
+    };
+
+    let v: Vec<(u64, f64)> = vec![]; // Random number from 0 to 1, seq id
+    let mut rng = rand::thread_rng();
+    while let Some(rec) = input.read_next(){
+        let r = rng.gen_range(0.0..1.0);
+        dbg!(r);
+    }
+}
+
 enum ReaderInput{
     FromFile{filename: String},
     FromStdIn{is_fastq: bool, is_gzipped: bool} // Is fasta if not fastq
@@ -98,6 +117,9 @@ fn main() {
         }
         Some(("stats", _)) => { 
             print_stats(&mut reader);
+        }
+        Some(("subsample", _)) => { 
+            random_subsample(&mut reader);
         }
         _ => {}
     };
