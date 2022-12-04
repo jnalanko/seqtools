@@ -482,7 +482,7 @@ impl DynamicFastXWriter{
 
     // Write to a file
     pub fn new_to_file(filename: &String) -> Self {
-        let output = File::open(&filename).unwrap();
+        let output = File::create(&filename).unwrap();
         match figure_out_file_format(&filename.as_str()){
             (FileType::FASTQ, true) =>{
                 let gzencoder = GzEncoder::<File>::new(output, Compression::fast());
