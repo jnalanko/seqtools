@@ -2,11 +2,12 @@
 name = "seq_tools"
 version = "0.1.0"
 edition = "2021"
+build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [[bin]]
-name = "main"
+name = "seq_tools"
 path = "src/main.rs"
 
 [[bin]]
@@ -17,4 +18,12 @@ path = "src/revcomp.rs"
 
 flate2 = "1.0.24"
 clap = { version = "4.0.26", features = ["derive"] }
+clap_complete = "4.0.6"
+my_seqio = { path = "my_seqio" }
+
+[build-dependencies]
+
+flate2 = "1.0.24"
+clap = { version = "4.0.26", features = ["derive"] }
+clap_complete = "4.0.6"
 my_seqio = { path = "my_seqio" }
