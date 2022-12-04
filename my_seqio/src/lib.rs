@@ -2,12 +2,18 @@
 use std::io;
 use std::io::BufReader;
 use std::io::BufRead;
+use std::io::BufWriter;
+use std::io::Write;
 use std::fmt;
 use std::str;
 use std::fs::File;
 use flate2::read::MultiGzDecoder;
 
 pub enum InputMode{
+    FASTA,
+    FASTQ,
+}
+pub enum OutputMode{
     FASTA,
     FASTQ,
 }
@@ -22,11 +28,54 @@ pub struct FastXReader<R: io::Read>{
     fasta_temp_buf: Vec<u8>, // Stores the fasta header read in the previous iteration
 }
 
+pub trait Record{
+    fn head(&self) -> &[u8];
+    fn seq(&self) -> &[u8];
+    fn qual(&self) -> Option<&[u8]>;
+}
+
 #[derive(Debug)]
 pub struct SeqRecord<'a>{
     pub head: &'a [u8],    
     pub seq: &'a [u8],
     pub qual: Option<&'a [u8]>, // If FASTA, this is None
+}
+
+#[derive(Debug)]
+pub struct OwnedSeqRecord{
+    pub head: Vec<u8>,    
+    pub seq: Vec<u8>,
+    pub qual: Option<Vec<u8>>, // If FASTA, this is None
+}
+
+impl<'a> Record for SeqRecord<'a>{
+    fn head(&self) -> &[u8]{self.head}
+    fn seq(&self) -> &[u8]{self.seq}
+    fn qual(&self) -> Option<&[u8]>{self.qual}
+}
+
+impl<'a> Record for OwnedSeqRecord{
+    fn head(&self) -> &[u8]{self.head.as_slice()}
+    fn seq(&self) -> &[u8]{self.seq.as_slice()}
+    fn qual(&self) -> Option<&[u8]>{
+        match &self.qual{
+            Some(q) => return Some(q.as_slice()),
+            None => None,
+        }
+    }
+}
+
+impl<'a> SeqRecord<'a>{
+    pub fn to_owned(&self) -> OwnedSeqRecord{
+        OwnedSeqRecord { 
+            head: self.head.to_vec(), 
+            seq: self.seq.to_vec(), 
+            qual: match self.qual {
+                Some(q) => Some(q.to_vec()), 
+                None => None
+            }
+        }
+    }
 }
 
 impl<'a> fmt::Display for SeqRecord<'a> {
@@ -306,15 +355,29 @@ mod tests {
     }
 }
 
+pub struct FastaWriter<W: Write>{
+    outputmode: OutputMode,
+    output: BufWriter<W>,
+}
 
-/*
-fn main() {
-    let input = BufReader::new(File::open(&"reads_trunc.fastq").unwrap());
-    let mut reader = FastXReader::new(input, InputMode::FASTA);
-    loop{
-        if let Some(record) = reader.next(){
-            println!("{}", record);
-        } else { break };
+impl<W: Write> FastaWriter<W>{
+    pub fn write<Rec: Record>(&mut self, rec: Rec){
+        match &self.outputmode{
+            OutputMode::FASTA => {
+                self.output.write(b">").expect("Error writing output");
+                self.output.write(rec.head()).expect("Error writing output");
+                self.output.write(b"\n").expect("Error writing output");
+                self.output.write(rec.seq()).expect("Error writing output");
+                self.output.write(b"\n").expect("Error writing output");
+            }
+            OutputMode::FASTQ => {
+                self.output.write(b"@").expect("Error writing output");
+                self.output.write(rec.head()).expect("Error writing output");
+                self.output.write(b"\n").expect("Error writing output");
+                self.output.write(rec.seq()).expect("Error writing output");
+                self.output.write(b"\n+\n").expect("Error writing output");
+                self.output.write(rec.qual().expect("Quality values missing")).expect("Error writing output");                
+            }
+        }
     }
 }
-*/
