@@ -260,7 +260,7 @@ impl DynamicFastXReader {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::cmp::min;
+    use std::{cmp::min, process::Output};
 
     #[test]
     fn fastq() {
@@ -341,6 +341,7 @@ mod tests {
         let input = BufReader::new(fasta_data.as_bytes());
         let mut reader = FastXReader::new(input, InputMode::FASTA);
 
+        let mut owned_records: Vec<OwnedSeqRecord> = vec![];
         let mut seqs_read = 0;
         loop{
             if let Some(record) = reader.next(){
@@ -348,10 +349,23 @@ mod tests {
                 assert_eq!(record.head, headers[seqs_read].as_bytes());
                 assert_eq!(record.seq, seqs[seqs_read].as_bytes());
                 assert_eq!(record.qual, None);
+                owned_records.push(record.to_owned());
                 seqs_read += 1;
             } else { break };
         }
         assert_eq!(seqs_read, n_seqs);
+
+        // Test writer
+        let out_buf: Vec<u8> = vec![];
+        let mut writer = FastXWriter::<Vec<u8>>::new(out_buf, OutputMode::FASTA);
+
+        for rec in owned_records.iter() {
+            writer.write(rec);
+        }
+
+        writer.flush();
+        dbg!(writer.output.into_inner().unwrap());
+
     }
 }
 
@@ -361,7 +375,7 @@ pub struct FastXWriter<W: Write>{
 }
 
 impl<W: Write> FastXWriter<W>{
-    pub fn write<Rec: Record>(&mut self, rec: Rec){
+    pub fn write<Rec: Record>(&mut self, rec: &Rec){
         match &self.outputmode{
             OutputMode::FASTA => {
                 self.output.write(b">").expect("Error writing output");
@@ -386,5 +400,9 @@ impl<W: Write> FastXWriter<W>{
             outputmode: mode,
             output: BufWriter::<W>::new(output)
         }
+    }
+
+    pub fn flush(&mut self){
+        self.output.flush().expect("Error flushing output stream");
     }
 }
