@@ -137,12 +137,12 @@ fn main() {
         Some(("stats", _)) => { 
             print_stats(&mut reader);
         }
-        Some(("subsample", _)) => {
+        Some(("subsample", sub_matches)) => {
             // Todo: we have to create two readers here because we need
             // to pass over the data twice. Make this part smarter.
             let mut input1 = DynamicFastXReader::new_from_file(filename.unwrap());
             let mut input2 = DynamicFastXReader::new_from_file(filename.unwrap());
-            let frac: f64 = matches.get_one::<String>("fraction").unwrap().parse::<f64>().unwrap();
+            let frac: f64 = sub_matches.get_one::<String>("fraction").unwrap().parse::<f64>().unwrap();
             random_subsample(&mut input1, &mut input2, frac);
         }
         _ => {}
