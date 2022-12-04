@@ -80,10 +80,7 @@ fn random_subsample(input1: &mut DynamicFastXReader, input2: &mut DynamicFastXRe
     }
 
     let mut output = FastXWriter::<std::io::Stdout>{
-        outputmode: match input1.inputmode(){
-            my_seqio::InputMode::FASTA => my_seqio::OutputMode::FASTA,
-            my_seqio::InputMode::FASTQ => my_seqio::OutputMode::FASTQ,
-        },
+        outputmode: input1.inputmode(),
         output: BufWriter::<std::io::Stdout>::new(std::io::stdout()),
     };
 

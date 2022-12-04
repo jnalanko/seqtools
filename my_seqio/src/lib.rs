@@ -15,23 +15,8 @@ pub enum FileType{
     FASTQ,    
 }
 
-
-// TODO: replace uses of this enum with FileType
-#[derive(Copy, Clone)]
-pub enum InputMode{
-    FASTA,
-    FASTQ,
-}
-
-// TODO: replace uses of this enum with FileType
-#[derive(Copy, Clone)]
-pub enum OutputMode{
-    FASTA,
-    FASTQ,
-}
-
 pub struct FastXReader<R: io::Read>{
-    inputmode: InputMode,
+    inputmode: FileType,
     input: BufReader<R>,
     seq_buf: Vec<u8>,
     head_buf: Vec<u8>,
@@ -107,7 +92,7 @@ impl<'a> fmt::Display for SeqRecord<'a> {
 
 impl<R: io::Read> FastXReader<R>{
     pub fn next(&mut self) -> Option<SeqRecord>{
-        if matches!(self.inputmode, InputMode::FASTQ){
+        if matches!(self.inputmode, FileType::FASTQ){
             // FASTQ format
 
             self.seq_buf.clear();
@@ -194,7 +179,7 @@ impl<R: io::Read> FastXReader<R>{
         }
     }
 
-    pub fn new(input: R, mode: InputMode) -> Self{
+    pub fn new(input: R, mode: FileType) -> Self{
         FastXReader{inputmode: mode,
                     input: BufReader::new(input),
                     seq_buf: Vec::<u8>::new(),
@@ -209,7 +194,7 @@ impl<R: io::Read> FastXReader<R>{
 // Trait for a stream returning SeqRecord objects.
 pub trait SeqRecordProducer {
     fn next(&mut self) -> Option<SeqRecord>;
-    fn inputmode(&self )-> InputMode; 
+    fn inputmode(&self )-> FileType; 
 }
 
 // Implement common SeqStream trait for all
@@ -219,7 +204,7 @@ impl<R: io::Read> SeqRecordProducer for FastXReader<R>{
         self.next()
     }
 
-    fn inputmode(&self)-> InputMode{
+    fn inputmode(&self)-> FileType{
         self.inputmode
     } 
 
@@ -252,7 +237,7 @@ impl DynamicFastXReader {
 
     // Need to constrain + 'static because boxed things always need to have a static
     // lifetime.
-    pub fn new_from_input_stream<R: io::Read + 'static>(r: R, mode: InputMode) -> Self{
+    pub fn new_from_input_stream<R: io::Read + 'static>(r: R, mode: FileType) -> Self{
         let reader = FastXReader::<R>::new(r, mode);
         DynamicFastXReader {stream: Box::new(reader)}
     }
@@ -263,24 +248,24 @@ impl DynamicFastXReader {
         match figure_out_file_format(&filename.as_str()){
             (FileType::FASTQ, true) =>{
                 let gzdecoder = MultiGzDecoder::<File>::new(input);
-                Self::new_from_input_stream(gzdecoder, InputMode::FASTQ)
+                Self::new_from_input_stream(gzdecoder, FileType::FASTQ)
             },
             (FileType::FASTQ, false) => {
-                Self::new_from_input_stream(input, InputMode::FASTQ)
+                Self::new_from_input_stream(input, FileType::FASTQ)
             },
             (FileType::FASTA, true) => {
                 let gzdecoder = MultiGzDecoder::<File>::new(input);
-                Self::new_from_input_stream(gzdecoder, InputMode::FASTA)
+                Self::new_from_input_stream(gzdecoder, FileType::FASTA)
             },
             (FileType::FASTA, false) => {
-                Self::new_from_input_stream(input, InputMode::FASTA)
+                Self::new_from_input_stream(input, FileType::FASTA)
             },
         }
     }
 
     // New from stdin
     pub fn new_from_stdin(fastq: bool, gzipped: bool) -> Self {
-        let mode = if fastq {InputMode::FASTQ} else {InputMode::FASTA};
+        let mode = if fastq {FileType::FASTQ} else {FileType::FASTA};
         if gzipped {
             Self::new_from_input_stream(MultiGzDecoder::new(io::stdin()), mode)
         } else {
@@ -293,7 +278,7 @@ impl DynamicFastXReader {
         return self.stream.next()
     }
 
-    pub fn inputmode(&self)-> InputMode{
+    pub fn inputmode(&self)-> FileType{
         self.stream.inputmode()
     } 
 
@@ -331,7 +316,7 @@ mod tests {
         }
 
         let input = BufReader::new(fastq_data.as_bytes());
-        let mut reader = FastXReader::new(input, InputMode::FASTQ);
+        let mut reader = FastXReader::new(input, FileType::FASTQ);
 
         let mut owned_records: Vec<OwnedSeqRecord> = vec![];
         let mut seqs_read = 0;
@@ -359,7 +344,7 @@ mod tests {
 
         // Read the records back from written data and compare to originals.
 
-        let mut reader2 = FastXReader::new(written_data.as_slice(), InputMode::FASTQ);
+        let mut reader2 = FastXReader::new(written_data.as_slice(), FileType::FASTQ);
         let mut seqs_read2 = 0;
         loop{
             if let Some(record) = reader2.next(){
@@ -409,7 +394,7 @@ mod tests {
         dbg!(&fasta_data);
 
         let input = BufReader::new(fasta_data.as_bytes());
-        let mut reader = FastXReader::new(input, InputMode::FASTA);
+        let mut reader = FastXReader::new(input, FileType::FASTA);
 
         let mut owned_records: Vec<OwnedSeqRecord> = vec![];
         let mut seqs_read = 0;
@@ -440,7 +425,7 @@ mod tests {
         // because the length of FASTA sequence lines is not fixed.
         // Read the records back from written data and compare to originals.
 
-        let mut reader2 = FastXReader::new(written_data.as_slice(), InputMode::FASTA);
+        let mut reader2 = FastXReader::new(written_data.as_slice(), FileType::FASTA);
         let mut seqs_read2 = 0;
         loop{
             if let Some(record) = reader2.next(){
@@ -468,21 +453,21 @@ mod tests {
 }
 
 pub struct FastXWriter<W: Write>{
-    pub outputmode: OutputMode,
+    pub outputmode: FileType,
     pub output: BufWriter<W>,
 }
 
 impl<W: Write> FastXWriter<W>{
     pub fn write<Rec: Record>(&mut self, rec: &Rec){
         match &self.outputmode{
-            OutputMode::FASTA => {
+            FileType::FASTA => {
                 self.output.write(b">").expect("Error writing output");
                 self.output.write(rec.head()).expect("Error writing output");
                 self.output.write(b"\n").expect("Error writing output");
                 self.output.write(rec.seq()).expect("Error writing output");
                 self.output.write(b"\n").expect("Error writing output");
             }
-            OutputMode::FASTQ => {
+            FileType::FASTQ => {
                 self.output.write(b"@").expect("Error writing output");
                 self.output.write(rec.head()).expect("Error writing output");
                 self.output.write(b"\n").expect("Error writing output");
@@ -494,7 +479,7 @@ impl<W: Write> FastXWriter<W>{
         }
     }
 
-    pub fn new(output: W, mode: OutputMode) -> Self{
+    pub fn new(output: W, mode: FileType) -> Self{
         Self{
             outputmode: mode,
             output: BufWriter::<W>::new(output)
