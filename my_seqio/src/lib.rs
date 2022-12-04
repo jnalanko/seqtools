@@ -10,11 +10,20 @@ use std::fs::File;
 use flate2::read::MultiGzDecoder;
 
 #[derive(Copy, Clone)]
+pub enum FileType{
+    FASTA,
+    FASTQ,    
+}
+
+
+// TODO: replace uses of this enum with FileType
+#[derive(Copy, Clone)]
 pub enum InputMode{
     FASTA,
     FASTQ,
 }
 
+// TODO: replace uses of this enum with FileType
 #[derive(Copy, Clone)]
 pub enum OutputMode{
     FASTA,
@@ -218,6 +227,23 @@ impl<R: io::Read> SeqRecordProducer for FastXReader<R>{
 
 pub struct DynamicFastXReader {
     stream: Box<dyn SeqRecordProducer>,
+}
+
+// Returns (file type, is_gzipped)
+fn figure_out_file_format(filename: &str) -> (FileType, bool){
+    let is_gzipped = filename.ends_with(".gz");
+    let filename = if is_gzipped{
+        &filename[0 .. filename.len()-3] // Drop the .gz suffix
+    } else {&filename};
+    let fasta_extensions = vec![".fasta", ".fna", ".ffn", ".faa", ".frn", ".fa"];
+    let fastq_extensions = vec![".fastq", ".fq"];
+    if fasta_extensions.iter().any(|&suffix| filename.ends_with(suffix)){
+        return (FileType::FASTA, is_gzipped);
+    } else if fastq_extensions.iter().any(|&suffix| filename.ends_with(suffix)){
+        return (FileType::FASTQ, is_gzipped);
+    } else{
+        panic!("Unkown file extension: {}", filename);
+    }
 }
 
 // A class that contains a dynamic trait object for different
@@ -424,6 +450,17 @@ mod tests {
         }
         assert_eq!(seqs_read2, n_seqs);
 
+    }
+
+    #[test]
+    fn test_figure_out_file_format(){
+        assert!(match figure_out_file_format("aa.fna") {(FileType::FASTA,false) => true, _ => false});
+        assert!(match figure_out_file_format("aa.fq") {(FileType::FASTQ,false) => true, _ => false});
+        assert!(match figure_out_file_format("bbb.fna.gz") {(FileType::FASTA,true) => true, _ => false});
+        assert!(match figure_out_file_format("cc.fna.gz") {(FileType::FASTA,true) => true, _ => false});
+        assert!(match figure_out_file_format(".fna.gz") {(FileType::FASTA,true) => true, _ => false});
+        assert!(match figure_out_file_format(".fasta") {(FileType::FASTA,false) => true, _ => false});
+        assert!(match figure_out_file_format(".fq") {(FileType::FASTQ,false) => true, _ => false});
     }
 }
 
