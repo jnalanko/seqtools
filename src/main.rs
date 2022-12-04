@@ -59,7 +59,7 @@ impl SeqReader {
     // New from stdin
     pub fn new_from_stdin(fastq: bool, gzipped: bool) -> Self {
         let mode = if(fastq) {InputMode::FASTQ} else {InputMode::FASTA};
-        if fastq {
+        if gzipped {
             SeqReader::new_from_input_stream(GzDecoder::new(io::stdin()), mode)
         } else {
             SeqReader::new_from_input_stream(io::stdin(), mode)
@@ -72,28 +72,6 @@ impl SeqReader {
     }
 
 }
-
-/*
-fn print_all_to_stdout(reader: &mut SeqReader){
-    loop{
-        let next = reader.read_next();
-        match next {
-            Some(rec) => {
-                std::io::stdout().write_all(b"Header: ").ok();
-                std::io::stdout().write_all(rec.header.as_slice()).ok();
-                std::io::stdout().write_all(b"\n").ok();
-                std::io::stdout().write_all(b"Sequence: ").ok();
-                std::io::stdout().write_all(rec.seq.as_slice()).ok();
-                std::io::stdout().write_all(b"\n").ok();
-                std::io::stdout().write_all(b"Quality: ").ok();
-                std::io::stdout().write_all(match rec.qual {Some(x) => x, None => b"Not available".to_vec()}.as_slice()).ok();
-                std::io::stdout().write_all(b"\n").ok();
-            }
-            None => break
-        }
-    }
-}
-*/
 
 fn print_stats(reader: &mut SeqReader){
     let mut total_length: usize = 0;
