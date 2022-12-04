@@ -355,12 +355,12 @@ mod tests {
     }
 }
 
-pub struct FastaWriter<W: Write>{
+pub struct FastXWriter<W: Write>{
     outputmode: OutputMode,
     output: BufWriter<W>,
 }
 
-impl<W: Write> FastaWriter<W>{
+impl<W: Write> FastXWriter<W>{
     pub fn write<Rec: Record>(&mut self, rec: Rec){
         match &self.outputmode{
             OutputMode::FASTA => {
@@ -376,8 +376,12 @@ impl<W: Write> FastaWriter<W>{
                 self.output.write(b"\n").expect("Error writing output");
                 self.output.write(rec.seq()).expect("Error writing output");
                 self.output.write(b"\n+\n").expect("Error writing output");
-                self.output.write(rec.qual().expect("Quality values missing")).expect("Error writing output");                
+                self.output.write(rec.qual().expect("Quality values missing")).expect("Error writing output");
             }
         }
     }
+
+    pub fn new(output: W, mode: OutputMode) -> Self{
+        Self{outputmode: mode,
+             output: BufWriter::<W>::new(output)}
 }
