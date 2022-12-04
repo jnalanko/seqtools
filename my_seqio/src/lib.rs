@@ -1,5 +1,4 @@
 
-use std::fs::FileType;
 use std::io;
 use std::io::BufReader;
 use std::io::BufRead;
@@ -267,8 +266,7 @@ impl DynamicFastXReader {
     }
 
     // New from stdin
-    pub fn new_from_stdin(fastq: bool, gzipped: bool) -> Self {
-        let mode = if fastq {FileType::FASTQ} else {FileType::FASTA};
+    pub fn new_from_stdin(mode: FileType, gzipped: bool) -> Self {
         if gzipped {
             Self::new_from_input_stream(MultiGzDecoder::new(io::stdin()), mode)
         } else {
@@ -472,11 +470,8 @@ pub struct DynamicFastXWriter {
 }
 
 impl DynamicFastXWriter{
-    pub fn write<Rec: Record>(&mut self, rec: &Rec){
-        self.stream.write(rec.head(), rec.seq(), rec.qual());
-    }
 
-    pub fn new_to_stream<W: Write>(&self, stream: W, mode: FileType){
+    pub fn new_to_stream<W: Write + 'static>(stream: W, mode: FileType) -> Self{
         let writer = FastXWriter::<W>::new(stream, mode);
         DynamicFastXWriter {stream: Box::new(writer)}
     }
@@ -487,17 +482,17 @@ impl DynamicFastXWriter{
         match figure_out_file_format(&filename.as_str()){
             (FileType::FASTQ, true) =>{
                 let gzencoder = GzEncoder::<File>::new(output, Compression::fast());
-                Self::new_from_input_stream(gzencoder, FileType::FASTQ)
+                Self::new_to_stream(gzencoder, FileType::FASTQ)
             },
             (FileType::FASTQ, false) => {
-                Self::new_from_input_stream(output, FileType::FASTQ)
+                Self::new_to_stream(output, FileType::FASTQ)
             },
             (FileType::FASTA, true) => {
                 let gzencoder = GzEncoder::<File>::new(output, Compression::fast());
-                Self::new_from_input_stream(gzencoder, FileType::FASTA)
+                Self::new_to_stream(gzencoder, FileType::FASTA)
             },
             (FileType::FASTA, false) => {
-                Self::new_from_input_stream(output, FileType::FASTA)
+                Self::new_to_stream(output, FileType::FASTA)
             },
         }
     }
@@ -534,5 +529,13 @@ impl<W: Write> FastXWriter<W>{
 
     pub fn flush(&mut self){
         self.output.flush().expect("Error flushing output stream");
+    }
+}
+
+
+impl<W: Write> SeqRecordWriter for FastXWriter<W>{
+    fn write(&mut self, head: &[u8], seq: &[u8], qual: Option<&[u8]>){
+        let rec = SeqRecord{head, seq, qual};
+        self.write(&rec);
     }
 }

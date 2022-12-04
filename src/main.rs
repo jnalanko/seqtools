@@ -1,6 +1,6 @@
 extern crate flate2;
 
-use my_seqio::{DynamicFastXReader,FastXWriter, FastXReader};
+use my_seqio::{DynamicFastXReader,FastXWriter, FastXReader, FileType};
 use std::io::{Write,BufWriter};
 use rand::Rng;
 
@@ -114,7 +114,8 @@ fn get_reader(args: &clap::ArgMatches) -> DynamicFastXReader{
                 "Error: must give --fasta or --fastq and possibly --gzip if reading from stdin."
             );
         };
-        DynamicFastXReader::new_from_stdin(is_fastq, is_gzip)
+        let filetype = if(is_fastq) {my_seqio::FileType::FASTQ} else {my_seqio::FileType::FASTA};
+        DynamicFastXReader::new_from_stdin(filetype, is_gzip)
     }
 }
 
