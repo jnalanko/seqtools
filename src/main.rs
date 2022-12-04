@@ -1,6 +1,6 @@
 extern crate flate2;
 
-use my_seqio::{DynamicFastXReader,FastXWriter};
+use my_seqio::{DynamicFastXReader,FastXWriter, FastXReader};
 use std::io::{Write,BufWriter};
 use rand::Rng;
 
@@ -53,27 +53,38 @@ fn print_length_histogram(reader: &mut DynamicFastXReader, min: i64, max: i64, n
     }
 }
 
-// Writing to just stdout for now
-fn random_subsample(input: &mut DynamicFastXReader){
-    let output = FastXWriter::<std::io::Stdout>{
-        outputmode: match input.inputmode(){
+// Needs two input reader to the same data because needs
+// to pass over the data twice.
+fn random_subsample(input1: &mut DynamicFastXReader, input2: &mut DynamicFastXReader, fraction: f64){
+    let mut v: Vec<(f64, u64)> = vec![]; // Random number from 0 to 1, seq id
+    let mut rng = rand::thread_rng();
+    let mut seq_idx = 0u64;
+    while let Some(rec) = input1.read_next(){
+        let r = rng.gen_range(0.0..1.0);
+        v.push((r, seq_idx));
+        seq_idx += 1;
+    }
+
+    v.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+    dbg!(&v);
+
+    let mut output = FastXWriter::<std::io::Stdout>{
+        outputmode: match input1.inputmode(){
             my_seqio::InputMode::FASTA => my_seqio::OutputMode::FASTA,
             my_seqio::InputMode::FASTQ => my_seqio::OutputMode::FASTQ,
         },
         output: BufWriter::<std::io::Stdout>::new(std::io::stdout()),
     };
 
-    let mut v: Vec<(f64, u64)> = vec![]; // Random number from 0 to 1, seq id
-    let mut rng = rand::thread_rng();
-    let mut seq_idx = 0u64;
-    while let Some(rec) = input.read_next(){
-        let r = rng.gen_range(0.0..1.0);
-        v.push((r, seq_idx));
-        seq_idx += 1;
+    let howmany: usize = (v.len() as f64 * fraction) as usize;
+    while let Some(rec) = input1.read_next(){
+        if howmany > 0{
+            output.write(&rec);
+        } else {
+            break;
+        }
     }
-    v.sort_by(|a, b| a.partial_cmp(b).unwrap());
-
-    dbg!(v);
 }
 
 enum ReaderInput{
@@ -92,8 +103,11 @@ fn main() {
 
     let matches = cli::build_cli().get_matches();
 
+    let filename = matches.get_one::<String>("input");
+
     // Flag consistency check
-    let mut reader = if let Some(infile) = matches.get_one::<String>("input") {
+    let mut reader = if let Some(infile) = filename {
+        // From file
         get_reader(ReaderInput::FromFile{filename: infile.clone()})
     } else {
         // From stdin
@@ -123,8 +137,13 @@ fn main() {
         Some(("stats", _)) => { 
             print_stats(&mut reader);
         }
-        Some(("subsample", _)) => { 
-            random_subsample(&mut reader);
+        Some(("subsample", _)) => {
+            // Todo: we have to create two readers here because we need
+            // to pass over the data twice. Make this part smarter.
+            let mut input1 = DynamicFastXReader::new_from_file(filename.unwrap());
+            let mut input2 = DynamicFastXReader::new_from_file(filename.unwrap());
+            let frac: f64 = matches.get_one::<String>("fraction").unwrap().parse::<f64>().unwrap();
+            random_subsample(&mut input1, &mut input2, frac);
         }
         _ => {}
     };
