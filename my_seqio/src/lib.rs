@@ -1,4 +1,5 @@
 
+use std::fs::FileType;
 use std::io;
 use std::io::BufReader;
 use std::io::BufRead;
@@ -7,12 +8,14 @@ use std::io::Write;
 use std::fmt;
 use std::str;
 use std::fs::File;
+use flate2::Compression;
+use flate2::write::GzEncoder; // todo: flate2::bufwrite?
 use flate2::read::MultiGzDecoder;
 
 #[derive(Copy, Clone)]
 pub enum FileType{
     FASTA,
-    FASTQ,    
+    FASTQ,
 }
 
 pub struct FastXReader<R: io::Read>{
@@ -455,6 +458,49 @@ mod tests {
 pub struct FastXWriter<W: Write>{
     pub outputmode: FileType,
     pub output: BufWriter<W>,
+}
+
+pub trait SeqRecordWriter{
+    // Can not take a Record trait object because then we can't
+    // for some reason put a SeqRecordWriter into a box.
+    // So we take the header, sequence and quality values as slices.
+    fn write(&mut self, head: &[u8], seq: &[u8], qual: Option<&[u8]>);
+}
+
+pub struct DynamicFastXWriter {
+    stream: Box<dyn SeqRecordWriter>,
+}
+
+impl DynamicFastXWriter{
+    pub fn write<Rec: Record>(&mut self, rec: &Rec){
+        self.stream.write(rec.head(), rec.seq(), rec.qual());
+    }
+
+    pub fn new_to_stream<W: Write>(&self, stream: W, mode: FileType){
+        let writer = FastXWriter::<W>::new(stream, mode);
+        DynamicFastXWriter {stream: Box::new(writer)}
+    }
+
+    // Write to a file
+    pub fn new_to_file(filename: &String) -> Self {
+        let output = File::open(&filename).unwrap();
+        match figure_out_file_format(&filename.as_str()){
+            (FileType::FASTQ, true) =>{
+                let gzencoder = GzEncoder::<File>::new(output, Compression::fast());
+                Self::new_from_input_stream(gzencoder, FileType::FASTQ)
+            },
+            (FileType::FASTQ, false) => {
+                Self::new_from_input_stream(output, FileType::FASTQ)
+            },
+            (FileType::FASTA, true) => {
+                let gzencoder = GzEncoder::<File>::new(output, Compression::fast());
+                Self::new_from_input_stream(gzencoder, FileType::FASTA)
+            },
+            (FileType::FASTA, false) => {
+                Self::new_from_input_stream(output, FileType::FASTA)
+            },
+        }
+    }
 }
 
 impl<W: Write> FastXWriter<W>{
