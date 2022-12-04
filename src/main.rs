@@ -59,11 +59,18 @@ fn random_subsample(input1: &mut DynamicFastXReader, input2: &mut DynamicFastXRe
     let mut v: Vec<(f64, usize)> = vec![]; // Random number from 0 to 1, seq id
     let mut rng = rand::thread_rng();
     let mut seq_idx = 0;
+
+    eprintln!("Counting the number of sequences...");
     while let Some(_) = input1.read_next(){
         let r = rng.gen_range(0.0..1.0);
         v.push((r, seq_idx));
         seq_idx += 1;
     }
+
+    eprintln!("{} sequences found", seq_idx);
+
+    let howmany: usize = (v.len() as f64 * fraction) as usize;
+    eprintln!("Subsampling {}% ({} sequences...)", fraction*100.0, howmany);
 
     v.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
@@ -89,11 +96,8 @@ fn random_subsample(input1: &mut DynamicFastXReader, input2: &mut DynamicFastXRe
         }
         seq_idx += 1;
     }
-}
 
-enum ReaderInput{
-    FromFile{filename: String},
-    FromStdIn{is_fastq: bool, is_gzipped: bool} // Is fasta if not fastq
+    eprintln!("Done...");
 }
 
 fn get_reader(args: &clap::ArgMatches) -> DynamicFastXReader{
