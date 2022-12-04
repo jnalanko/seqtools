@@ -1,6 +1,6 @@
 extern crate flate2;
 
-use my_seqio::{DynamicFastXReader,FastXWriter, FastXReader, FileType};
+use my_seqio::{DynamicFastXReader, FastXReader, DynamicFastXWriter, FastXWriter};
 use std::io::{Write,BufWriter};
 use rand::Rng;
 
@@ -103,21 +103,46 @@ fn get_reader(args: &clap::ArgMatches) -> DynamicFastXReader{
         DynamicFastXReader::new_from_file(&infile)
     } else {
         // From stdin
-        let is_fasta = args.get_flag("fasta");
-        let is_fastq = args.get_flag("fastq");
-        let is_gzip = args.get_flag("gzip");
+        let is_fasta = args.get_flag("fasta-in");
+        let is_fastq = args.get_flag("fastq-in");
+        let is_gzip = args.get_flag("gzip-in");
         if is_fasta && is_fastq {
             panic!("Error: can't give both fasta and fastq flags.");
         }
         if !is_fasta && !is_fastq {
             panic!(
-                "Error: must give --fasta or --fastq and possibly --gzip if reading from stdin."
+                "Error: must give --fasta-in or --fastq-in and possibly --gzip if reading from stdin."
             );
         };
         let filetype = if is_fastq {my_seqio::FileType::FASTQ} else {my_seqio::FileType::FASTA};
         DynamicFastXReader::new_from_stdin(filetype, is_gzip)
     }
 }
+
+fn get_writer(args: &clap::ArgMatches) -> DynamicFastXWriter{
+    let filename = args.get_one::<String>("output");
+
+    if let Some(outfile) = filename {
+        // From file
+        DynamicFastXWriter::new_to_file(&outfile)
+    } else {
+        // To stdout
+        let is_fasta = args.get_flag("fasta-out");
+        let is_fastq = args.get_flag("fastq-out");
+        let is_gzip = args.get_flag("gzip-out");
+        if is_fasta && is_fastq {
+            panic!("Error: can't give both fasta and fastq flags.");
+        }
+        if !is_fasta && !is_fastq {
+            panic!(
+                "Error: must give --fasta-out or --fastq-out and possibly --gzip-out if writing to stdout."
+            );
+        };
+        let filetype = if is_fastq {my_seqio::FileType::FASTQ} else {my_seqio::FileType::FASTA};
+        DynamicFastXWriter::new_to_stdout(filetype, is_gzip)
+    }
+}
+
 
 fn main() {
 

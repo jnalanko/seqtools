@@ -14,27 +14,45 @@ pub fn build_cli() -> Command {
                 .global(true),
         )
         .arg(
-            Arg::new("fasta")
-                .short('a')
-                .long("fasta")
+            Arg::new("fasta-in")
+                .long("fasta-in")
                 .action(ArgAction::SetTrue)
                 .help("Parse in fasta format")
                 .global(true),
         )
         .arg(
-            Arg::new("fastq")
-                .short('q')
-                .long("fastq")
+            Arg::new("fastq-in")
+                .long("fastq-in")
                 .action(ArgAction::SetTrue)
                 .help("Parse in fastq format")
                 .global(true),
         )
         .arg(
-            Arg::new("gzip")
-                .short('g')
+            Arg::new("gzip-in")
                 .long("gzip")
                 .action(ArgAction::SetTrue)
                 .help("Read gzipped input")
+                .global(true),
+        )
+        .arg(
+            Arg::new("fasta-out")
+                .long("fasta-out")
+                .action(ArgAction::SetTrue)
+                .help("Write in fasta format")
+                .global(true),
+        )
+        .arg(
+            Arg::new("fastq-out")
+                .long("fastq-out")
+                .action(ArgAction::SetTrue)
+                .help("Write in fastq format")
+                .global(true),
+        )
+        .arg(
+            Arg::new("gzip-out")
+                .long("gzip-out")
+                .action(ArgAction::SetTrue)
+                .help("Write as gzipped")
                 .global(true),
         )
         .subcommand(
