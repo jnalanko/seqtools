@@ -496,6 +496,14 @@ impl DynamicFastXWriter{
             },
         }
     }
+
+    pub fn new_to_stdout(mode: FileType, gzipped: bool) -> Self {
+        if gzipped {
+            Self::new_to_stream(GzEncoder::new(io::stdout(), Compression::fast()), mode)
+        } else {
+            Self::new_to_stream(io::stdout(), mode)
+        }
+    }
 }
 
 impl<W: Write> FastXWriter<W>{
