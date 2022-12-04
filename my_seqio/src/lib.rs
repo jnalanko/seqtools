@@ -260,18 +260,21 @@ impl DynamicFastXReader {
     // New from file
     pub fn new_from_file(filename: &String) -> Self {
         let input = File::open(&filename).unwrap();
-        if filename.ends_with("fastq.gz") {
-            let gzdecoder = MultiGzDecoder::<File>::new(input);
-            Self::new_from_input_stream(gzdecoder, InputMode::FASTQ)
-        } else if filename.ends_with("fastq") {
-            Self::new_from_input_stream(input, InputMode::FASTQ)
-        } else if filename.ends_with("fna.gz") {
-            let gzdecoder = MultiGzDecoder::<File>::new(input);
-            Self::new_from_input_stream(gzdecoder, InputMode::FASTA)
-        } else if filename.ends_with("fna") {
-            Self::new_from_input_stream(input, InputMode::FASTA)
-        } else {
-            panic!("Could not determine the format of file {}", filename);
+        match figure_out_file_format(&filename.as_str()){
+            (FileType::FASTQ, true) =>{
+                let gzdecoder = MultiGzDecoder::<File>::new(input);
+                Self::new_from_input_stream(gzdecoder, InputMode::FASTQ)
+            },
+            (FileType::FASTQ, false) => {
+                Self::new_from_input_stream(input, InputMode::FASTQ)
+            },
+            (FileType::FASTA, true) => {
+                let gzdecoder = MultiGzDecoder::<File>::new(input);
+                Self::new_from_input_stream(gzdecoder, InputMode::FASTA)
+            },
+            (FileType::FASTA, false) => {
+                Self::new_from_input_stream(input, InputMode::FASTA)
+            },
         }
     }
 
