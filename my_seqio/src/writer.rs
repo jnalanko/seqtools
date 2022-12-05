@@ -7,8 +7,8 @@ use flate2::Compression;
 use flate2::write::GzEncoder;
 
 use crate::FileType;
-use crate::SeqRecord;
-use crate::Record;
+use crate::record::SeqRecord;
+use crate::record::Record;
 use crate::figure_out_file_format;
 
 pub struct FastXWriter<W: Write>{

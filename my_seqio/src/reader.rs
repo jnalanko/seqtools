@@ -4,7 +4,7 @@ use std::io::BufReader;
 use std::io::BufRead;
 use flate2::read::MultiGzDecoder;
 use crate::FileType;
-use crate::SeqRecord;
+use crate::record::SeqRecord;
 use crate::figure_out_file_format;
 
 pub struct FastXReader<R: io::BufRead>{
