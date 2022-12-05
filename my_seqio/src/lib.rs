@@ -247,21 +247,12 @@ impl DynamicFastXReader {
     // New from file
     pub fn new_from_file(filename: &String) -> Self {
         let input = File::open(&filename).unwrap();
-        match figure_out_file_format(&filename.as_str()){
-            (FileType::FASTQ, true) =>{
-                let gzdecoder = MultiGzDecoder::<File>::new(input);
-                Self::new_from_input_stream(BufReader::new(gzdecoder), FileType::FASTQ)
-            },
-            (FileType::FASTQ, false) => {
-                Self::new_from_input_stream(BufReader::new(input), FileType::FASTQ)
-            },
-            (FileType::FASTA, true) => {
-                let gzdecoder = MultiGzDecoder::<File>::new(input);
-                Self::new_from_input_stream(BufReader::new(gzdecoder), FileType::FASTA)
-            },
-            (FileType::FASTA, false) => {
-                Self::new_from_input_stream(BufReader::new(input), FileType::FASTA)
-            },
+        let (fileformat, gzipped) = figure_out_file_format(&filename.as_str());
+        if gzipped{
+            let gzdecoder = MultiGzDecoder::<File>::new(input);
+            Self::new_from_input_stream(BufReader::new(gzdecoder), fileformat)
+        } else{
+            Self::new_from_input_stream(BufReader::new(input), fileformat)
         }
     }
 
