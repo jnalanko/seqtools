@@ -8,7 +8,7 @@ use std::fmt;
 use std::str;
 use std::fs::File;
 use flate2::Compression;
-use flate2::bufread::MultiGzDecoder;
+use flate2::read::MultiGzDecoder;
 use flate2::write::GzEncoder; // todo: flate2::bufwrite?
 
 #[derive(Copy, Clone)]
@@ -17,9 +17,9 @@ pub enum FileType{
     FASTQ,
 }
 
-pub struct FastXReader<R: io::Read>{
+pub struct FastXReader<R: io::BufRead>{
     filetype: FileType,
-    input: BufReader<R>,
+    input: R,
     seq_buf: Vec<u8>,
     head_buf: Vec<u8>,
     qual_buf: Vec<u8>,
@@ -92,7 +92,7 @@ impl<'a> fmt::Display for SeqRecord<'a> {
     }
 }
 
-impl<R: io::Read> FastXReader<R>{
+impl<R: io::BufRead> FastXReader<R>{
     pub fn next(&mut self) -> Option<SeqRecord>{
         if matches!(self.filetype, FileType::FASTQ){
             // FASTQ format
@@ -183,7 +183,7 @@ impl<R: io::Read> FastXReader<R>{
 
     pub fn new(input: R, filetype: FileType) -> Self{
         FastXReader{filetype: filetype,
-                    input: BufReader::new(input),
+                    input: input,
                     seq_buf: Vec::<u8>::new(),
                     head_buf: Vec::<u8>::new(),
                     qual_buf: Vec::<u8>::new(),
@@ -201,7 +201,7 @@ pub trait SeqRecordProducer {
 
 // Implement common SeqStream trait for all
 // FastXReaders over the generic parameter R.
-impl<R: io::Read> SeqRecordProducer for FastXReader<R>{
+impl<R: io::BufRead> SeqRecordProducer for FastXReader<R>{
     fn next(&mut self) -> Option<SeqRecord>{
         self.next()
     }
@@ -239,28 +239,28 @@ impl DynamicFastXReader {
 
     // Need to constrain + 'static because boxed things always need to have a static
     // lifetime.
-    pub fn new_from_input_stream<R: io::Read + 'static>(r: R, filetype: FileType) -> Self{
+    pub fn new_from_input_stream<R: io::BufRead + 'static>(r: R, filetype: FileType) -> Self{
         let reader = FastXReader::<R>::new(r, filetype);
         DynamicFastXReader {stream: Box::new(reader)}
     }
 
     // New from file
     pub fn new_from_file(filename: &String) -> Self {
-        let input = BufReader::new(File::open(&filename).unwrap());
+        let input = File::open(&filename).unwrap();
         match figure_out_file_format(&filename.as_str()){
             (FileType::FASTQ, true) =>{
-                let gzdecoder = MultiGzDecoder::<BufReader<File>>::new(input);
-                Self::new_from_input_stream(gzdecoder, FileType::FASTQ)
+                let gzdecoder = MultiGzDecoder::<File>::new(input);
+                Self::new_from_input_stream(BufReader::new(gzdecoder), FileType::FASTQ)
             },
             (FileType::FASTQ, false) => {
-                Self::new_from_input_stream(input, FileType::FASTQ)
+                Self::new_from_input_stream(BufReader::new(input), FileType::FASTQ)
             },
             (FileType::FASTA, true) => {
-                let gzdecoder = MultiGzDecoder::<BufReader<File>>::new(input);
-                Self::new_from_input_stream(gzdecoder, FileType::FASTA)
+                let gzdecoder = MultiGzDecoder::<File>::new(input);
+                Self::new_from_input_stream(BufReader::new(gzdecoder), FileType::FASTA)
             },
             (FileType::FASTA, false) => {
-                Self::new_from_input_stream(input, FileType::FASTA)
+                Self::new_from_input_stream(BufReader::new(input), FileType::FASTA)
             },
         }
     }
@@ -268,7 +268,7 @@ impl DynamicFastXReader {
     // New from stdin
     pub fn new_from_stdin(filetype: FileType, gzipped: bool) -> Self {
         if gzipped {
-            Self::new_from_input_stream(MultiGzDecoder::new(BufReader::new(io::stdin())), filetype)
+            Self::new_from_input_stream(BufReader::new(MultiGzDecoder::new(io::stdin())), filetype)
         } else {
             Self::new_from_input_stream(BufReader::new(io::stdin()), filetype)
         }
