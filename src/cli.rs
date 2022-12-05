@@ -77,6 +77,9 @@ pub fn build_cli() -> Command {
                     .long("fraction")
                     .required(true)
                 ),
+        ).subcommand(
+            Command::new("convert")
+                .about("Convert the input file format into the output file format."),
         )
         .subcommand(Command::new("stats").about("Print stats about the input."))
 }

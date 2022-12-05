@@ -90,6 +90,25 @@ fn random_subsample(input1: &mut DynamicFastXReader, input2: &mut DynamicFastXRe
     eprintln!("Done");
 }
 
+fn convert(input: &mut DynamicFastXReader, output: &mut DynamicFastXWriter){
+    let mut dummy_qual_values: Vec<u8> = vec![]; // A buffer for dummy quality values for fasta -> fastq conversion 
+    while let Some(mut rec) = input.read_next(){
+        if matches!(rec.qual, None){
+            // Potentially doing Fasta to Fastq conversion.
+            // Put dummy quality values to rec.qual.
+            while dummy_qual_values.len() < rec.seq.len(){
+                dummy_qual_values.push(b'I');
+                // 'I' is the maximum quality value from most sequencers.
+                // Some software may break if they see quality values larger than 'I'.
+                // Hence, we use 'I' as the a dummy value.
+            }
+            rec.qual = Some(&dummy_qual_values.as_slice()[0..rec.seq.len()]);
+        }
+        output.write(rec);
+    }   
+}
+
+
 fn get_reader(args: &clap::ArgMatches) -> DynamicFastXReader{
     let filename = args.get_one::<String>("input");
 
@@ -167,6 +186,11 @@ fn main() {
             let frac: f64 = sub_matches.get_one::<String>("fraction")
                 .unwrap().parse::<f64>().unwrap();
             random_subsample(&mut input1, &mut input2, &mut output, frac);
+        }
+        Some(("convert", _)) => { 
+            let mut reader = get_reader(&matches);
+            let mut writer = get_writer(&matches);
+            convert(&mut reader, &mut writer);
         }
         _ => {}
     };
