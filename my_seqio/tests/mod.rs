@@ -1,9 +1,10 @@
 #[cfg(test)]
 
-use super::*;
-use super::reader::FastXReader;
-use super::writer::FastXWriter;
-use super::record::OwnedSeqRecord;
+use my_seqio::reader::FastXReader;
+use my_seqio::writer::FastXWriter;
+use my_seqio::record::OwnedSeqRecord;
+use my_seqio::FileType;
+use my_seqio::figure_out_file_format;
 use std::io::BufReader;
 
 use std::{cmp::min, process::Output};

@@ -3,7 +3,6 @@ use std::str;
 pub mod reader;
 pub mod writer;
 pub mod record;
-mod tests;
 
 #[derive(Copy, Clone)]
 pub enum FileType{
@@ -12,7 +11,7 @@ pub enum FileType{
 }
 
 // Returns (file type, is_gzipped)
-fn figure_out_file_format(filename: &str) -> (FileType, bool){
+pub fn figure_out_file_format(filename: &str) -> (FileType, bool){
     let is_gzipped = filename.ends_with(".gz");
     let filename = if is_gzipped{
         &filename[0 .. filename.len()-3] // Drop the .gz suffix
