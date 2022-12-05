@@ -3,23 +3,31 @@ extern crate flate2;
 use my_seqio::{DynamicFastXReader, FastXReader, DynamicFastXWriter, FastXWriter};
 use std::io::{Write,BufWriter};
 use rand::Rng;
+use std::cmp::{max,min};
 
 mod cli;
 
 fn print_stats(reader: &mut DynamicFastXReader){
-    let mut total_length: usize = 0;
-    let mut number_of_sequences: usize = 0;
+    let mut total_length: u64 = 0;
+    let mut number_of_sequences: u64 = 0;
+    let mut max_seq_len: u64 = 0;
+    let mut min_seq_len: u64 = 1e20 as u64;
     loop{
         match reader.read_next() {
             Some(rec) => {
-                total_length += rec.seq.len();
-                number_of_sequences += 1;  
+                total_length += rec.seq.len() as u64;
+                number_of_sequences += 1;
+                max_seq_len = max(max_seq_len, rec.seq.len() as u64);
+                min_seq_len = min(min_seq_len, rec.seq.len() as u64);
             },
             None => break
         }
     }
     println!("Number of nucleotides: {}", total_length);
     println!("Number of sequences: {}", number_of_sequences);
+    println!("Maximum sequence length: {}", max_seq_len);
+    println!("Minimum sequence length: {}", min_seq_len);
+    println!("Average sequence length: {}", total_length as f64 / number_of_sequences as f64);
 }
 
 fn print_length_histogram(reader: &mut DynamicFastXReader, min: i64, max: i64, n_bins: i64){
