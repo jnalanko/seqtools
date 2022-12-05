@@ -8,8 +8,8 @@ use std::fmt;
 use std::str;
 use std::fs::File;
 use flate2::Compression;
+use flate2::bufread::MultiGzDecoder;
 use flate2::write::GzEncoder; // todo: flate2::bufwrite?
-use flate2::read::MultiGzDecoder;
 
 #[derive(Copy, Clone)]
 pub enum FileType{
@@ -246,17 +246,17 @@ impl DynamicFastXReader {
 
     // New from file
     pub fn new_from_file(filename: &String) -> Self {
-        let input = File::open(&filename).unwrap();
+        let input = BufReader::new(File::open(&filename).unwrap());
         match figure_out_file_format(&filename.as_str()){
             (FileType::FASTQ, true) =>{
-                let gzdecoder = MultiGzDecoder::<File>::new(input);
+                let gzdecoder = MultiGzDecoder::<BufReader<File>>::new(input);
                 Self::new_from_input_stream(gzdecoder, FileType::FASTQ)
             },
             (FileType::FASTQ, false) => {
                 Self::new_from_input_stream(input, FileType::FASTQ)
             },
             (FileType::FASTA, true) => {
-                let gzdecoder = MultiGzDecoder::<File>::new(input);
+                let gzdecoder = MultiGzDecoder::<BufReader<File>>::new(input);
                 Self::new_from_input_stream(gzdecoder, FileType::FASTA)
             },
             (FileType::FASTA, false) => {
@@ -268,9 +268,9 @@ impl DynamicFastXReader {
     // New from stdin
     pub fn new_from_stdin(filetype: FileType, gzipped: bool) -> Self {
         if gzipped {
-            Self::new_from_input_stream(MultiGzDecoder::new(io::stdin()), filetype)
+            Self::new_from_input_stream(MultiGzDecoder::new(BufReader::new(io::stdin())), filetype)
         } else {
-            Self::new_from_input_stream(io::stdin(), filetype)
+            Self::new_from_input_stream(BufReader::new(io::stdin()), filetype)
         }
     }
 
