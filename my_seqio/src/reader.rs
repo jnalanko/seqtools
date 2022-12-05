@@ -1,7 +1,6 @@
 use std::io;
 use std::fs::File;
 use std::io::BufReader;
-use std::io::BufRead;
 use flate2::read::MultiGzDecoder;
 use crate::FileType;
 use crate::record::SeqRecord;

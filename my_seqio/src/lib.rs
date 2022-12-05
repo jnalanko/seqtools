@@ -1,22 +1,9 @@
-
-use std::io;
-use std::io::BufReader;
-use std::io::BufRead;
-use std::io::BufWriter;
-use std::io::Write;
-use std::fmt;
 use std::str;
-use std::fs::File;
-use flate2::Compression;
-use flate2::read::MultiGzDecoder;
-use flate2::write::GzEncoder;
 
 pub mod reader;
 pub mod writer;
 pub mod record;
 mod tests;
-
-use crate::reader::FastXReader;
 
 #[derive(Copy, Clone)]
 pub enum FileType{
