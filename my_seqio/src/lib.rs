@@ -86,16 +86,6 @@ impl<'a> fmt::Display for SeqRecord<'a> {
     }
 }
 
-// Trait for a stream returning SeqRecord objects.
-pub trait SeqRecordProducer {
-    fn next(&mut self) -> Option<SeqRecord>;
-    fn filetype(&self )-> FileType; 
-}
-
-pub struct DynamicFastXReader {
-    stream: Box<dyn SeqRecordProducer>,
-}
-
 // Returns (file type, is_gzipped)
 fn figure_out_file_format(filename: &str) -> (FileType, bool){
     let is_gzipped = filename.ends_with(".gz");
@@ -111,49 +101,6 @@ fn figure_out_file_format(filename: &str) -> (FileType, bool){
     } else{
         panic!("Unkown file extension: {}", filename);
     }
-}
-
-// A class that contains a dynamic trait object for different
-// types of input streams.
-impl DynamicFastXReader {
-
-    // Need to constrain + 'static because boxed things always need to have a static
-    // lifetime.
-    pub fn new_from_input_stream<R: io::BufRead + 'static>(r: R, filetype: FileType) -> Self{
-        let reader = FastXReader::<R>::new(r, filetype);
-        DynamicFastXReader {stream: Box::new(reader)}
-    }
-
-    // New from file
-    pub fn new_from_file(filename: &String) -> Self {
-        let input = File::open(&filename).unwrap();
-        let (fileformat, gzipped) = figure_out_file_format(&filename.as_str());
-        if gzipped{
-            let gzdecoder = MultiGzDecoder::<File>::new(input);
-            Self::new_from_input_stream(BufReader::new(gzdecoder), fileformat)
-        } else{
-            Self::new_from_input_stream(BufReader::new(input), fileformat)
-        }
-    }
-
-    // New from stdin
-    pub fn new_from_stdin(filetype: FileType, gzipped: bool) -> Self {
-        if gzipped {
-            Self::new_from_input_stream(BufReader::new(MultiGzDecoder::new(io::stdin())), filetype)
-        } else {
-            Self::new_from_input_stream(BufReader::new(io::stdin()), filetype)
-        }
-    }
-
-    // Returns None if no more records
-    pub fn read_next(&mut self) -> Option<SeqRecord>{
-        return self.stream.next()
-    }
-
-    pub fn filetype(&self)-> FileType{
-        self.stream.filetype()
-    } 
-
 }
 
 #[cfg(test)]
@@ -420,17 +367,5 @@ impl<W: Write> SeqRecordWriter for FastXWriter<W>{
     fn write(&mut self, head: &[u8], seq: &[u8], qual: Option<&[u8]>){
         let rec = SeqRecord{head, seq, qual};
         self.write(&rec);
-    }
-}
-
-// Implement common SeqStream trait for all
-// FastXReaders over the generic parameter R.
-impl<R: io::BufRead> SeqRecordProducer for FastXReader<R>{
-    fn next(&mut self) -> Option<SeqRecord>{
-        self.next()
-    }
-
-    fn filetype(&self)-> FileType{
-        self.filetype
     }
 }

@@ -1,6 +1,7 @@
 extern crate flate2;
 
-use my_seqio::{DynamicFastXReader, DynamicFastXWriter};
+use my_seqio::reader::DynamicFastXReader;
+use my_seqio::DynamicFastXWriter;
 
 use std::io::{Write,BufWriter};
 use rand::Rng;
