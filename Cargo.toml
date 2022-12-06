@@ -11,8 +11,12 @@ name = "seq_tools"
 path = "src/main.rs"
 
 [[bin]]
-name = "revcomp"
+name = "revcomp"    
 path = "src/revcomp.rs"
+
+[[bin]]
+name = "alignment_start_histogram"
+path = "src/alignment_start_histogram.rs"
 
 [dependencies]
 
