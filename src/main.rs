@@ -110,6 +110,25 @@ fn convert(input: &mut DynamicFastXReader, output: &mut DynamicFastXWriter){
     }   
 }
 
+fn trim(input: &mut DynamicFastXReader, output: &mut DynamicFastXWriter, from_start: usize, from_end: usize){
+    let mut n_deleted: u64 = 0;
+    while let Some(mut rec) = input.read_next(){
+        if rec.seq.len() >= from_start + from_end{
+            // Trimming leaves at least one nucleotide
+            rec.seq = &rec.seq[from_start .. rec.seq.len() - from_end];
+            if let Some(qual) = rec.qual{
+                // Quality values are present -> trim those too
+                rec.qual = Some(&qual[from_start .. qual.len() - from_end]);
+            }
+            output.write(rec);
+        } else{
+            // Delete this sequence
+            n_deleted += 1;
+        }
+    }
+    eprintln!("Deleted {} sequences as too short to trim", n_deleted);
+}
+
 
 fn get_reader(args: &clap::ArgMatches) -> DynamicFastXReader{
     let filename = args.get_one::<String>("input");
@@ -193,6 +212,13 @@ fn main() {
             let mut reader = get_reader(&matches);
             let mut writer = get_writer(&matches);
             convert(&mut reader, &mut writer);
+        }
+        Some(("trim", sub_matches)) => { 
+            let mut reader = get_reader(&matches);
+            let mut writer = get_writer(&matches);
+            let from_start: usize = sub_matches.get_one::<String>("from-start").unwrap().parse().unwrap();
+            let from_end: usize = sub_matches.get_one::<String>("from-end").unwrap().parse().unwrap();
+            trim(&mut reader, &mut writer, from_start, from_end);
         }
         _ => {}
     };

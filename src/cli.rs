@@ -78,6 +78,17 @@ pub fn build_cli() -> Command {
                     .required(true)
                 ),
         ).subcommand(
+            Command::new("trim")
+                .about("Trim starts and ends of sequences.")
+                .arg_required_else_help(true)
+                .arg(Arg::new("from-start")
+                    .long("from-start")
+                    .required(true)
+                ).arg(Arg::new("from-end")
+                    .long("from-end")
+                    .required(true)
+                ),
+        ).subcommand(
             Command::new("convert")
                 .about("Convert the input file format into the output file format."),
         )
