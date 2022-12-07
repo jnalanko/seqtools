@@ -28,5 +28,5 @@ fn main(){
         starts.push(length as i64);
     }
 
-    print_histogram(starts.iter().map(|x| *x), min, max, nbins);
+    print_histogram(starts.into_iter(), min, max, nbins);
 }
