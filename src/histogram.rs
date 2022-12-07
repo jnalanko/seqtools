@@ -2,7 +2,7 @@ use std::io::Write;
 
 // Takes an iterator that produces i64 values, and prints the histogram
 // of those values to stdout.
-fn print_histogram(value_iterator: impl Iterator<Item = i64>, min: i64, max: i64, n_bins: i64){
+pub fn print_histogram(value_iterator: impl Iterator<Item = i64>, min: i64, max: i64, n_bins: i64){
     let mut counters: Vec<i64> = vec![0; n_bins as usize];
     let bin_width = (max-min+1) / n_bins;
 

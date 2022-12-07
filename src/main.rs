@@ -11,6 +11,22 @@ use std::cmp::{max,min};
 
 mod cli;
 
+struct LengthIterator<'a>{
+    reader: &'a mut DynamicFastXReader,
+}
+
+impl<'a> Iterator for LengthIterator<'a>{
+    type Item = i64;
+
+    fn next(&mut self) -> Option<Self::Item>{
+        let rec = self.reader.read_next();
+        match rec{
+            None => None,
+            Some(r) => Some(r.seq.len() as i64),
+        }
+    }
+}
+
 fn print_stats(reader: &mut DynamicFastXReader){
     let mut total_length: u64 = 0;
     let mut number_of_sequences: u64 = 0;
@@ -35,34 +51,8 @@ fn print_stats(reader: &mut DynamicFastXReader){
 }
 
 fn print_length_histogram(reader: &mut DynamicFastXReader, min: i64, max: i64, n_bins: i64){
-
-    let mut counters: Vec<i64> = vec![0; n_bins as usize];
-    let bin_width = (max-min+1) / n_bins;
-    loop{
-        match reader.read_next() {
-            Some(rec) => {
-                let len = rec.seq.len() as i64;
-                let mut bin = (len - min as i64) / bin_width;
-
-                // Clamp to [0, n_bins-1]
-                bin = std::cmp::max(0, bin);
-                bin = std::cmp::min(n_bins-1, bin);
-
-                counters[bin as usize] += 1;
-            },
-            None => break
-        }
-    }
-
-    let max_counter: i64 = *counters.iter().max().unwrap();
-    let n_columns: i64 = 40;
-
-    for (i, c) in counters.iter().enumerate(){
-        let n_chars = ((*c as f64 / max_counter as f64) * n_columns as f64) as i64;
-        print!("{}\t", (min + (i as i64)*bin_width) as usize);
-        std::io::stdout().write_all(vec![b'#'; n_chars as usize].as_slice()).ok();
-        println!();
-    }
+    let it = LengthIterator{reader: reader};
+    histogram::print_histogram(it, min, max, n_bins);
 }
 
 // Needs two input reader to the same data because needs
