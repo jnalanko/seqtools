@@ -1,5 +1,7 @@
 extern crate flate2;
 
+mod histogram;
+
 use my_seqio::reader::DynamicFastXReader;
 use my_seqio::writer::DynamicFastXWriter;
 
