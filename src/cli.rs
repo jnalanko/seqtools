@@ -96,6 +96,7 @@ pub fn build_cli() -> Command {
         ).subcommand(
             Command::new("convert")
                 .about("Convert the input file format into the output file format.")
+                .arg_required_else_help(true)                
                 .arg(&output_file)
                 .arg(&stdout_fasta)
                 .arg(&stdout_fastq)
