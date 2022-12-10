@@ -32,3 +32,7 @@ flate2 = "1.0.24"
 clap = { version = "4.0.26", features = ["derive"] }
 clap_complete = "4.0.6"
 my_seqio = { path = "my_seqio" }
+
+[dev-dependencies]
+assert_cmd = "2.0"
+predicates = "2.1"
