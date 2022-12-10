@@ -76,7 +76,7 @@ pub fn print_stats(reader: &mut DynamicFastXReader){
 
     }
     if let Some(x) = sum_of_quality_values{
-        println!("Maximum quality value: {}", x as f64 / total_length as f64);
+        println!("Average quality value: {}", x as f64 / total_length as f64);
     }
 }
 

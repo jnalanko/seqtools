@@ -16,8 +16,10 @@ fn stats() -> Result<(), Box<dyn std::error::Error>> {
         .stdout(predicate::str::contains("Number of sequences: 10"))
         .stdout(predicate::str::contains("Maximum sequence length: 54"))
         .stdout(predicate::str::contains("Minimum sequence length: 38"))
-        .stdout(predicate::str::contains("Average sequence length: 47.4"));
-
+        .stdout(predicate::str::contains("Average sequence length: 47.4"))
+        .stdout(predicate::str::contains("Maximum quality value: 93"))
+        .stdout(predicate::str::contains("Minimum quality value: 0"))
+        .stdout(predicate::str::contains("Average quality value: 41.4008"));
     Ok(())
 }
 
