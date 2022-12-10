@@ -12,12 +12,6 @@ pub fn build_cli() -> Command {
                 .long("input")
                 .help("Input filename")
                 .global(true),
-        ).arg(
-            Arg::new("output")
-                .short('o')
-                .long("output")
-                .help("Output filename")
-                .global(true),
         )
         .arg(
             Arg::new("fasta-in")
@@ -76,6 +70,12 @@ pub fn build_cli() -> Command {
                     .short('f')
                     .long("fraction")
                     .required(true)
+                ).arg(
+                    Arg::new("output")
+                        .short('o')
+                        .long("output")
+                        .help("Output filename")
+                        .global(true),
                 ),
         ).subcommand(
             Command::new("trim")
@@ -87,10 +87,23 @@ pub fn build_cli() -> Command {
                 ).arg(Arg::new("from-end")
                     .long("from-end")
                     .required(true)
+                ).arg(
+                    Arg::new("output")
+                        .short('o')
+                        .long("output")
+                        .help("Output filename")
+                        .global(true),
                 ),
         ).subcommand(
             Command::new("convert")
-                .about("Convert the input file format into the output file format."),
+                .about("Convert the input file format into the output file format.")
+                .arg(
+                    Arg::new("output")
+                        .short('o')
+                        .long("output")
+                        .help("Output filename")
+                        .global(true),
+                ),
         )
         .subcommand(Command::new("stats").about("Print stats about the input."))
 }

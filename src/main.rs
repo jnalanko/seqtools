@@ -203,19 +203,19 @@ fn main() {
             // Get two readers for two passes over the data
             let mut input1 = get_reader(&matches);
             let mut input2 = get_reader(&matches);
-            let mut output = get_writer(&matches);
+            let mut output = get_writer(&sub_matches);
             let frac: f64 = sub_matches.get_one::<String>("fraction")
                 .unwrap().parse::<f64>().unwrap();
             random_subsample(&mut input1, &mut input2, &mut output, frac);
         }
-        Some(("convert", _)) => { 
+        Some(("convert", sub_matches)) => { 
             let mut reader = get_reader(&matches);
-            let mut writer = get_writer(&matches);
+            let mut writer = get_writer(&sub_matches);
             convert(&mut reader, &mut writer);
         }
         Some(("trim", sub_matches)) => { 
             let mut reader = get_reader(&matches);
-            let mut writer = get_writer(&matches);
+            let mut writer = get_writer(&sub_matches);
             let from_start: usize = sub_matches.get_one::<String>("from-start").unwrap().parse().unwrap();
             let from_end: usize = sub_matches.get_one::<String>("from-end").unwrap().parse().unwrap();
             trim(&mut reader, &mut writer, from_start, from_end);
