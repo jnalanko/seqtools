@@ -4,7 +4,6 @@ pub fn build_cli() -> Command {
     Command::new("seq_tools")
         .version("0.1.0")
         .author("Jarno N. Alanko <alanko.jarno@gmail.com>")
-        .about("Fasta/fastq parsing")
         .arg_required_else_help(true)
         .arg(
             Arg::new("input")
@@ -17,42 +16,42 @@ pub fn build_cli() -> Command {
             Arg::new("fasta-in")
                 .long("fasta-in")
                 .action(ArgAction::SetTrue)
-                .help("Parse in fasta format")
+                .help("Parse from stdin in fasta format")
                 .global(true),
         )
         .arg(
             Arg::new("fastq-in")
                 .long("fastq-in")
                 .action(ArgAction::SetTrue)
-                .help("Parse in fastq format")
+                .help("Parse from stdin in fastq format")
                 .global(true),
         )
         .arg(
             Arg::new("gzip-in")
                 .long("gzip-in")
                 .action(ArgAction::SetTrue)
-                .help("Read gzipped input")
+                .help("Read from stdin as gzipped")
                 .global(true),
         )
         .arg(
             Arg::new("fasta-out")
                 .long("fasta-out")
                 .action(ArgAction::SetTrue)
-                .help("Write in fasta format")
+                .help("Write to stdout in fasta format")
                 .global(true),
         )
         .arg(
             Arg::new("fastq-out")
                 .long("fastq-out")
                 .action(ArgAction::SetTrue)
-                .help("Write in fastq format")
+                .help("Write to stdout in fastq format")
                 .global(true),
         )
         .arg(
             Arg::new("gzip-out")
                 .long("gzip-out")
                 .action(ArgAction::SetTrue)
-                .help("Write as gzipped")
+                .help("Write to stdout as gzipped")
                 .global(true),
         )
         .subcommand(
