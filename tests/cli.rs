@@ -22,6 +22,35 @@ fn stats() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
+fn length_histogram() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::cargo_bin("seqtools")?;
+
+    cmd.arg("length-histogram").arg("tests/data/reads.fna").arg("--min").arg("10").arg("--max").arg("100").arg("--nbins").arg("15");
+
+    let answer = "\
+10	
+16	
+22	
+28	
+34	######
+40	######
+46	########################################
+52	#############
+58	
+64	
+70	
+76	
+82	
+88	
+94	
+";
+    cmd.assert()
+        .stdout(predicate::str::contains(answer));
+
+    Ok(())
+}
+
+#[test]
 fn convert() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("seqtools")?;
 
