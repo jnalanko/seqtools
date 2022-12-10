@@ -1,7 +1,10 @@
 
-use std::process::Command; // Run programs
+use std::process::{Command, Stdio}; // Run programs
 use assert_cmd::prelude::*; // Add methods on commands
 use predicates::prelude::*; // Used for writing assertions
+use tempfile;
+use std::str;
+use std::io::Write;
 
 #[test]
 fn stats() -> Result<(), Box<dyn std::error::Error>> {
@@ -18,16 +21,33 @@ fn stats() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/*
+#[test]
 fn convert() -> Result<(), Box<dyn std::error::Error>> {
-    let mut cmd = Command::cargo_bin("seq_tools")?;
-    cmd.arg("stats").arg("-i").arg("tests/data/reads.fastq.gz");
-} */
+    let mut cmd = Command::cargo_bin("seqtools")?;
+
+    let first = cmd.arg("convert").arg("-i").arg("tests/data/reads.fastq.gz").arg("--fasta-out").arg("--gzip-out").stdout(Stdio::piped()).spawn()?;
+    let first_stdout_result = first.wait_with_output()?.stdout;
+
+    let mut cmd = Command::cargo_bin("seqtools")?;
+    let mut second = cmd.arg("convert").arg("--fasta-in").arg("--gzip-in").arg("--fastq-out").stdin(Stdio::piped()).stdout(Stdio::piped()).spawn()?;
+    let mut second_stdin = second.stdin.as_mut().unwrap();
+    second_stdin.write_all(&first_stdout_result)?;
+    drop(second_stdin); // Flush
+
+    let second_stdout_result = second.wait_with_output()?.stdout;
+    let S = str::from_utf8(&second_stdout_result)?;
+    println!("{}",S);
+
+
+
+    Ok(())
+}
+
 
 
 #[test]
 fn trim() -> Result<(), Box<dyn std::error::Error>> {
-    let mut cmd = Command::cargo_bin("seq_tools")?;
+    let mut cmd = Command::cargo_bin("seqtools")?;
 
     cmd.arg("trim").arg("-i").arg("tests/data/reads.fastq.gz")
         .arg("--from-start").arg("20").arg("--from-end").arg("26").arg("--fastq-out");
