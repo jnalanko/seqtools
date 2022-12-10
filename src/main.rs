@@ -113,7 +113,7 @@ fn convert(input: &mut DynamicFastXReader, output: &mut DynamicFastXWriter){
 fn trim(input: &mut DynamicFastXReader, output: &mut DynamicFastXWriter, from_start: usize, from_end: usize){
     let mut n_deleted: u64 = 0;
     while let Some(mut rec) = input.read_next(){
-        if rec.seq.len() >= from_start + from_end{
+        if rec.seq.len() > from_start + from_end{
             // Trimming leaves at least one nucleotide
             rec.seq = &rec.seq[from_start .. rec.seq.len() - from_end];
             if let Some(qual) = rec.qual{
