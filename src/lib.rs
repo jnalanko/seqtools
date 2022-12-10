@@ -45,7 +45,7 @@ pub fn print_stats(reader: &mut DynamicFastXReader){
                 // Check quality values is they exist
                 if let Some(qual) = rec.qual{
                     for q in qual{
-                        let x = q - 0x21;
+                        let x = q - 0x21; // Fastq quality bytes start from 0x21
                         min_quality_value = min(min_quality_value, x as u64);
                         max_quality_value = max(max_quality_value, x as u64);
                         sum_of_quality_values += x as u64;
