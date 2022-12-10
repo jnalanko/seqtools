@@ -148,7 +148,7 @@ fn get_reader(args: &clap::ArgMatches) -> DynamicFastXReader{
         }
         if !is_fasta && !is_fastq {
             panic!(
-                "Error: must give --fasta-in or --fastq-in and possibly --gzip if reading from stdin."
+                "Error: must give --fasta-in or --fastq-in and possibly --gzip-in if reading from stdin."
             );
         };
         let filetype = if is_fastq {my_seqio::FileType::FASTQ} else {my_seqio::FileType::FASTA};
