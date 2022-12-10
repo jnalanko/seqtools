@@ -27,7 +27,8 @@ fn trim() -> Result<(), Box<dyn std::error::Error>> {
     // Corner case: 20 + 26 = 46. There is a sequence of length exactly 46. That should be deleted.
 
     let answer = 
-    "@SRR403017.1 HWUSI-EAS108E_0007:3:1:3797:973/1
+    "\
+@SRR403017.1 HWUSI-EAS108E_0007:3:1:3797:973/1
 CCA
 +
 567
