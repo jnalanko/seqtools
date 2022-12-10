@@ -126,7 +126,9 @@ fn trim(input: &mut DynamicFastXReader, output: &mut DynamicFastXWriter, from_st
             n_deleted += 1;
         }
     }
-    eprintln!("Deleted {} sequences as too short to trim", n_deleted);
+    if n_deleted > 0 {
+        eprintln!("Deleted {} sequences as too short to trim", n_deleted);
+    }
 }
 
 
