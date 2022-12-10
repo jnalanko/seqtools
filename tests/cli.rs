@@ -8,7 +8,7 @@ use std::io::Write;
 
 #[test]
 fn stats() -> Result<(), Box<dyn std::error::Error>> {
-    let mut cmd = Command::cargo_bin("seq_tools")?;
+    let mut cmd = Command::cargo_bin("seqtools")?;
 
     cmd.arg("stats").arg("-i").arg("tests/data/reads.fastq.gz");
     cmd.assert()
@@ -75,7 +75,8 @@ ATAGAGAAGGGGGACAATGAGCCTGGATCTTTGCCTTGNNNN
 >SRR403017.9 HWUSI-EAS108E_0007:3:1:11308:980/1
 AAATTTATTTCTCATAGTTCTGGANTCTAGGAAGTTCAAGATCAGNNNN
 >SRR403017.10 HWUSI-EAS108E_0007:3:1:14685:981/1
-CCCATTCTTGGAGATACCAGCAAAAATTCNAATTCACCAACACCAGCAGCNNNN";
+CCCATTCTTGGAGATACCAGCAAAAATTCNAATTCACCAACACCAGCAGCNNNN
+";
 
     assert_eq!(S, answer);
     Ok(())
