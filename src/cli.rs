@@ -9,7 +9,7 @@ pub fn build_cli() -> Command {
             Arg::new("input")
                 .short('i')
                 .long("input")
-                .help("Input filename")
+                .help("Read from a file on disk (format is deduced from the file extension)")
                 .global(true),
         )
         .arg(
@@ -30,7 +30,7 @@ pub fn build_cli() -> Command {
             Arg::new("gzip-in")
                 .long("gzip-in")
                 .action(ArgAction::SetTrue)
-                .help("Read from stdin as gzipped")
+                .help("Parse from stdin as gzipped")
                 .global(true),
         )
         .arg(
