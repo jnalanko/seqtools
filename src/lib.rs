@@ -27,7 +27,7 @@ pub fn print_stats(reader: &mut DynamicFastXReader){
     let mut total_length: u64 = 0;
     let mut number_of_sequences: u64 = 0;
     let mut max_seq_len: u64 = 0;
-    let mut min_seq_len: u64 = 1e20 as u64;
+    let mut min_seq_len: u64 = u64::MAX;
     loop{
         match reader.read_next() {
             Some(rec) => {

@@ -26,7 +26,7 @@ fn main() {
             let mut reader = get_reader(&matches);
             print_stats(&mut reader);
         }
-        Some(("subsample", sub_matches)) => {
+        Some(("subsample", sub_matches)) => { // TODO: Untested
             if matches.get_one::<String>("input") == None {
                 panic!("Can not subsample from stdin because we need to pass over the data twice.");
             }
