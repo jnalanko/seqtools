@@ -26,7 +26,7 @@ fn convert() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("seqtools")?;
 
     // fasta -> fasta.gz
-    let first = cmd.arg("convert").arg("-i").arg("tests/data/reads.fastq.gz").arg("--fasta-out").arg("--gzip-out").stdout(Stdio::piped()).spawn()?;
+    let first = cmd.arg("convert").arg("-i").arg("tests/data/reads.fna").arg("--fasta-out").arg("--gzip-out").stdout(Stdio::piped()).spawn()?;
     let first_stdout_result = first.wait_with_output()?.stdout;
 
     // fasta.gz -> fastq
