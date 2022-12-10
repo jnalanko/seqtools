@@ -66,3 +66,21 @@ impl<'a> fmt::Display for SeqRecord<'a> {
         )
     }
 }
+
+// Does the FASTQ interpretation of the quality bytes.
+#[inline(always)]
+pub fn interpret_quality_value(q: u8) -> u8{
+    q - 0x21
+}
+
+#[cfg(test)]
+mod tests{
+    use super::*;
+
+    #[test]
+    fn test_interpret_quality_values(){
+        let mut data: Vec<u8> = vec![b'!', b'#', b'%'];
+        data.iter_mut().for_each(|x| *x = interpret_quality_value(*x));
+        assert_eq!(data, vec![0,2,4])
+    }
+}

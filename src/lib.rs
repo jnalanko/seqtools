@@ -28,6 +28,12 @@ pub fn print_stats(reader: &mut DynamicFastXReader){
     let mut number_of_sequences: u64 = 0;
     let mut max_seq_len: u64 = 0;
     let mut min_seq_len: u64 = u64::MAX;
+
+    // Quality value statistics, if exist
+    let mut max_quality_value: Option<u64> = None;
+    let mut min_quality_value: Option<u64> = None;
+    let mut sum_of_quality_values: Option<u64> = None;
+
     loop{
         match reader.read_next() {
             Some(rec) => {
@@ -35,6 +41,23 @@ pub fn print_stats(reader: &mut DynamicFastXReader){
                 number_of_sequences += 1;
                 max_seq_len = max(max_seq_len, rec.seq.len() as u64);
                 min_seq_len = min(min_seq_len, rec.seq.len() as u64);
+
+                // Check quality values is they exist
+                if let Some(qual) = rec.qual{
+                    if matches!(min_quality_value, None){
+                        // Initialize quality value statistics
+                        min_quality_value = Some(u64::MAX);
+                        max_quality_value = Some(0);
+                        sum_of_quality_values = Some(0);
+                    }
+
+                    for q in qual{
+                        let x = my_seqio::record::interpret_quality_value(*q);
+                        min_quality_value = Some(min(min_quality_value.unwrap(), x as u64));
+                        max_quality_value = Some(max(max_quality_value.unwrap(), x as u64));
+                        sum_of_quality_values = Some(sum_of_quality_values.unwrap() + x as u64);
+                    }
+                }
             },
             None => break
         }
@@ -44,6 +67,17 @@ pub fn print_stats(reader: &mut DynamicFastXReader){
     println!("Maximum sequence length: {}", max_seq_len);
     println!("Minimum sequence length: {}", min_seq_len);
     println!("Average sequence length: {}", total_length as f64 / number_of_sequences as f64);
+    if let Some(x) = max_quality_value{
+        println!("Maximum quality value: {}", x);
+
+    }
+    if let Some(x) = min_quality_value{
+        println!("Minimum quality value: {}", x);
+
+    }
+    if let Some(x) = sum_of_quality_values{
+        println!("Maximum quality value: {}", x as f64 / total_length as f64);
+    }
 }
 
 
