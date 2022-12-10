@@ -1,6 +1,32 @@
 use clap::{Arg, ArgAction, Command};
 
 pub fn build_cli() -> Command {
+    
+    let stdout_fasta = 
+        Arg::new("fasta-out")
+            .long("fasta-out")
+            .action(ArgAction::SetTrue)
+            .help("Write to stdout in fasta format")
+            .global(true);
+    let stdout_fastq =
+        Arg::new("fastq-out")
+            .long("fastq-out")
+            .action(ArgAction::SetTrue)
+            .help("Write to stdout in fastq format")
+            .global(true);
+    let stdout_gzip =
+        Arg::new("gzip-out")
+            .long("gzip-out")
+            .action(ArgAction::SetTrue)
+            .help("Write to stdout as gzipped")
+            .global(true);
+    let output_file =
+        Arg::new("output")
+        .short('o')
+        .long("output")
+        .help("Output filename")
+        .global(false);
+
     Command::new("seq_tools")
         .version("0.1.0")
         .author("Jarno N. Alanko <alanko.jarno@gmail.com>")
@@ -33,27 +59,6 @@ pub fn build_cli() -> Command {
                 .help("Parse from stdin as gzipped")
                 .global(true),
         )
-        .arg(
-            Arg::new("fasta-out")
-                .long("fasta-out")
-                .action(ArgAction::SetTrue)
-                .help("Write to stdout in fasta format")
-                .global(true),
-        )
-        .arg(
-            Arg::new("fastq-out")
-                .long("fastq-out")
-                .action(ArgAction::SetTrue)
-                .help("Write to stdout in fastq format")
-                .global(true),
-        )
-        .arg(
-            Arg::new("gzip-out")
-                .long("gzip-out")
-                .action(ArgAction::SetTrue)
-                .help("Write to stdout as gzipped")
-                .global(true),
-        )
         .subcommand(
             Command::new("length-histogram")
                 .about("Print the length histogram of the sequences.")
@@ -69,13 +74,11 @@ pub fn build_cli() -> Command {
                     .short('f')
                     .long("fraction")
                     .required(true)
-                ).arg(
-                    Arg::new("output")
-                        .short('o')
-                        .long("output")
-                        .help("Output filename")
-                        .global(true),
-                ),
+                )
+                .arg(&output_file)
+                .arg(&stdout_fasta)
+                .arg(&stdout_fastq)
+                .arg(&stdout_gzip),
         ).subcommand(
             Command::new("trim")
                 .about("Trim starts and ends of sequences.")
@@ -86,23 +89,17 @@ pub fn build_cli() -> Command {
                 ).arg(Arg::new("from-end")
                     .long("from-end")
                     .required(true)
-                ).arg(
-                    Arg::new("output")
-                        .short('o')
-                        .long("output")
-                        .help("Output filename")
-                        .global(true),
-                ),
+                ).arg(&output_file)
+                .arg(&stdout_fasta)
+                .arg(&stdout_fastq)
+                .arg(&stdout_gzip),
         ).subcommand(
             Command::new("convert")
                 .about("Convert the input file format into the output file format.")
-                .arg(
-                    Arg::new("output")
-                        .short('o')
-                        .long("output")
-                        .help("Output filename")
-                        .global(true),
-                ),
+                .arg(&output_file)
+                .arg(&stdout_fasta)
+                .arg(&stdout_fastq)
+                .arg(&stdout_gzip),
         )
         .subcommand(Command::new("stats").about("Print stats about the input."))
 }
