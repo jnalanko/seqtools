@@ -7,19 +7,19 @@ pub fn build_cli() -> Command {
             .long("fasta-out")
             .action(ArgAction::SetTrue)
             .help("Write to stdout in fasta format")
-            .global(true);
+            .global(false);
     let stdout_fastq =
         Arg::new("fastq-out")
             .long("fastq-out")
             .action(ArgAction::SetTrue)
             .help("Write to stdout in fastq format")
-            .global(true);
+            .global(false);
     let stdout_gzip =
         Arg::new("gzip-out")
             .long("gzip-out")
             .action(ArgAction::SetTrue)
             .help("Write to stdout as gzipped")
-            .global(true);
+            .global(false);
     let output_file =
         Arg::new("output")
         .short('o')
