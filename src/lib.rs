@@ -52,7 +52,7 @@ pub fn print_stats(reader: &mut DynamicFastXReader){
                     }
 
                     for q in qual{
-                        let x = *q - 0x21;
+                        let x = my_seqio::record::interpret_quality_value(*q);
                         min_quality_value = Some(min(min_quality_value.unwrap(), x as u64));
                         max_quality_value = Some(max(max_quality_value.unwrap(), x as u64));
                         sum_of_quality_values = Some(sum_of_quality_values.unwrap() + x as u64);
