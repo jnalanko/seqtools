@@ -69,7 +69,7 @@ impl<'a> fmt::Display for SeqRecord<'a> {
 
 // Does the FASTQ interpretation of the quality bytes.
 #[inline(always)]
-pub fn interpret_quality_value(q: u8) -> u8{
+pub const fn interpret_quality_value(q: u8) -> u8{
     q - 0x21
 }
 
