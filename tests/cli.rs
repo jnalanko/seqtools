@@ -10,7 +10,7 @@ use std::io::Write;
 fn stats() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("seqtools")?;
 
-    cmd.arg("stats").arg("-i").arg("tests/data/reads.fastq.gz");
+    cmd.arg("stats").arg("tests/data/reads.fastq.gz");
     cmd.assert()
         .stdout(predicate::str::contains("Number of nucleotides: 474"))
         .stdout(predicate::str::contains("Number of sequences: 10"))
@@ -26,7 +26,7 @@ fn convert() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("seqtools")?;
 
     // fasta -> fasta.gz
-    let first = cmd.arg("convert").arg("-i").arg("tests/data/reads.fna").arg("--fasta-out").arg("--gzip-out").stdout(Stdio::piped()).spawn()?;
+    let first = cmd.arg("convert").arg("tests/data/reads.fna").arg("--fasta-out").arg("--gzip-out").stdout(Stdio::piped()).spawn()?;
     let first_stdout_result = first.wait_with_output()?.stdout;
 
     // fasta.gz -> fastq
@@ -88,7 +88,7 @@ CCCATTCTTGGAGATACCAGCAAAAATTCNAATTCACCAACACCAGCAGCNNNN
 fn trim() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("seqtools")?;
 
-    cmd.arg("trim").arg("-i").arg("tests/data/reads.fastq.gz")
+    cmd.arg("trim").arg("tests/data/reads.fastq.gz")
         .arg("--from-start").arg("20").arg("--from-end").arg("26").arg("--fastq-out");
     // Corner case: 20 + 26 = 46. There is a sequence of length exactly 46. That should be deleted.
 

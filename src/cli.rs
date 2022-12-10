@@ -33,8 +33,8 @@ pub fn build_cli() -> Command {
         .arg_required_else_help(true)
         .arg(
             Arg::new("input")
-                .short('i')
-                .long("input")
+                //.short('i')
+                //.long("input")
                 .help("Read from a file on disk (format is deduced from the file extension)")
                 .global(true),
         )
@@ -63,9 +63,9 @@ pub fn build_cli() -> Command {
             Command::new("length-histogram")
                 .about("Print the length histogram of the sequences.")
                 .arg_required_else_help(true)
-                .arg(Arg::new("min").default_value("0").help("Minimum value"))
-                .arg(Arg::new("max").default_value("1000").help("Maximum value"))
-                .arg(Arg::new("nbins").default_value("20").help("Number of bins")),
+                .arg(Arg::new("min").long("min").default_value("0").help("Minimum value"))
+                .arg(Arg::new("max").long("max").default_value("1000").help("Maximum value"))
+                .arg(Arg::new("nbins").long("nbins").default_value("20").help("Number of bins")),
         ).subcommand(
             Command::new("subsample")
                 .about("Subsample a random fraction of sequences.")
