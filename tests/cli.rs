@@ -18,6 +18,13 @@ fn stats() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+/*
+fn convert() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::cargo_bin("seq_tools")?;
+    cmd.arg("stats").arg("-i").arg("tests/data/reads.fastq.gz");
+} */
+
+
 #[test]
 fn trim() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("seq_tools")?;
