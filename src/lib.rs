@@ -45,7 +45,7 @@ pub fn print_stats(reader: &mut DynamicFastXReader){
                 // Check quality values is they exist
                 if let Some(qual) = rec.qual{
                     for q in qual{
-                        let x = my_seqio::record::interpret_quality_value(*q);
+                        let x = q - 0x21;
                         min_quality_value = min(min_quality_value, x as u64);
                         max_quality_value = max(max_quality_value, x as u64);
                         sum_of_quality_values += x as u64;
@@ -55,7 +55,7 @@ pub fn print_stats(reader: &mut DynamicFastXReader){
             None => break
         }
     }
-    
+
     println!("Number of nucleotides: {}", total_length);
     println!("Number of sequences: {}", number_of_sequences);
     println!("Maximum sequence length: {}", max_seq_len);
