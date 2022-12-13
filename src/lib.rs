@@ -104,18 +104,23 @@ fn get_random_permutation(n_elements: usize) -> Vec<usize> {
 
 // Needs two input reader to the same data because needs
 // to pass over the data twice.
-pub fn random_subsample(input1: DynamicFastXReader, mut input2: DynamicFastXReader, out: &mut DynamicFastXWriter, fraction: f64){
+pub fn random_subsample(input1: DynamicFastXReader, input2: DynamicFastXReader, out: &mut DynamicFastXWriter, fraction: f64){
     let n_seqs = count_sequences(input1) as usize; // Consumes the input
-    let perm = get_random_permutation(n_seqs); 
+    let subsample_seqs: usize = (n_seqs as f64 * fraction) as usize;
 
-    let howmany: usize = (n_seqs as f64 * fraction) as usize;
+    random_subsample_howmany(input2, out, n_seqs, subsample_seqs);
+}
+
+pub fn random_subsample_howmany(mut input: DynamicFastXReader, out: &mut DynamicFastXWriter, total_seqs: usize, sumsample_seqs: usize){
+    let perm = get_random_permutation(total_seqs); 
+
     let mut keep_marks: Vec<u8> = vec![0u8; perm.len()];
-    for id in perm.iter().take(howmany){
+    for id in perm.iter().take(sumsample_seqs){
         keep_marks[*id as usize] = 1;
     }
 
     let mut seq_idx = 0;
-    while let Some(rec) = input2.read_next(){
+    while let Some(rec) = input.read_next(){
         if keep_marks[seq_idx] == 1{
             out.write(rec);
         }
