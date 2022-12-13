@@ -32,12 +32,12 @@ fn main() {
             }
 
             // Get two readers for two passes over the data
-            let mut input1 = get_reader(&matches);
-            let mut input2 = get_reader(&matches);
+            let input1 = get_reader(&matches);
+            let input2 = get_reader(&matches);
             let mut output = get_writer(&sub_matches);
             let frac: f64 = sub_matches.get_one::<String>("fraction")
                 .unwrap().parse::<f64>().unwrap();
-            random_subsample(&mut input1, &mut input2, &mut output, frac);
+            random_subsample(input1,  input2, &mut output, frac);
         }
         Some(("convert", sub_matches)) => { 
             let mut reader = get_reader(&matches);

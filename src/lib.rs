@@ -75,29 +75,42 @@ pub fn print_length_histogram(reader: &mut DynamicFastXReader, min: i64, max: i6
     histogram::print_histogram(it, min, max, n_bins);
 }
 
-// Needs two input reader to the same data because needs
-// to pass over the data twice.
-pub fn random_subsample(input1: &mut DynamicFastXReader, input2: &mut DynamicFastXReader, out: &mut DynamicFastXWriter, fraction: f64){
-    let mut v: Vec<(f64, usize)> = vec![]; // Random number from 0 to 1, seq id
-    let mut rng = rand::thread_rng();
-    let mut seq_idx = 0;
-
-    eprintln!("Assigning random numbers to sequences...");
-    while let Some(_) = input1.read_next(){
-        let r = rng.gen_range(0.0..1.0);
-        v.push((r, seq_idx));
-        seq_idx += 1;
+fn count_sequences(mut input: DynamicFastXReader) -> u64{
+    let mut count = 0u64;
+    while let Some(_) = input.read_next(){
+        count += 1;
     }
+    return count;
+}
 
-    eprintln!("{} sequences found", seq_idx);
+// Returns a random permutation of [0..n_elements)
+fn get_random_permutation(n_elements: usize) -> Vec<usize> {
+    let mut v: Vec<(f64, usize)> = vec![]; // Random number from 0 to 1, index
+    let mut rng = rand::thread_rng();
 
-    let howmany: usize = (v.len() as f64 * fraction) as usize;
-    eprintln!("Subsampling {}% ({} sequences...)", fraction*100.0, howmany);
-
+    for i in 0..n_elements{
+        let r = rng.gen_range(0.0..1.0);
+        v.push((r, i));
+    }
     v.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-    let mut keep_marks: Vec<u8> = vec![0u8; v.len()];
-    for (_, id) in v.iter().take(howmany){
+    // Build the permutation
+    let mut p: Vec<usize> = vec![];
+    for i in 0..n_elements{
+        p.push(v[i].1);
+    }
+    p
+}
+
+// Needs two input reader to the same data because needs
+// to pass over the data twice.
+pub fn random_subsample(input1: DynamicFastXReader, mut input2: DynamicFastXReader, out: &mut DynamicFastXWriter, fraction: f64){
+    let n_seqs = count_sequences(input1) as usize; // Consumes the input
+    let perm = get_random_permutation(n_seqs); 
+
+    let howmany: usize = (n_seqs as f64 * fraction) as usize;
+    let mut keep_marks: Vec<u8> = vec![0u8; perm.len()];
+    for id in perm.iter().take(howmany){
         keep_marks[*id as usize] = 1;
     }
 
