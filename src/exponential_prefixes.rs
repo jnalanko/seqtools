@@ -20,6 +20,8 @@ fn main(){
         if howmany == 0 { break }
         let outfile = format!("{}-{}.fna.gz", out_prefix, howmany.to_string());
 
+        eprintln!("Creating file {}", outfile);
+
         let mut reader = DynamicFastXReader::new_from_file(&prev_file);
         let mut writer = DynamicFastXWriter::new_to_file(&outfile);
 
