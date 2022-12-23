@@ -18,6 +18,10 @@ path = "src/revcomp.rs"
 name = "alignment_start_histogram"
 path = "src/alignment_start_histogram.rs"
 
+[[bin]]
+name = "exponential_prefixes"
+path = "src/exponential_prefixes.rs"
+
 [dependencies]
 
 flate2 = "1.0.24"

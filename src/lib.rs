@@ -75,7 +75,7 @@ pub fn print_length_histogram(reader: &mut DynamicFastXReader, min: i64, max: i6
     histogram::print_histogram(it, min, max, n_bins);
 }
 
-fn count_sequences(mut input: DynamicFastXReader) -> u64{
+pub fn count_sequences(mut input: DynamicFastXReader) -> u64{
     let mut count = 0u64;
     while let Some(_) = input.read_next(){
         count += 1;
