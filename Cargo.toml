@@ -22,6 +22,10 @@ path = "src/alignment_start_histogram.rs"
 name = "exponential_prefixes"
 path = "src/exponential_prefixes.rs"
 
+[[bin]]
+name = "split_for_themisto_experiment"
+path = "src/split_for_themisto_experiment.rs"
+
 [dependencies]
 
 flate2 = "1.0.24"
