@@ -11,20 +11,23 @@ use crate::record::SeqRecord;
 use crate::record::Record;
 use crate::figure_out_file_format;
 
-pub struct FastXWriter<W: Write>{
-    pub filetype: FileType,
-    pub output: BufWriter<W>,
-}
-
 pub trait SeqRecordWriter{
     // Can not take a Record trait object because then we can't
     // for some reason put a SeqRecordWriter into a box.
     // So we take the header, sequence and quality values as slices.
     fn write(&mut self, head: &[u8], seq: &[u8], qual: Option<&[u8]>);
+    fn flush(&mut self);
 }
 
+// A dynamic writer, i.e. one that takes no generics and uses dyn instead
 pub struct DynamicFastXWriter {
     stream: Box<dyn SeqRecordWriter>,
+}
+
+// Non-dynamic writer, i.e. a writer that takes the internal stream as a generic parameter
+pub struct FastXWriter<W: Write>{
+    pub filetype: FileType,
+    pub output: BufWriter<W>,
 }
 
 impl DynamicFastXWriter{
@@ -66,6 +69,10 @@ impl DynamicFastXWriter{
             Self::new_to_stream(io::stdout(), filetype)
         }
     }
+
+    pub fn flush(&mut self){
+        self.stream.flush();
+    }
 }
 
 impl<W: Write> FastXWriter<W>{
@@ -106,5 +113,9 @@ impl<W: Write> SeqRecordWriter for FastXWriter<W>{
     fn write(&mut self, head: &[u8], seq: &[u8], qual: Option<&[u8]>){
         let rec = SeqRecord{head, seq, qual};
         self.write(&rec);
+    }
+
+    fn flush(&mut self){
+        self.output.flush().expect("Error flushing output stream");
     }
 }

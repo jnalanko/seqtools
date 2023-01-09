@@ -22,7 +22,14 @@ fn main(){
         let accession = first.split(|x| *x == b'.').next().unwrap();
         if accession != prev.as_slice(){
             // New accession number. Open a new fasta writer for that.
+
             let outfile = format!("{}/{}.fna", outdir, str::from_utf8(accession).unwrap());
+
+            match writer{ // Flush an existing stream
+                Some(mut w) => w.flush(),
+                None => ()
+            }
+            
             writer = Some(DynamicFastXWriter::new_to_file(&outfile));
             eprintln!("Processing accession {}", String::from_utf8(accession.to_vec()).unwrap());
         }
