@@ -113,23 +113,49 @@ CCCATTCTTGGAGATACCAGCAAAAATTCNAATTCACCAACACCAGCAGCNNNN
     Ok(())
 }
 
-#[test]
-fn subsample() -> Result<(), Box<dyn std::error::Error>>{
+fn subsample_frac() -> Result<(), Box<dyn std::error::Error>>{
     // Test fraction subsampling
     let mut cmd = Command::cargo_bin("seqtools")?;
-    let frac_cmd = cmd.arg("subsample").arg("tests/data/reads.fna").arg("--fraction").arg("0.55").arg("--fasta-out").arg("--gzip-out").stdout(Stdio::piped()).spawn()?;
-    let frac_out = frac_cmd.wait_with_output()?.stdout;
+    let child = cmd.arg("subsample").arg("tests/data/reads.fna").arg("--fraction").arg("0.55").arg("--fasta-out").stdout(Stdio::piped()).spawn()?;
+    let child_out = child.wait_with_output()?.stdout;
 
-    let n_lines = frac_out.iter().filter(|&&c| c == b'\n').count();
+    let n_lines = child_out.iter().filter(|&&c| c == b'\n').count();
     assert_eq!(n_lines, 5*2); // 5 sequences and headers
 
+    Ok(())
+}
+
+fn subsample_howmany() -> Result<(), Box<dyn std::error::Error>>{
     // Test howmany subsampling
     let mut cmd = Command::cargo_bin("seqtools")?;
-    let howmany_cmd = cmd.arg("subsample").arg("tests/data/reads.fna").arg("--howmany").arg("4").arg("--fasta-out").arg("--gzip-out").stdout(Stdio::piped()).spawn()?;
-    let frac_out = howmany_cmd.wait_with_output()?.stdout;
+    let child = cmd.arg("subsample").arg("tests/data/reads.fna").arg("--howmany").arg("4").arg("--fasta-out").stdout(Stdio::piped()).spawn()?;
+    let child_out = child.wait_with_output()?.stdout;
 
-    let n_lines = frac_out.iter().filter(|&&c| c == b'\n').count();
+    let n_lines = child_out.iter().filter(|&&c| c == b'\n').count();
     assert_eq!(n_lines, 4*2); // 4 sequences and headers
+
+    Ok(())
+}
+
+fn subsample_toomany() -> Result<(), Box<dyn std::error::Error>>{
+    // Test subsampling more than the number of sequences in the file
+    let mut cmd = Command::cargo_bin("seqtools")?;
+    let child = cmd.arg("subsample").arg("tests/data/reads.fna").arg("--howmany").arg("11").arg("--fasta-out").stdout(Stdio::piped()).spawn()?;
+    let child_out = child.wait_with_output()?.stdout;
+
+    let n_lines = child_out.iter().filter(|&&c| c == b'\n').count();
+    assert_eq!(n_lines, 10*2); // 10 sequences and headers
+
+    Ok(())
+}
+
+
+#[test]
+fn subsample() -> Result<(), Box<dyn std::error::Error>>{
+
+    subsample_frac()?;
+    subsample_howmany()?;
+    subsample_toomany()?;
 
     Ok(())
 }
