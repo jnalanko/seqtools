@@ -31,13 +31,33 @@ fn main() {
                 panic!("Can not subsample from stdin because we need to pass over the data twice.");
             }
 
-            // Get two readers for two passes over the data
-            let input1 = get_reader(&matches);
-            let input2 = get_reader(&matches);
-            let mut output = get_writer(&sub_matches);
-            let frac: f64 = sub_matches.get_one::<String>("fraction")
-                .unwrap().parse::<f64>().unwrap();
-            random_subsample(input1,  input2, &mut output, frac);
+            if let Some(f) = sub_matches.get_one::<String>("fraction"){
+                let frac = f.parse::<f64>().unwrap();
+                // Get two readers for two passes over the data
+                let input1 = get_reader(&matches);
+                let input2 = get_reader(&matches);
+                let mut output = get_writer(&sub_matches);
+                random_subsample(input1,  input2, &mut output, frac);
+            }
+
+            if let Some(f) = sub_matches.get_one::<String>("howmany"){
+                let mut howmany = f.parse::<u64>().unwrap();
+
+                // Count the number of sequences in the file
+                eprintln!("Counting sequences...");
+                let total_seqs = count_sequences(get_reader(&matches));
+                eprintln!("{} sequences found", total_seqs);
+                eprintln!("Subsampling {} sequences...", howmany);
+                if howmany > total_seqs{
+                    eprintln!("Warning: Trying to sample more sequences than what the file has -> sampling all.");
+                    howmany = total_seqs;
+                }
+
+                // Do the subsampling
+                let input = get_reader(&matches);
+                let mut output = get_writer(&sub_matches);
+                random_subsample_howmany(input, &mut output, total_seqs as usize, howmany as usize);
+            }
         }
         Some(("convert", sub_matches)) => { 
             let mut reader = get_reader(&matches);

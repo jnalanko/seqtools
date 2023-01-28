@@ -113,7 +113,26 @@ CCCATTCTTGGAGATACCAGCAAAAATTCNAATTCACCAACACCAGCAGCNNNN
     Ok(())
 }
 
+#[test]
+fn subsample() -> Result<(), Box<dyn std::error::Error>>{
+    // Test fraction subsampling
+    let mut cmd = Command::cargo_bin("seqtools")?;
+    let frac_cmd = cmd.arg("subsample").arg("tests/data/reads.fna").arg("--fraction").arg("0.55").arg("--fasta-out").arg("--gzip-out").stdout(Stdio::piped()).spawn()?;
+    let frac_out = frac_cmd.wait_with_output()?.stdout;
 
+    let n_lines = frac_out.iter().filter(|&&c| c == b'\n').count();
+    assert_eq!(n_lines, 5*2); // 5 sequences and headers
+
+    // Test howmany subsampling
+    let mut cmd = Command::cargo_bin("seqtools")?;
+    let howmany_cmd = cmd.arg("subsample").arg("tests/data/reads.fna").arg("--howmany").arg("4").arg("--fasta-out").arg("--gzip-out").stdout(Stdio::piped()).spawn()?;
+    let frac_out = howmany_cmd.wait_with_output()?.stdout;
+
+    let n_lines = frac_out.iter().filter(|&&c| c == b'\n').count();
+    assert_eq!(n_lines, 4*2); // 4 sequences and headers
+
+    Ok(())
+}
 
 #[test]
 fn trim() -> Result<(), Box<dyn std::error::Error>> {

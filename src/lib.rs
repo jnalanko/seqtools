@@ -111,11 +111,11 @@ pub fn random_subsample(input1: DynamicFastXReader, input2: DynamicFastXReader, 
     random_subsample_howmany(input2, out, n_seqs, subsample_seqs);
 }
 
-pub fn random_subsample_howmany(mut input: DynamicFastXReader, out: &mut DynamicFastXWriter, total_seqs: usize, sumsample_seqs: usize){
+pub fn random_subsample_howmany(mut input: DynamicFastXReader, out: &mut DynamicFastXWriter, total_seqs: usize, subsample_seqs: usize){
     let perm = get_random_permutation(total_seqs); 
 
     let mut keep_marks: Vec<u8> = vec![0u8; perm.len()];
-    for id in perm.iter().take(sumsample_seqs){
+    for id in perm.iter().take(subsample_seqs){
         keep_marks[*id as usize] = 1;
     }
 
