@@ -108,6 +108,15 @@ pub fn build_cli() -> Command {
                 .arg(&stdout_fasta)
                 .arg(&stdout_fastq)
                 .arg(&stdout_gzip),
+        ).subcommand(
+            Command::new("extract-read")
+                .about("Prints the read with rank i (zero-based)")
+                .arg_required_else_help(true)                
+                .arg(Arg::new("rank")
+                    .short('r')
+                    .long("rank")
+                    .required(true)
+                )                
         )
         .subcommand(Command::new("stats").about("Print stats about the input."))
 }

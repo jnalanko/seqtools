@@ -23,6 +23,23 @@ impl<'a> Iterator for LengthIterator<'a>{
     }
 }
 
+pub fn extract_read(reader: &mut DynamicFastXReader, target_rank: usize){
+    let mut current_rank = 0 as usize;
+    loop{
+        match reader.read_next() {
+            Some(rec) => {
+                if current_rank == target_rank{
+                    println!("{}", rec);
+                    return;
+                }
+                current_rank += 1;
+            },
+            None => break
+        }
+    }    
+    eprintln!("Error: requested rank {} must be smaller than the number of reads {} in the input.", target_rank, current_rank);
+}
+
 pub fn print_stats(reader: &mut DynamicFastXReader){
     let mut total_length: u64 = 0;
     let mut number_of_sequences: u64 = 0;

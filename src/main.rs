@@ -26,6 +26,11 @@ fn main() {
             let mut reader = get_reader(&matches);
             print_stats(&mut reader);
         }
+        Some(("extract-read", sub_matches)) => { 
+            let mut reader = get_reader(&matches);
+            let rank = sub_matches.get_one::<String>("rank").unwrap().parse::<usize>().unwrap();
+            extract_read(&mut reader, rank);
+        }
         Some(("subsample", sub_matches)) => { // TODO: Untested
             if matches.get_one::<String>("input") == None {
                 panic!("Can not subsample from stdin because we need to pass over the data twice.");
