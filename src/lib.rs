@@ -165,10 +165,10 @@ pub fn convert(input: &mut DynamicFastXReader, output: &mut DynamicFastXWriter){
     }   
 }
 
-pub fn trim(input: &mut DynamicFastXReader, output: &mut DynamicFastXWriter, from_start: usize, from_end: usize){
+pub fn trim(input: &mut DynamicFastXReader, output: &mut DynamicFastXWriter, from_start: usize, from_end: usize, min_final_len: usize){
     let mut n_deleted: u64 = 0;
     while let Some(mut rec) = input.read_next(){
-        if rec.seq.len() > from_start + from_end{
+        if rec.seq.len() >= from_start + from_end + min_final_len{
             // Trimming leaves at least one nucleotide
             rec.seq = &rec.seq[from_start .. rec.seq.len() - from_end];
             if let Some(qual) = rec.qual{
@@ -182,7 +182,7 @@ pub fn trim(input: &mut DynamicFastXReader, output: &mut DynamicFastXWriter, fro
         }
     }
     if n_deleted > 0 {
-        eprintln!("Deleted {} sequences as too short to trim", n_deleted);
+        eprintln!("Deleted {} sequences whose final length would have been below the minimum length {}", n_deleted, min_final_len);
     }
 }
 

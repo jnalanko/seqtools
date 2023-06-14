@@ -74,7 +74,8 @@ fn main() {
             let mut writer = get_writer(&sub_matches);
             let from_start: usize = sub_matches.get_one::<String>("from-start").unwrap().parse().unwrap();
             let from_end: usize = sub_matches.get_one::<String>("from-end").unwrap().parse().unwrap();
-            trim(&mut reader, &mut writer, from_start, from_end);
+            let min_final_length: usize = sub_matches.get_one::<String>("min-final-length").unwrap().parse().unwrap();
+            trim(&mut reader, &mut writer, from_start, from_end, min_final_length);
         }
         _ => {}
     };
