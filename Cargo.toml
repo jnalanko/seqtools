@@ -11,6 +11,10 @@ name = "seqtools"
 path = "src/main.rs"
 
 [[bin]]
+name = "kmer_intersection"
+path = "src/kmer_intersection.rs"
+
+[[bin]]
 name = "revcomp"    
 path = "src/revcomp.rs"
 
