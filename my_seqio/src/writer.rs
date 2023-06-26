@@ -36,12 +36,14 @@ impl DynamicFastXWriter{
         self.stream.write(rec.head(), rec.seq(), rec.qual());
     }
 
+    // No need to give a buffered writer. Buffering is handled internally.
     pub fn new_to_stream<W: Write + 'static>(stream: W, filetype: FileType) -> Self{
         let writer = FastXWriter::<W>::new(stream, filetype);
         DynamicFastXWriter {stream: Box::new(writer)}
     }
 
     // Write to a file
+    // No need to give a buffered writer. Buffering is handled internally.
     pub fn new_to_file(filename: &String) -> Self {
         let output = File::create(&filename).unwrap();
         match figure_out_file_format(&filename.as_str()){

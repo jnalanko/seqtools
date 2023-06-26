@@ -15,6 +15,10 @@ name = "kmer_intersection"
 path = "src/kmer_intersection.rs"
 
 [[bin]]
+name = "interleave_seqs"
+path = "src/interleave_seqs.rs"
+
+[[bin]]
 name = "revcomp"    
 path = "src/revcomp.rs"
 
