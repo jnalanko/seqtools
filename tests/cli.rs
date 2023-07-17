@@ -66,7 +66,6 @@ fn convert() -> Result<(), Box<dyn std::error::Error>> {
     let mut second = cmd.arg("convert").arg("--gzip-in").arg("--fastq-out").stdin(Stdio::piped()).stdout(Stdio::piped()).spawn()?;
     let second_stdin = second.stdin.as_mut().unwrap();
     second_stdin.write_all(&first_stdout_result)?;
-    drop(second_stdin); // Flush
     let second_stdout_result = second.wait_with_output()?.stdout;
 
     // fastq -> fastq.gz
@@ -74,7 +73,6 @@ fn convert() -> Result<(), Box<dyn std::error::Error>> {
     let mut third = cmd.arg("convert").arg("--fastq-out").arg("--gzip-out").stdin(Stdio::piped()).stdout(Stdio::piped()).spawn()?;
     let third_stdin = third.stdin.as_mut().unwrap();
     third_stdin.write_all(&second_stdout_result)?;
-    drop(third_stdin); // Flush
     let third_stdout_result = third.wait_with_output()?.stdout;
 
     // fastq.gz -> fasta
@@ -82,7 +80,6 @@ fn convert() -> Result<(), Box<dyn std::error::Error>> {
     let mut fourth = cmd.arg("convert").arg("--gzip-in").arg("--fasta-out").stdin(Stdio::piped()).stdout(Stdio::piped()).spawn()?;
     let fourth_stdin = fourth.stdin.as_mut().unwrap();
     fourth_stdin.write_all(&third_stdout_result)?;
-    drop(fourth_stdin); // Flush
     let fourth_stdout_result = fourth.wait_with_output()?.stdout;
 
     // See if we have the same fasta data as we started with
