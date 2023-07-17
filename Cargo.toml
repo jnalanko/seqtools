@@ -33,6 +33,8 @@ clap = { version = "4.0.26", features = ["derive"] }
 clap_complete = "4.0.6"
 rand = "*"
 my_seqio = { path = "my_seqio" }
+sha2 = "0.10.7"
+generic-array = "*"
 
 [build-dependencies]
 

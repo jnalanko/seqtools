@@ -64,6 +64,12 @@ fn main() {
                 random_subsample_howmany(input, &mut output, total_seqs as usize, howmany as usize);
             }
         }
+        Some(("remove-duplicates", sub_matches)) => { // TODO: Untested
+
+            let mut input = get_reader(&matches);
+            let mut output = get_writer(&sub_matches);
+            remove_duplicates(&mut input, &mut output);
+        }
         Some(("convert", sub_matches)) => { 
             let mut reader = get_reader(&matches);
             let mut writer = get_writer(&sub_matches);

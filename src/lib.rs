@@ -6,6 +6,10 @@ mod histogram;
 use std::io::{Write,BufWriter};
 use rand::Rng;
 use std::cmp::{max,min};
+use sha2::{Sha256, Digest};
+use generic_array::GenericArray;
+use generic_array::typenum::U32; // Replace `U32` with the desired size
+
 
 struct LengthIterator<'a>{
     reader: &'a mut DynamicFastXReader,
@@ -84,6 +88,20 @@ pub fn print_stats(reader: &mut DynamicFastXReader){
         println!("Average quality value: {}", sum_of_quality_values as f64 / total_length as f64);
     }
 
+}
+
+// Removes sequenes that have exactly the same nucleotides. The headers need not match.
+pub fn remove_duplicates(reader: &mut DynamicFastXReader, writer: &mut DynamicFastXWriter){
+    let mut seen: std::collections::HashSet<Vec<u8>> = std::collections::HashSet::new(); // Hash values of seen sequences
+    let mut hasher = Sha256::new();
+    while let Some(rec) = reader.read_next(){
+        hasher.update(&rec.seq);
+        let hashvalue = hasher.finalize_reset();
+        if !seen.contains(hashvalue.as_slice()){
+            writer.write(rec);
+            seen.insert(hashvalue.to_vec());
+        }
+    }
 }
 
 

@@ -87,6 +87,14 @@ pub fn build_cli() -> Command {
                 .arg(&stdout_fastq)
                 .arg(&stdout_gzip),
         ).subcommand(
+            Command::new("remove-duplicates")
+                .about("Removes reads that have exactly the same nucleotides (headers do not need to match).")
+                .arg_required_else_help(true)
+                .arg(&output_file)
+                .arg(&stdout_fasta)
+                .arg(&stdout_fastq)
+                .arg(&stdout_gzip),
+            ).subcommand(
             Command::new("trim")
                 .about("Trim starts and ends of sequences.")
                 .arg_required_else_help(true)

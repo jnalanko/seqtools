@@ -1,10 +1,11 @@
 
 use std::process::{Command, Stdio}; // Run programs
-use assert_cmd::prelude::*; // Add methods on commands
+use assert_cmd::prelude::*; use my_seqio::writer::{DynamicFastXWriter, self, FastXWriter};
+// Add methods on commands
 use predicates::prelude::*; // Used for writing assertions
 use tempfile;
 use std::str;
-use std::io::Write;
+use std::io::{Write, BufWriter};
 
 #[test]
 fn stats() -> Result<(), Box<dyn std::error::Error>> {
@@ -113,6 +114,7 @@ CCCATTCTTGGAGATACCAGCAAAAATTCNAATTCACCAACACCAGCAGCNNNN
     Ok(())
 }
 
+#[test]
 fn subsample_frac() -> Result<(), Box<dyn std::error::Error>>{
     // Test fraction subsampling
     let mut cmd = Command::cargo_bin("seqtools")?;
@@ -125,6 +127,7 @@ fn subsample_frac() -> Result<(), Box<dyn std::error::Error>>{
     Ok(())
 }
 
+#[test]
 fn subsample_howmany() -> Result<(), Box<dyn std::error::Error>>{
     // Test howmany subsampling
     let mut cmd = Command::cargo_bin("seqtools")?;
@@ -137,6 +140,7 @@ fn subsample_howmany() -> Result<(), Box<dyn std::error::Error>>{
     Ok(())
 }
 
+#[test]
 fn subsample_toomany() -> Result<(), Box<dyn std::error::Error>>{
     // Test subsampling more than the number of sequences in the file
     let mut cmd = Command::cargo_bin("seqtools")?;
@@ -161,12 +165,54 @@ fn subsample() -> Result<(), Box<dyn std::error::Error>>{
 }
 
 #[test]
+fn remove_duplicates() -> Result<(), Box<dyn std::error::Error>>{
+    let mut buf = Vec::<u8>::new();
+    let mut bufwriter = BufWriter::<Vec::<u8>>::new(buf);
+    let mut seqwriter = my_seqio::writer::FastXWriter::new(&mut bufwriter, my_seqio::FileType::FASTA);
+    seqwriter.write(&my_seqio::record::OwnedSeqRecord{
+        head: b"".to_vec(),
+        seq: b"ACGT".to_vec(),
+        qual: None,
+    });
+    seqwriter.write(&my_seqio::record::OwnedSeqRecord{
+        head: b"".to_vec(),
+        seq: b"GGG".to_vec(),
+        qual: None,
+    });
+    seqwriter.write(&my_seqio::record::OwnedSeqRecord{
+        head: b"".to_vec(),
+        seq: b"ACGT".to_vec(),
+        qual: None,
+    });
+    seqwriter.write(&my_seqio::record::OwnedSeqRecord{
+        head: b"".to_vec(),
+        seq: b"ACGT".to_vec(),
+        qual: None,
+    });
+
+    seqwriter.flush();
+    drop(seqwriter);
+    let buf = bufwriter.into_inner().unwrap(); // Take back ownership
+
+    let mut cmd = Command::cargo_bin("seqtools")?;
+    let mut child = cmd.arg("remove-duplicates").arg("--fasta-in").arg("--fasta-out").stdout(Stdio::piped()).stdin(Stdio::piped()).spawn()?;
+    child.stdin.as_mut().unwrap().write_all(buf.as_slice()).unwrap();
+    // TODO: Do we need to write eof?
+    let child_out = child.wait_with_output()?.stdout;
+
+    assert_eq!(child_out, b">\nACGT\n>\nGGG\n");
+
+    Ok(())
+}
+
+#[test]
 fn trim() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("seqtools")?;
 
     cmd.arg("trim").arg("tests/data/reads.fastq.gz")
         .arg("--from-start").arg("20").arg("--from-end").arg("26").arg("--fastq-out");
     // Corner case: 20 + 26 = 46. There is a sequence of length exactly 46. That should be deleted.
+    // TODO: update test and test --min-final-length
 
     let answer = 
     "\
