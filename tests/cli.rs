@@ -196,7 +196,7 @@ fn remove_duplicates() -> Result<(), Box<dyn std::error::Error>>{
 
     let mut cmd = Command::cargo_bin("seqtools")?;
     let mut child = cmd.arg("remove-duplicates").arg("--fasta-in").arg("--fasta-out").stdout(Stdio::piped()).stdin(Stdio::piped()).spawn()?;
-    child.stdin.as_mut().unwrap().write_all(buf.as_slice()).unwrap();
+    child.stdin.take().unwrap().write_all(buf.as_slice()).unwrap();
     // TODO: Do we need to write eof?
     let child_out = child.wait_with_output()?.stdout;
 
@@ -210,38 +210,20 @@ fn trim() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("seqtools")?;
 
     cmd.arg("trim").arg("tests/data/reads.fastq.gz")
-        .arg("--from-start").arg("20").arg("--from-end").arg("26").arg("--fastq-out");
-    // Corner case: 20 + 26 = 46. There is a sequence of length exactly 46. That should be deleted.
-    // TODO: update test and test --min-final-length
+        .arg("--from-start").arg("20").arg("--from-end").arg("26").arg("--fastq-out").arg("--min-final-length").arg("4");
 
     let answer = 
     "\
-@SRR403017.1 HWUSI-EAS108E_0007:3:1:3797:973/1
-CCA
-+
-567
-@SRR403017.3 HWUSI-EAS108E_0007:3:1:13569:972/1
-GAA
-+
-III
-@SRR403017.5 HWUSI-EAS108E_0007:3:1:6652:978/1
-TAG
-+
-III
 @SRR403017.6 HWUSI-EAS108E_0007:3:1:8133:984/1
 AGGCNC
 +
 IIIIII
-@SRR403017.9 HWUSI-EAS108E_0007:3:1:11308:980/1
-TGG
-+
-III
 @SRR403017.10 HWUSI-EAS108E_0007:3:1:14685:981/1
 CAAAAATT
 +
 IIIIIIII";
 
-    let deleted_seqs_message = "Deleted 4 sequences as too short to trim";
+    let deleted_seqs_message = "Deleted 8 sequences whose final length would have been below the minimum length 4";
 
     cmd.assert()
         .stdout(predicate::str::contains(answer))
