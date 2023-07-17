@@ -1,6 +1,6 @@
 use seq_tools::*;
-use my_seqio::reader::DynamicFastXReader;
-use my_seqio::writer::DynamicFastXWriter;
+use jseqio::reader::DynamicFastXReader;
+use jseqio::writer::DynamicFastXWriter;
 
 use std::env;
 
@@ -27,8 +27,8 @@ fn main(){
 
         // copy `howmany` records to a new file.
         for _ in 0u64..howmany{
-            let rec = reader.read_next();
-            writer.write(rec.unwrap());
+            let rec = reader.read_next().unwrap();
+            writer.write(&rec.expect("Not enough records in file"));
         }
 
         prev_file = outfile.clone();

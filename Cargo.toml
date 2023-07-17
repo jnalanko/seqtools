@@ -32,7 +32,7 @@ flate2 = "1.0.24"
 clap = { version = "4.0.26", features = ["derive"] }
 clap_complete = "4.0.6"
 rand = "*"
-my_seqio = { path = "my_seqio" }
+jseqio = { path = "jseqio" }
 sha2 = "0.10.7"
 generic-array = "*"
 
@@ -41,7 +41,7 @@ generic-array = "*"
 flate2 = "1.0.24"
 clap = { version = "4.0.26", features = ["derive"] }
 clap_complete = "4.0.6"
-my_seqio = { path = "my_seqio" }
+jseqio = { path = "jseqio" }
 
 [dev-dependencies]
 assert_cmd = "2.0"

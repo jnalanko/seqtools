@@ -1,5 +1,5 @@
-use my_seqio::reader::DynamicFastXReader;
-use my_seqio::writer::DynamicFastXWriter;
+use jseqio::reader::DynamicFastXReader;
+use jseqio::writer::DynamicFastXWriter;
 
 mod histogram;
 
@@ -19,7 +19,7 @@ impl<'a> Iterator for LengthIterator<'a>{
     type Item = i64;
 
     fn next(&mut self) -> Option<Self::Item>{
-        let rec = self.reader.read_next();
+        let rec = self.reader.read_next().unwrap();
         match rec{
             None => None,
             Some(r) => Some(r.seq.len() as i64),
@@ -30,7 +30,7 @@ impl<'a> Iterator for LengthIterator<'a>{
 pub fn extract_read(reader: &mut DynamicFastXReader, target_rank: usize){
     let mut current_rank = 0 as usize;
     loop{
-        match reader.read_next() {
+        match reader.read_next().unwrap() {
             Some(rec) => {
                 if current_rank == target_rank{
                     println!("{}", rec);
@@ -56,7 +56,7 @@ pub fn print_stats(reader: &mut DynamicFastXReader){
     let mut sum_of_quality_values: u64 = 0;
 
     loop{
-        match reader.read_next() {
+        match reader.read_next().unwrap() {
             Some(rec) => {
                 total_length += rec.seq.len() as u64;
                 number_of_sequences += 1;
@@ -94,11 +94,11 @@ pub fn print_stats(reader: &mut DynamicFastXReader){
 pub fn remove_duplicates(reader: &mut DynamicFastXReader, writer: &mut DynamicFastXWriter){
     let mut seen: std::collections::HashSet<Vec<u8>> = std::collections::HashSet::new(); // Hash values of seen sequences
     let mut hasher = Sha256::new();
-    while let Some(rec) = reader.read_next(){
+    while let Some(rec) = reader.read_next().unwrap(){
         hasher.update(&rec.seq);
         let hashvalue = hasher.finalize_reset();
         if !seen.contains(hashvalue.as_slice()){
-            writer.write(rec);
+            writer.write(&rec);
             seen.insert(hashvalue.to_vec());
         }
     }
@@ -112,7 +112,7 @@ pub fn print_length_histogram(reader: &mut DynamicFastXReader, min: i64, max: i6
 
 pub fn count_sequences(mut input: DynamicFastXReader) -> u64{
     let mut count = 0u64;
-    while let Some(_) = input.read_next(){
+    while let Some(_) = input.read_next().unwrap(){
         count += 1;
     }
     return count;
@@ -155,9 +155,9 @@ pub fn random_subsample_howmany(mut input: DynamicFastXReader, out: &mut Dynamic
     }
 
     let mut seq_idx = 0;
-    while let Some(rec) = input.read_next(){
+    while let Some(rec) = input.read_next().unwrap(){
         if keep_marks[seq_idx] == 1{
-            out.write(rec);
+            out.write(&rec);
         }
         seq_idx += 1;
     }
@@ -167,7 +167,7 @@ pub fn random_subsample_howmany(mut input: DynamicFastXReader, out: &mut Dynamic
 
 pub fn convert(input: &mut DynamicFastXReader, output: &mut DynamicFastXWriter){
     let mut dummy_qual_values: Vec<u8> = vec![]; // A buffer for dummy quality values for fasta -> fastq conversion 
-    while let Some(mut rec) = input.read_next(){
+    while let Some(mut rec) = input.read_next().unwrap(){
         if matches!(rec.qual, None){
             // Potentially doing Fasta to Fastq conversion.
             // Put dummy quality values to rec.qual.
@@ -179,13 +179,13 @@ pub fn convert(input: &mut DynamicFastXReader, output: &mut DynamicFastXWriter){
             }
             rec.qual = Some(&dummy_qual_values.as_slice()[0..rec.seq.len()]);
         }
-        output.write(rec);
+        output.write(&rec);
     }   
 }
 
 pub fn trim(input: &mut DynamicFastXReader, output: &mut DynamicFastXWriter, from_start: usize, from_end: usize, min_final_len: usize){
     let mut n_deleted: u64 = 0;
-    while let Some(mut rec) = input.read_next(){
+    while let Some(mut rec) = input.read_next().unwrap(){
         if rec.seq.len() >= from_start + from_end + min_final_len{
             // Trimming leaves at least one nucleotide
             rec.seq = &rec.seq[from_start .. rec.seq.len() - from_end];
@@ -193,7 +193,7 @@ pub fn trim(input: &mut DynamicFastXReader, output: &mut DynamicFastXWriter, fro
                 // Quality values are present -> trim those too
                 rec.qual = Some(&qual[from_start .. qual.len() - from_end]);
             }
-            output.write(rec);
+            output.write(&rec);
         } else{
             // Delete this sequence
             n_deleted += 1;
@@ -224,7 +224,7 @@ pub fn get_reader(args: &clap::ArgMatches) -> DynamicFastXReader{
                 "Error: must give --fasta-in or --fastq-in and possibly --gzip-in if reading from stdin."
             );
         };
-        let filetype = if is_fastq {my_seqio::FileType::FASTQ} else {my_seqio::FileType::FASTA};
+        let filetype = if is_fastq {jseqio::FileType::FASTQ} else {jseqio::FileType::FASTA};
         DynamicFastXReader::new_from_stdin(filetype, is_gzip)
     }
 }
@@ -248,7 +248,7 @@ pub fn get_writer(args: &clap::ArgMatches) -> DynamicFastXWriter{
                 "Error: must give --fasta-out or --fastq-out and possibly --gzip-out if writing to stdout."
             );
         };
-        let filetype = if is_fastq {my_seqio::FileType::FASTQ} else {my_seqio::FileType::FASTA};
+        let filetype = if is_fastq {jseqio::FileType::FASTQ} else {jseqio::FileType::FASTA};
         DynamicFastXWriter::new_to_stdout(filetype, is_gzip)
     }
 }

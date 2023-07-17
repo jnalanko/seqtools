@@ -1,6 +1,6 @@
 use seq_tools::*;
-use my_seqio::reader::DynamicFastXReader;
-use my_seqio::writer::DynamicFastXWriter;
+use jseqio::reader::DynamicFastXReader;
+use jseqio::writer::DynamicFastXWriter;
 use std::str;
 
 use std::env;
@@ -16,7 +16,7 @@ fn main(){
 
     let mut writer: Option<DynamicFastXWriter> = None;
 
-    while let Some(rec) = reader.read_next(){
+    while let Some(rec) = reader.read_next().unwrap(){
         let mut tokens = rec.head.split(|x| *x == b' ');
         let first = tokens.next().unwrap();
         let accession = first.split(|x| *x == b'.').next().unwrap();
@@ -33,7 +33,7 @@ fn main(){
             writer = Some(DynamicFastXWriter::new_to_file(&outfile));
             eprintln!("Processing accession {}", String::from_utf8(accession.to_vec()).unwrap());
         }
-        writer.as_mut().unwrap().write(rec);
+        writer.as_mut().unwrap().write(&rec);
         prev = accession.to_owned();
     }
 

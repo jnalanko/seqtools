@@ -1,6 +1,6 @@
 
 use std::process::{Command, Stdio}; // Run programs
-use assert_cmd::prelude::*; use my_seqio::writer::{DynamicFastXWriter, self, FastXWriter};
+use assert_cmd::prelude::*; use jseqio::writer::{DynamicFastXWriter, self, FastXWriter};
 // Add methods on commands
 use predicates::prelude::*; // Used for writing assertions
 use tempfile;
@@ -168,23 +168,23 @@ fn subsample() -> Result<(), Box<dyn std::error::Error>>{
 fn remove_duplicates() -> Result<(), Box<dyn std::error::Error>>{
     let mut buf = Vec::<u8>::new();
     let mut bufwriter = BufWriter::<Vec::<u8>>::new(buf);
-    let mut seqwriter = my_seqio::writer::FastXWriter::new(&mut bufwriter, my_seqio::FileType::FASTA);
-    seqwriter.write(&my_seqio::record::OwnedSeqRecord{
+    let mut seqwriter = jseqio::writer::FastXWriter::new(&mut bufwriter, jseqio::FileType::FASTA);
+    seqwriter.write(&jseqio::record::OwnedRecord{
         head: b"".to_vec(),
         seq: b"ACGT".to_vec(),
         qual: None,
     });
-    seqwriter.write(&my_seqio::record::OwnedSeqRecord{
+    seqwriter.write(&jseqio::record::OwnedRecord{
         head: b"".to_vec(),
         seq: b"GGG".to_vec(),
         qual: None,
     });
-    seqwriter.write(&my_seqio::record::OwnedSeqRecord{
+    seqwriter.write(&jseqio::record::OwnedRecord{
         head: b"".to_vec(),
         seq: b"ACGT".to_vec(),
         qual: None,
     });
-    seqwriter.write(&my_seqio::record::OwnedSeqRecord{
+    seqwriter.write(&jseqio::record::OwnedRecord{
         head: b"".to_vec(),
         seq: b"ACGT".to_vec(),
         qual: None,
