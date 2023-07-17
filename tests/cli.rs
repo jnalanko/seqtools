@@ -63,7 +63,7 @@ fn convert() -> Result<(), Box<dyn std::error::Error>> {
 
     // fasta.gz -> fastq
     cmd = Command::cargo_bin("seqtools")?;
-    let mut second = cmd.arg("convert").arg("--fasta-in").arg("--gzip-in").arg("--fastq-out").stdin(Stdio::piped()).stdout(Stdio::piped()).spawn()?;
+    let mut second = cmd.arg("convert").arg("--gzip-in").arg("--fastq-out").stdin(Stdio::piped()).stdout(Stdio::piped()).spawn()?;
     let second_stdin = second.stdin.as_mut().unwrap();
     second_stdin.write_all(&first_stdout_result)?;
     drop(second_stdin); // Flush
@@ -71,7 +71,7 @@ fn convert() -> Result<(), Box<dyn std::error::Error>> {
 
     // fastq -> fastq.gz
     cmd = Command::cargo_bin("seqtools")?;
-    let mut third = cmd.arg("convert").arg("--fastq-in").arg("--fastq-out").arg("--gzip-out").stdin(Stdio::piped()).stdout(Stdio::piped()).spawn()?;
+    let mut third = cmd.arg("convert").arg("--fastq-out").arg("--gzip-out").stdin(Stdio::piped()).stdout(Stdio::piped()).spawn()?;
     let third_stdin = third.stdin.as_mut().unwrap();
     third_stdin.write_all(&second_stdout_result)?;
     drop(third_stdin); // Flush
@@ -79,7 +79,7 @@ fn convert() -> Result<(), Box<dyn std::error::Error>> {
 
     // fastq.gz -> fasta
     cmd = Command::cargo_bin("seqtools")?;
-    let mut fourth = cmd.arg("convert").arg("--fastq-in").arg("--gzip-in").arg("--fasta-out").stdin(Stdio::piped()).stdout(Stdio::piped()).spawn()?;
+    let mut fourth = cmd.arg("convert").arg("--gzip-in").arg("--fasta-out").stdin(Stdio::piped()).stdout(Stdio::piped()).spawn()?;
     let fourth_stdin = fourth.stdin.as_mut().unwrap();
     fourth_stdin.write_all(&third_stdout_result)?;
     drop(fourth_stdin); // Flush
@@ -195,7 +195,7 @@ fn remove_duplicates() -> Result<(), Box<dyn std::error::Error>>{
     let buf = bufwriter.into_inner().unwrap(); // Take back ownership
 
     let mut cmd = Command::cargo_bin("seqtools")?;
-    let mut child = cmd.arg("remove-duplicates").arg("--fasta-in").arg("--fasta-out").stdout(Stdio::piped()).stdin(Stdio::piped()).spawn()?;
+    let mut child = cmd.arg("remove-duplicates").arg("--fasta-out").stdout(Stdio::piped()).stdin(Stdio::piped()).spawn()?;
     child.stdin.take().unwrap().write_all(buf.as_slice()).unwrap();
     // TODO: Do we need to write eof?
     let child_out = child.wait_with_output()?.stdout;

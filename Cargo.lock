@@ -551,7 +551,6 @@ dependencies = [
  "clap",
  "clap_complete",
  "flate2",
- "generic-array",
  "jseqio",
  "predicates",
  "rand",

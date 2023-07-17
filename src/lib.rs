@@ -7,9 +7,6 @@ use std::io::{Write,BufWriter};
 use rand::Rng;
 use std::cmp::{max,min};
 use sha2::{Sha256, Digest};
-use generic_array::GenericArray;
-use generic_array::typenum::U32; // Replace `U32` with the desired size
-
 
 struct LengthIterator<'a>{
     reader: &'a mut DynamicFastXReader,
@@ -205,7 +202,7 @@ pub fn trim(input: &mut DynamicFastXReader, output: &mut DynamicFastXWriter, fro
 }
 
 
-pub fn get_reader(args: &clap::ArgMatches) -> DynamicFastXReader{
+pub fn get_reader(args: &clap::ArgMatches) -> Result<DynamicFastXReader, Box<dyn std::error::Error>>{
     let filename = args.get_one::<String>("input");
 
     if let Some(infile) = filename {
@@ -213,19 +210,8 @@ pub fn get_reader(args: &clap::ArgMatches) -> DynamicFastXReader{
         DynamicFastXReader::new_from_file(&infile)
     } else {
         // From stdin
-        let is_fasta = args.get_flag("fasta-in");
-        let is_fastq = args.get_flag("fastq-in");
         let is_gzip = args.get_flag("gzip-in");
-        if is_fasta && is_fastq {
-            panic!("Error: can't give both fasta and fastq flags.");
-        }
-        if !is_fasta && !is_fastq {
-            panic!(
-                "Error: must give --fasta-in or --fastq-in and possibly --gzip-in if reading from stdin."
-            );
-        };
-        let filetype = if is_fastq {jseqio::FileType::FASTQ} else {jseqio::FileType::FASTA};
-        DynamicFastXReader::new_from_stdin(filetype, is_gzip)
+        DynamicFastXReader::new_from_stdin(is_gzip)
     }
 }
 

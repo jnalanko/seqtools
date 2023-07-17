@@ -34,7 +34,6 @@ clap_complete = "4.0.6"
 rand = "*"
 jseqio = { path = "jseqio" }
 sha2 = "0.10.7"
-generic-array = "*"
 
 [build-dependencies]
 

@@ -35,21 +35,7 @@ pub fn build_cli() -> Command {
             Arg::new("input")
                 //.short('i')
                 //.long("input")
-                .help("Read from a file on disk (format is deduced from the file extension)")
-                .global(true),
-        )
-        .arg(
-            Arg::new("fasta-in")
-                .long("fasta-in")
-                .action(ArgAction::SetTrue)
-                .help("Parse from stdin in fasta format")
-                .global(true),
-        )
-        .arg(
-            Arg::new("fastq-in")
-                .long("fastq-in")
-                .action(ArgAction::SetTrue)
-                .help("Parse from stdin in fastq format")
+                .help("Read from a file on disk (FASTA/FASTQ format is detected automatically based on the first byte. Gzipped files are supported as long as the file extension is .gz)")
                 .global(true),
         )
         .arg(
