@@ -1,11 +1,11 @@
-use seq_tools::*;
+
 use jseqio::reader::DynamicFastXReader;
-use jseqio::writer::{DynamicFastXWriter, self};
-use std::collections::HashSet;
-use std::str;
-use std::cmp::max;
-use std::fs::File;
-use std::io::{BufWriter};
+use jseqio::writer::{DynamicFastXWriter};
+
+
+
+
+
 
 use std::env;
 

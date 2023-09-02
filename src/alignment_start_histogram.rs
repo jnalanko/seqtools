@@ -4,7 +4,7 @@ use std::env;
 use std::fs;
 use std::io;
 use std::io::BufRead;
-use std::io::Write;
+
 
 use histogram::print_histogram;
 

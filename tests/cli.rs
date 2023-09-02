@@ -1,9 +1,9 @@
 
 use std::process::{Command, Stdio}; // Run programs
-use assert_cmd::prelude::*; use jseqio::writer::{DynamicFastXWriter, self, FastXWriter};
+use assert_cmd::prelude::*; 
 // Add methods on commands
 use predicates::prelude::*; // Used for writing assertions
-use tempfile;
+
 use std::str;
 use std::io::{Write, BufWriter};
 
@@ -163,7 +163,7 @@ fn subsample() -> Result<(), Box<dyn std::error::Error>>{
 
 #[test]
 fn remove_duplicates() -> Result<(), Box<dyn std::error::Error>>{
-    let mut buf = Vec::<u8>::new();
+    let buf = Vec::<u8>::new();
     let mut bufwriter = BufWriter::<Vec::<u8>>::new(buf);
     let mut seqwriter = jseqio::writer::FastXWriter::new(&mut bufwriter, jseqio::FileType::FASTA);
     seqwriter.write(&jseqio::record::OwnedRecord{

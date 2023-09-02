@@ -1,8 +1,8 @@
-use seq_tools::*;
+
 use jseqio::reader::DynamicFastXReader;
-use jseqio::writer::DynamicFastXWriter;
+
 use std::collections::HashSet;
-use std::str;
+
 use std::cmp::max;
 
 use std::env;
@@ -23,6 +23,7 @@ fn hash_kmers(filename: &String, k: usize) -> HashSet<Vec<u8>>{
     kmers
 }
 
+#[allow(non_snake_case)]
 fn main(){
     let args: Vec<String> = env::args().collect();
     let seqs1 = args[1].clone();
