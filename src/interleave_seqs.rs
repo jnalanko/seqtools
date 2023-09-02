@@ -1,6 +1,6 @@
 use seq_tools::*;
-use my_seqio::reader::DynamicFastXReader;
-use my_seqio::writer::{DynamicFastXWriter, self};
+use jseqio::reader::DynamicFastXReader;
+use jseqio::writer::{DynamicFastXWriter, self};
 use std::collections::HashSet;
 use std::str;
 use std::cmp::max;
@@ -15,19 +15,19 @@ fn main(){
     let seqs2 = args[2].clone();
     let outfile = args[3].clone();
 
-    let mut reader1 = DynamicFastXReader::new_from_file(&seqs1);
-    let mut reader2 = DynamicFastXReader::new_from_file(&seqs2);
+    let mut reader1 = DynamicFastXReader::new_from_file(&seqs1).unwrap();
+    let mut reader2 = DynamicFastXReader::new_from_file(&seqs2).unwrap();
 
     let mut writer = DynamicFastXWriter::new_to_file(&outfile);
 
-    while let Some(rec1) = reader1.read_next(){
-        let rec2 = reader2.read_next().expect("File 2 has fewer records than file 1.");
-        writer.write(rec1);
-        writer.write(rec2);
+    while let Some(rec1) = reader1.read_next().unwrap(){
+        let rec2 = reader2.read_next().expect("File 2 has fewer records than file 1.").unwrap();
+        writer.write(&rec1);
+        writer.write(&rec2);
     }
 
     writer.flush();
-    if let Some(_) = reader2.read_next(){
+    if let Some(_) = reader2.read_next().unwrap(){
         panic!("File 2 has more records than file 1.")
     }
 

@@ -1,6 +1,6 @@
 use seq_tools::*;
-use my_seqio::reader::DynamicFastXReader;
-use my_seqio::writer::DynamicFastXWriter;
+use jseqio::reader::DynamicFastXReader;
+use jseqio::writer::DynamicFastXWriter;
 use std::collections::HashSet;
 use std::str;
 use std::cmp::max;
@@ -8,9 +8,9 @@ use std::cmp::max;
 use std::env;
 
 fn hash_kmers(filename: &String, k: usize) -> HashSet<Vec<u8>>{
-    let mut reader = DynamicFastXReader::new_from_file(&filename);    
+    let mut reader = DynamicFastXReader::new_from_file(&filename).unwrap();
     let mut kmers: HashSet<Vec<u8>> = HashSet::new();
-    while let Some(rec) = reader.read_next(){
+    while let Some(rec) = reader.read_next().unwrap(){
         let seq = rec.seq;
         let n = seq.len() as i64;
         let k = k as i64;
