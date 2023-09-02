@@ -15,26 +15,18 @@ impl<'a> Iterator for LengthIterator<'a>{
 
     fn next(&mut self) -> Option<Self::Item>{
         let rec = self.reader.read_next().unwrap();
-        match rec{
-            None => None,
-            Some(r) => Some(r.seq.len() as i64),
-        }
+        rec.map(|r| r.seq.len() as i64)
     }
 }
 
 pub fn extract_read(reader: &mut DynamicFastXReader, target_rank: usize){
-    let mut current_rank = 0 as usize;
-    loop{
-        match reader.read_next().unwrap() {
-            Some(rec) => {
-                if current_rank == target_rank{
-                    println!("{}", rec);
-                    return;
-                }
-                current_rank += 1;
-            },
-            None => break
+    let mut current_rank = 0_usize;
+    while let Some(rec) = reader.read_next().unwrap() {
+        if current_rank == target_rank{
+            println!("{}", rec);
+            return;
         }
+        current_rank += 1;
     }    
     eprintln!("Error: requested rank {} must be smaller than the number of reads {} in the input.", target_rank, current_rank);
 }
@@ -50,25 +42,20 @@ pub fn print_stats(reader: &mut DynamicFastXReader){
     let mut min_quality_value: u64 = u64::MAX;
     let mut sum_of_quality_values: u64 = 0;
 
-    loop{
-        match reader.read_next().unwrap() {
-            Some(rec) => {
-                total_length += rec.seq.len() as u64;
-                number_of_sequences += 1;
-                max_seq_len = max(max_seq_len, rec.seq.len() as u64);
-                min_seq_len = min(min_seq_len, rec.seq.len() as u64);
+    while let Some(rec) = reader.read_next().unwrap() {
+        total_length += rec.seq.len() as u64;
+        number_of_sequences += 1;
+        max_seq_len = max(max_seq_len, rec.seq.len() as u64);
+        min_seq_len = min(min_seq_len, rec.seq.len() as u64);
 
-                // Check quality values if they exist
-                if let Some(qual) = rec.qual{
-                    for q in qual{
-                        let x = q - 0x21; // Fastq quality bytes start from 0x21
-                        min_quality_value = min(min_quality_value, x as u64);
-                        max_quality_value = max(max_quality_value, x as u64);
-                        sum_of_quality_values += x as u64;
-                    }
-                }
-            },
-            None => break
+        // Check quality values if they exist
+        if let Some(qual) = rec.qual{
+            for q in qual{
+                let x = q - 0x21; // Fastq quality bytes start from 0x21
+                min_quality_value = min(min_quality_value, x as u64);
+                max_quality_value = max(max_quality_value, x as u64);
+                sum_of_quality_values += x as u64;
+            }
         }
     }
 
@@ -90,7 +77,7 @@ pub fn remove_duplicates(reader: &mut DynamicFastXReader, writer: &mut DynamicFa
     let mut seen: std::collections::HashSet<Vec<u8>> = std::collections::HashSet::new(); // Hash values of seen sequences
     let mut hasher = Sha256::new();
     while let Some(rec) = reader.read_next().unwrap(){
-        hasher.update(&rec.seq);
+        hasher.update(rec.seq);
         let hashvalue = hasher.finalize_reset();
         if !seen.contains(hashvalue.as_slice()){
             writer.write(&rec);
@@ -101,16 +88,16 @@ pub fn remove_duplicates(reader: &mut DynamicFastXReader, writer: &mut DynamicFa
 
 
 pub fn print_length_histogram(reader: &mut DynamicFastXReader, min: i64, max: i64, n_bins: i64){
-    let it = LengthIterator{reader: reader};
+    let it = LengthIterator{reader};
     histogram::print_histogram(it, min, max, n_bins);
 }
 
 pub fn count_sequences(mut input: DynamicFastXReader) -> u64{
     let mut count = 0u64;
-    while let Some(_) = input.read_next().unwrap(){
+    while input.read_next().unwrap().is_some(){
         count += 1;
     }
-    return count;
+    count
 }
 
 // Returns a random permutation of [0..n_elements)
@@ -124,12 +111,8 @@ fn get_random_permutation(n_elements: usize) -> Vec<usize> {
     }
     v.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-    // Build the permutation
-    let mut p: Vec<usize> = vec![];
-    for i in 0..n_elements{
-        p.push(v[i].1);
-    }
-    p
+    // Collect the permutation
+    v.iter().map(|x| x.1).collect()
 }
 
 // Needs two input reader to the same data because needs
@@ -146,7 +129,7 @@ pub fn random_subsample_howmany(mut input: DynamicFastXReader, out: &mut Dynamic
 
     let mut keep_marks: Vec<u8> = vec![0u8; perm.len()];
     for id in perm.iter().take(subsample_seqs){
-        keep_marks[*id as usize] = 1;
+        keep_marks[*id] = 1;
     }
 
     let mut seq_idx = 0;
