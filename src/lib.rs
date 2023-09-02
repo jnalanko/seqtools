@@ -60,7 +60,7 @@ pub fn print_stats(reader: &mut DynamicFastXReader){
                 max_seq_len = max(max_seq_len, rec.seq.len() as u64);
                 min_seq_len = min(min_seq_len, rec.seq.len() as u64);
 
-                // Check quality values is they exist
+                // Check quality values if they exist
                 if let Some(qual) = rec.qual{
                     for q in qual{
                         let x = q - 0x21; // Fastq quality bytes start from 0x21
