@@ -14,7 +14,7 @@ fn main() {
             let min: i64 = sub_matches.get_one::<String>("min").unwrap().parse::<i64>().unwrap();
             let max: i64 = sub_matches.get_one::<String>("max").unwrap().parse::<i64>().unwrap();
             let nbins: i64 = sub_matches.get_one::<String>("nbins").unwrap().parse::<i64>().unwrap();
-            print_length_histogram(&mut reader, min as i64, max as i64, nbins as i64);
+            print_length_histogram(&mut reader, min, max, nbins);
         }
         Some(("stats", _)) => { 
             let mut reader = get_reader(&matches).unwrap();
@@ -26,7 +26,7 @@ fn main() {
             extract_read(&mut reader, rank);
         }
         Some(("subsample", sub_matches)) => { // TODO: Untested
-            if matches.get_one::<String>("input") == None {
+            if matches.get_one::<String>("input").is_none() {
                 panic!("Can not subsample from stdin because we need to pass over the data twice.");
             }
 
@@ -35,7 +35,7 @@ fn main() {
                 // Get two readers for two passes over the data
                 let input1 = get_reader(&matches).unwrap();
                 let input2 = get_reader(&matches).unwrap();
-                let mut output = get_writer(&sub_matches);
+                let mut output = get_writer(sub_matches);
                 random_subsample(input1,  input2, &mut output, frac);
             }
 
@@ -54,24 +54,24 @@ fn main() {
 
                 // Do the subsampling
                 let input = get_reader(&matches).unwrap();
-                let mut output = get_writer(&sub_matches);
+                let mut output = get_writer(sub_matches);
                 random_subsample_howmany(input, &mut output, total_seqs as usize, howmany as usize);
             }
         }
         Some(("remove-duplicates", sub_matches)) => { // TODO: Untested
 
             let mut input = get_reader(&matches).unwrap();
-            let mut output = get_writer(&sub_matches);
+            let mut output = get_writer(sub_matches);
             remove_duplicates(&mut input, &mut output);
         }
         Some(("convert", sub_matches)) => { 
             let mut reader = get_reader(&matches).unwrap();
-            let mut writer = get_writer(&sub_matches);
+            let mut writer = get_writer(sub_matches);
             convert(&mut reader, &mut writer);
         }
         Some(("trim", sub_matches)) => { 
             let mut reader = get_reader(&matches).unwrap();
-            let mut writer = get_writer(&sub_matches);
+            let mut writer = get_writer(sub_matches);
             let from_start: usize = sub_matches.get_one::<String>("from-start").unwrap().parse().unwrap();
             let from_end: usize = sub_matches.get_one::<String>("from-end").unwrap().parse().unwrap();
             let min_final_length: usize = sub_matches.get_one::<String>("min-final-length").unwrap().parse().unwrap();
