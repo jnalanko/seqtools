@@ -2,8 +2,6 @@ use jseqio::reader::DynamicFastXReader;
 use jseqio::writer::DynamicFastXWriter;
 
 mod histogram;
-
-use std::io::{Write};
 use rand::Rng;
 use std::cmp::{max,min};
 use sha2::{Sha256, Digest};

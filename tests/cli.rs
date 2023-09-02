@@ -83,7 +83,7 @@ fn convert() -> Result<(), Box<dyn std::error::Error>> {
     let fourth_stdout_result = fourth.wait_with_output()?.stdout;
 
     // See if we have the same fasta data as we started with
-    let S = str::from_utf8(&fourth_stdout_result)?;
+    let s = str::from_utf8(&fourth_stdout_result)?;
     let answer = "\
 >SRR403017.1 HWUSI-EAS108E_0007:3:1:3797:973/1
 TTGGACCGGCGCAAGACGGACCAGNGCGAAAGCATTTGCCAAGAANNNN
@@ -107,7 +107,7 @@ AAATTTATTTCTCATAGTTCTGGANTCTAGGAAGTTCAAGATCAGNNNN
 CCCATTCTTGGAGATACCAGCAAAAATTCNAATTCACCAACACCAGCAGCNNNN
 ";
 
-    assert_eq!(S, answer);
+    assert_eq!(s, answer);
     Ok(())
 }
 
