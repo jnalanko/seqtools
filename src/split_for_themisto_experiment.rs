@@ -30,7 +30,7 @@ fn main(){
                 None => ()
             }
             
-            writer = Some(DynamicFastXWriter::new_to_file(&outfile));
+            writer = Some(DynamicFastXWriter::new_to_file(&outfile).unwrap());
             eprintln!("Processing accession {}", String::from_utf8(accession.to_vec()).unwrap());
         }
         writer.as_mut().unwrap().write(&rec);

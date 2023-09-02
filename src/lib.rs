@@ -210,8 +210,7 @@ pub fn get_reader(args: &clap::ArgMatches) -> Result<DynamicFastXReader, Box<dyn
         DynamicFastXReader::new_from_file(&infile)
     } else {
         // From stdin
-        let is_gzip = args.get_flag("gzip-in");
-        DynamicFastXReader::new_from_stdin(is_gzip)
+        DynamicFastXReader::new_from_stdin()
     }
 }
 
@@ -220,7 +219,7 @@ pub fn get_writer(args: &clap::ArgMatches) -> DynamicFastXWriter{
 
     if let Some(outfile) = filename {
         // From file
-        DynamicFastXWriter::new_to_file(&outfile)
+        DynamicFastXWriter::new_to_file(&outfile).unwrap()
     } else {
         // To stdout
         let is_fasta = args.get_flag("fasta-out");

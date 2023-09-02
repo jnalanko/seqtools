@@ -23,7 +23,7 @@ fn main(){
         eprintln!("Creating file {}", outfile);
 
         let mut reader = DynamicFastXReader::new_from_file(&prev_file).unwrap();
-        let mut writer = DynamicFastXWriter::new_to_file(&outfile);
+        let mut writer = DynamicFastXWriter::new_to_file(&outfile).unwrap();
 
         // copy `howmany` records to a new file.
         for _ in 0u64..howmany{
