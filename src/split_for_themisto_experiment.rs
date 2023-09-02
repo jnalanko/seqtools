@@ -25,11 +25,10 @@ fn main(){
 
             let outfile = format!("{}/{}.fna", outdir, str::from_utf8(accession).unwrap());
 
-            match writer{ // Flush an existing stream
-                Some(mut w) => w.flush(),
-                None => ()
+            if let Some(mut w) = writer {
+                w.flush();
             }
-            
+
             writer = Some(DynamicFastXWriter::new_to_file(&outfile).unwrap());
             eprintln!("Processing accession {}", String::from_utf8(accession.to_vec()).unwrap());
         }

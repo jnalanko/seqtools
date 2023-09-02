@@ -27,7 +27,7 @@ fn main(){
     }
 
     writer.flush();
-    if let Some(_) = reader2.read_next().unwrap(){
+    if reader2.read_next().unwrap().is_some(){
         panic!("File 2 has more records than file 1.")
     }
 

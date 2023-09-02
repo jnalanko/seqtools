@@ -13,7 +13,7 @@ fn main(){
     let reader = DynamicFastXReader::new_from_file(&infile).unwrap();
 
     let n_seqs = count_sequences(reader); // Consumes the reader
-    let mut prev_file = infile.clone();
+    let mut prev_file = infile;
 
     for i in 0u64..n_subsamples {
         let howmany = n_seqs / 2u64.pow(i.try_into().unwrap()); // n / 2^i
