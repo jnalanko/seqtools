@@ -64,7 +64,7 @@ pub fn print_stats(reader: &mut DynamicFastXReader){
     println!("Maximum sequence length: {}", max_seq_len);
     println!("Minimum sequence length: {}", min_seq_len);
     println!("Average sequence length: {}", total_length as f64 / number_of_sequences as f64);
-    if max_quality_value != u64::MAX{
+    if min_quality_value != u64::MAX{
         println!("Maximum quality value: {}", max_quality_value);
         println!("Minimum quality value: {}", min_quality_value);
         println!("Average quality value: {}", sum_of_quality_values as f64 / total_length as f64);
