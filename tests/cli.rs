@@ -63,7 +63,7 @@ fn convert() -> Result<(), Box<dyn std::error::Error>> {
 
     // fasta.gz -> fastq
     cmd = Command::cargo_bin("seqtools")?;
-    let mut second = cmd.arg("convert").arg("--gzip-in").arg("--fastq-out").stdin(Stdio::piped()).stdout(Stdio::piped()).spawn()?;
+    let mut second = cmd.arg("convert").arg("--fastq-out").stdin(Stdio::piped()).stdout(Stdio::piped()).spawn()?;
     let second_stdin = second.stdin.as_mut().unwrap();
     second_stdin.write_all(&first_stdout_result)?;
     let second_stdout_result = second.wait_with_output()?.stdout;
@@ -77,7 +77,7 @@ fn convert() -> Result<(), Box<dyn std::error::Error>> {
 
     // fastq.gz -> fasta
     cmd = Command::cargo_bin("seqtools")?;
-    let mut fourth = cmd.arg("convert").arg("--gzip-in").arg("--fasta-out").stdin(Stdio::piped()).stdout(Stdio::piped()).spawn()?;
+    let mut fourth = cmd.arg("convert").arg("--fasta-out").stdin(Stdio::piped()).stdout(Stdio::piped()).spawn()?;
     let fourth_stdin = fourth.stdin.as_mut().unwrap();
     fourth_stdin.write_all(&third_stdout_result)?;
     let fourth_stdout_result = fourth.wait_with_output()?.stdout;

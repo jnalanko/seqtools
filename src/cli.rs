@@ -27,7 +27,7 @@ pub fn build_cli() -> Command {
         .help("Output filename")
         .global(false);
 
-    Command::new("seq_tools")
+    Command::new("seqtools")
         .version("0.1.0")
         .author("Jarno N. Alanko <alanko.jarno@gmail.com>")
         .arg_required_else_help(true)
@@ -35,14 +35,7 @@ pub fn build_cli() -> Command {
             Arg::new("input")
                 //.short('i')
                 //.long("input")
-                .help("Read from a file on disk (FASTA/FASTQ format is detected automatically based on the first byte. Gzipped files are supported as long as the file extension is .gz)")
-                .global(true),
-        )
-        .arg(
-            Arg::new("gzip-in")
-                .long("gzip-in")
-                .action(ArgAction::SetTrue)
-                .help("Parse from stdin as gzipped")
+                .help("Read from a file on disk. Format can be fasta or fastq, gzipped or not. The format is detected automatically.)")
                 .global(true),
         )
         .subcommand(
