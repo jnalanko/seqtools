@@ -10,7 +10,7 @@ fn main(){
     let out_prefix = args[2].clone();
     let n_subsamples: u64 = args[3].clone().parse().unwrap();
 
-    let reader = DynamicFastXReader::new_from_file(&infile).unwrap();
+    let reader = DynamicFastXReader::from_file(&infile).unwrap();
 
     let n_seqs = count_sequences(reader); // Consumes the reader
     let mut prev_file = infile;
@@ -22,7 +22,7 @@ fn main(){
 
         eprintln!("Creating file {}", outfile);
 
-        let mut reader = DynamicFastXReader::new_from_file(&prev_file).unwrap();
+        let mut reader = DynamicFastXReader::from_file(&prev_file).unwrap();
         let mut writer = DynamicFastXWriter::new_to_file(&outfile).unwrap();
 
         // copy `howmany` records to a new file.

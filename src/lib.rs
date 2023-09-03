@@ -188,10 +188,10 @@ pub fn get_reader(args: &clap::ArgMatches) -> Result<DynamicFastXReader, Box<dyn
 
     if let Some(infile) = filename {
         // From file
-        DynamicFastXReader::new_from_file(&infile)
+        DynamicFastXReader::from_file(&infile)
     } else {
         // From stdin
-        DynamicFastXReader::new_from_stdin()
+        DynamicFastXReader::from_stdin()
     }
 }
 

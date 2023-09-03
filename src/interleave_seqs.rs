@@ -15,8 +15,8 @@ fn main(){
     let seqs2 = args[2].clone();
     let outfile = args[3].clone();
 
-    let mut reader1 = DynamicFastXReader::new_from_file(&seqs1).unwrap();
-    let mut reader2 = DynamicFastXReader::new_from_file(&seqs2).unwrap();
+    let mut reader1 = DynamicFastXReader::from_file(&seqs1).unwrap();
+    let mut reader2 = DynamicFastXReader::from_file(&seqs2).unwrap();
 
     let mut writer = DynamicFastXWriter::new_to_file(&outfile).unwrap();
 

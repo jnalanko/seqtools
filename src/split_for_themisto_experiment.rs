@@ -10,7 +10,7 @@ fn main(){
     let infile = args[1].clone();
     let outdir = args[2].clone();
 
-    let mut reader = DynamicFastXReader::new_from_file(&infile).unwrap();
+    let mut reader = DynamicFastXReader::from_file(&infile).unwrap();
 
     let mut prev: Vec<u8> = vec![];
 

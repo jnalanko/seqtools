@@ -8,7 +8,7 @@ use std::cmp::max;
 use std::env;
 
 fn hash_kmers(filename: &String, k: usize) -> HashSet<Vec<u8>>{
-    let mut reader = DynamicFastXReader::new_from_file(&filename).unwrap();
+    let mut reader = DynamicFastXReader::from_file(&filename).unwrap();
     let mut kmers: HashSet<Vec<u8>> = HashSet::new();
     while let Some(rec) = reader.read_next().unwrap(){
         let seq = rec.seq;
