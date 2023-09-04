@@ -554,6 +554,7 @@ dependencies = [
  "jseqio",
  "predicates",
  "rand",
+ "rand_chacha",
  "sha2",
  "tempfile",
 ]

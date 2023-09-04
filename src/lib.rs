@@ -2,7 +2,7 @@ use jseqio::reader::DynamicFastXReader;
 use jseqio::writer::DynamicFastXWriter;
 
 mod histogram;
-use rand::Rng;
+use rand_chacha::rand_core::SeedableRng;
 use std::cmp::{max,min};
 use sha2::{Sha256, Digest};
 
@@ -101,31 +101,57 @@ pub fn count_sequences(mut input: DynamicFastXReader) -> u64{
 }
 
 // Returns a random permutation of [0..n_elements)
-fn get_random_permutation(n_elements: usize) -> Vec<usize> {
-    let mut v: Vec<(f64, usize)> = vec![]; // Random number from 0 to 1, index
-    let mut rng = rand::thread_rng();
+fn get_random_permutation(n_elements: usize, seed_option: Option<u64>) -> Vec<usize> {
+
+    // Generate random seed from current time if not given
+    let seed = match seed_option{
+        Some(s) => s,
+        None => {
+            // Generate a random seed from the current time
+            let now = std::time::SystemTime::now();
+            let since_epoch = now.duration_since(std::time::UNIX_EPOCH).unwrap();
+            (since_epoch.as_nanos() % 0xFFFFFFFFFFFFFFFF) as u64
+        }
+    };
+
+    // Put the seed into a 32-byte array
+    let mut seed_array: [u8; 32] = [0; 32];
+    for i in 0..8{
+        seed_array[i] = ((seed >> (i * 8)) & 0xFF) as u8;
+    }
+
+    // Create a random number generator with the fixed seed
+    let mut rng = rand_chacha::ChaCha20Rng::from_seed(seed_array);
+
+    eprintln!("Generating random numbers...");
+    let mut v: Vec<(u64, usize)> = vec![]; // Pairs (random u64, index)
 
     for i in 0..n_elements{
-        let r = rng.gen_range(0.0..1.0);
+        let r = rand::RngCore::next_u64(&mut rng);
         v.push((r, i));
     }
+
+    eprintln!("Sorting random numbers...");
     v.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    eprintln!("Sorting done");
 
     // Collect the permutation
     v.iter().map(|x| x.1).collect()
 }
 
-// Needs two input reader to the same data because needs
-// to pass over the data twice.
-pub fn random_subsample(input1: DynamicFastXReader, input2: DynamicFastXReader, out: &mut DynamicFastXWriter, fraction: f64){
+// Needs two input readers to the same data because needs
+// to pass over the data twice. Seed is the random seed. If not given, a seed is generated from the current time.
+pub fn random_subsample(input1: DynamicFastXReader, input2: DynamicFastXReader, out: &mut DynamicFastXWriter, fraction: f64, seed: Option<u64>){
     let n_seqs = count_sequences(input1) as usize; // Consumes the input
     let subsample_seqs: usize = (n_seqs as f64 * fraction) as usize;
 
-    random_subsample_howmany(input2, out, n_seqs, subsample_seqs);
+    random_subsample_howmany(input2, out, n_seqs, subsample_seqs, seed);
 }
 
-pub fn random_subsample_howmany(mut input: DynamicFastXReader, out: &mut DynamicFastXWriter, total_seqs: usize, subsample_seqs: usize){
-    let perm = get_random_permutation(total_seqs); 
+
+// Seed is the random seed. If not given, a seed is generated from the current time.
+pub fn random_subsample_howmany(mut input: DynamicFastXReader, out: &mut DynamicFastXWriter, total_seqs: usize, subsample_seqs: usize, seed: Option<u64>){
+    let perm = get_random_permutation(total_seqs, seed); 
 
     let mut keep_marks: Vec<u8> = vec![0u8; perm.len()];
     for id in perm.iter().take(subsample_seqs){
