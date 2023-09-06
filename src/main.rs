@@ -4,6 +4,11 @@ use seq_tools::*;
 
 mod cli;
 
+fn read_lines(filename: &str) -> Vec<String>{
+    let reader = std::io::BufReader::new(std::fs::File::open(filename).unwrap());
+    std::io::BufRead::lines(reader).map(|s| s.unwrap().to_owned()).collect()
+}
+
 fn main() {
 
     let matches = cli::build_cli().get_matches();
@@ -25,9 +30,15 @@ fn main() {
             if let Some(ranks) = sub_matches.get_many::<String>("rank"){
                 let list: Vec<usize> = ranks.map(|s| s.parse::<usize>().unwrap()).collect();
                 extract_reads_by_ranks(reader, &list);
-            }
-            else if let Some(names) = sub_matches.get_many::<String>("name"){
+            } else if let Some(ranks_listfilename) = sub_matches.get_one::<String>("ranks-listfile"){
+                let ranks_reader = std::io::BufReader::new(std::fs::File::open(ranks_listfilename).unwrap());
+                let list = std::io::BufRead::lines(ranks_reader).map(|s| s.unwrap().parse::<usize>().unwrap()).collect();
+                extract_reads_by_ranks(reader, &list);
+            } else if let Some(names) = sub_matches.get_many::<String>("name"){
                 let list: Vec<String> = names.map(|s| s.to_owned()).collect();
+                extract_reads_by_names(reader, &list);
+            } else if let Some(names_listfilename) = sub_matches.get_one::<String>("names-listfile"){
+                let list = read_lines(names_listfilename);
                 extract_reads_by_names(reader, &list);
             }
         }
