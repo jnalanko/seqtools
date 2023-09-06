@@ -107,7 +107,7 @@ pub fn build_cli() -> Command {
                 .arg(&stdout_gzip),
         ).subcommand(
             Command::new("extract-reads")
-                .about("Extract read by rank or header prefix.")
+                .about("Extract read by rank or sequence name.")
                 .arg_required_else_help(true)                
                 .arg(Arg::new("rank")
                     .short('r')
