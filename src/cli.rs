@@ -106,14 +106,24 @@ pub fn build_cli() -> Command {
                 .arg(&stdout_fastq)
                 .arg(&stdout_gzip),
         ).subcommand(
-            Command::new("extract-read")
-                .about("Prints the read with rank i (zero-based)")
+            Command::new("extract-reads")
+                .about("Extract read by rank (zero-based) or header prefix.")
                 .arg_required_else_help(true)                
                 .arg(Arg::new("rank")
                     .short('r')
                     .long("rank")
+                    .help("Can be given multiple times (e.g. -r 4 -r 6 -r).")
+                    .conflicts_with("header-prefix")
+                    .action(ArgAction::Append) // Can have multiple
                     .required(true)
-                )                
+                )
+                .arg(Arg::new("header-prefix")
+                    .short('p')
+                    .long("header-prefix")
+                    .help("Can be given multiple times.")
+                    .conflicts_with("rank")
+                    .required(true)
+                )
         )
         .subcommand(Command::new("stats").about("Print stats about the input."))
 }

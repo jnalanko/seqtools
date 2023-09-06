@@ -20,10 +20,10 @@ fn main() {
             let mut reader = get_reader(&matches).unwrap();
             print_stats(&mut reader);
         }
-        Some(("extract-read", sub_matches)) => { 
+        Some(("extract-reads", sub_matches)) => { 
             let mut reader = get_reader(&matches).unwrap();
-            let rank = sub_matches.get_one::<String>("rank").unwrap().parse::<usize>().unwrap();
-            extract_read(&mut reader, rank);
+            let ranks: Vec<usize> = sub_matches.get_many::<String>("rank").unwrap().map(|s| s.parse::<usize>().unwrap()).collect();
+            extract_reads(&mut reader, &ranks); //todo: header prefix
         }
         Some(("subsample", sub_matches)) => { // TODO: Untested
             if matches.get_one::<String>("input").is_none() {

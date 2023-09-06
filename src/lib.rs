@@ -1,4 +1,4 @@
-use jseqio::reader::DynamicFastXReader;
+use jseqio::{reader::DynamicFastXReader, record::OwnedRecord};
 use jseqio::writer::DynamicFastXWriter;
 
 mod histogram;
@@ -19,16 +19,39 @@ impl<'a> Iterator for LengthIterator<'a>{
     }
 }
 
-pub fn extract_read(reader: &mut DynamicFastXReader, target_rank: usize){
+pub fn extract_reads(reader: &mut DynamicFastXReader, ranks: &Vec<usize>){
     let mut current_rank = 0_usize;
+    let mut ranks_hashset = std::collections::HashSet::new();
+    for r in ranks{
+        ranks_hashset.insert(r);
+    }
+
+    let mut found = Vec::<(usize, OwnedRecord)>::new(); // Key, record
     while let Some(rec) = reader.read_next().unwrap() {
-        if current_rank == target_rank{
-            println!("{}", rec);
-            return;
+        if ranks_hashset.contains(&current_rank) {
+            found.push((current_rank, rec.to_owned()));
         }
         current_rank += 1;
-    }    
-    eprintln!("Error: requested rank {} must be smaller than the number of reads {} in the input.", target_rank, current_rank);
+    }
+
+    if found.len() != ranks_hashset.len(){
+        panic!("Error: Could not find all reads");
+    }
+
+    // Sort by the order in the given ranks
+    let mut ranks_order = std::collections::HashMap::<usize, usize>::new();
+    for (i, r) in ranks.iter().enumerate(){
+        ranks_order.insert(*r, i);
+    }
+
+    found.sort_by_key(|x| ranks_order.get(&x.0).unwrap());
+
+    // Print in order to stdout
+    let mut writer = jseqio::writer::DynamicFastXWriter::new_to_stdout(reader.filetype(), false);
+    for (_, rec) in found.iter(){
+        writer.write(rec);
+    }
+    writer.flush();
 }
 
 pub fn print_stats(reader: &mut DynamicFastXReader){
