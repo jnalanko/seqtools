@@ -47,7 +47,7 @@ pub fn build_cli() -> Command {
                 .arg(Arg::new("nbins").long("nbins").default_value("20").help("Number of bins")),
         ).subcommand(
             Command::new("subsample")
-                .about("Subsample a random fraction of sequences.")
+                .about("Randomly subsample a given fraction of sequences.")
                 .arg_required_else_help(true)
                 .arg(Arg::new("fraction")
                     .short('f')
