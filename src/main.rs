@@ -21,9 +21,15 @@ fn main() {
             print_stats(&mut reader);
         }
         Some(("extract-reads", sub_matches)) => { 
-            let mut reader = get_reader(&matches).unwrap();
-            let ranks: Vec<usize> = sub_matches.get_many::<String>("rank").unwrap().map(|s| s.parse::<usize>().unwrap()).collect();
-            extract_reads(&mut reader, &ranks); //todo: header prefix
+            let reader = get_reader(&matches).unwrap();
+            if let Some(ranks) = sub_matches.get_many::<String>("rank"){
+                let list: Vec<usize> = ranks.map(|s| s.parse::<usize>().unwrap()).collect();
+                extract_reads_by_ranks(reader, &list);
+            }
+            else if let Some(names) = sub_matches.get_many::<String>("name"){
+                let list: Vec<String> = names.map(|s| s.to_owned()).collect();
+                extract_reads_by_names(reader, &list);
+            }
         }
         Some(("subsample", sub_matches)) => { // TODO: Untested
             if matches.get_one::<String>("input").is_none() {

@@ -1,4 +1,4 @@
-use jseqio::{reader::DynamicFastXReader, record::OwnedRecord};
+use jseqio::{reader::DynamicFastXReader, record::RefRecord, record::OwnedRecord, record::Record};
 use jseqio::writer::DynamicFastXWriter;
 
 mod histogram;
@@ -19,14 +19,40 @@ impl<'a> Iterator for LengthIterator<'a>{
     }
 }
 
-pub fn extract_reads(reader: &mut DynamicFastXReader, ranks: &Vec<usize>){
-    let mut current_rank = 0_usize;
+pub fn extract_reads_by_names(reader: DynamicFastXReader, names: &Vec<String>){
+    let filetype = reader.filetype();
+    let mut names_hashset = std::collections::HashSet::new();
+    for name in names{
+        names_hashset.insert(name.as_bytes());
+    }
+    
+    let db = reader.into_db().unwrap();
+    let mut found: Vec<RefRecord> = db.iter().filter(|rec| names_hashset.contains(rec.name())).collect();
+
+    // Sort by the order in the given ranks
+    let mut names_order = std::collections::HashMap::<&[u8], usize>::new();
+    for (i, name) in names.iter().enumerate(){
+        names_order.insert(name.as_bytes(), i);
+    }
+
+    found.sort_by_key(|x| names_order.get(x.name()).unwrap());
+
+    // Print in order to stdout
+    let mut writer = jseqio::writer::DynamicFastXWriter::new_to_stdout(filetype, false);
+    for rec in found.iter(){
+        writer.write(rec);
+    }
+
+}
+
+pub fn extract_reads_by_ranks(mut reader: DynamicFastXReader, ranks: &Vec<usize>){
     let mut ranks_hashset = std::collections::HashSet::new();
     for r in ranks{
         ranks_hashset.insert(r);
     }
 
     let mut found = Vec::<(usize, OwnedRecord)>::new(); // Key, record
+    let mut current_rank = 0_usize;
     while let Some(rec) = reader.read_next().unwrap() {
         if ranks_hashset.contains(&current_rank) {
             found.push((current_rank, rec.to_owned()));
@@ -51,7 +77,6 @@ pub fn extract_reads(reader: &mut DynamicFastXReader, ranks: &Vec<usize>){
     for (_, rec) in found.iter(){
         writer.write(rec);
     }
-    writer.flush();
 }
 
 pub fn print_stats(reader: &mut DynamicFastXReader){
