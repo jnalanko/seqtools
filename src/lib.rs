@@ -48,36 +48,13 @@ pub fn extract_reads_by_names(reader: DynamicFastXReader, names: &Vec<String>){
 }
 
 pub fn extract_reads_by_ranks(mut reader: DynamicFastXReader, ranks: &Vec<usize>){
-    let mut ranks_hashset = std::collections::HashSet::new();
-    for r in ranks{
-        ranks_hashset.insert(r);
-    }
-
-    let mut found = Vec::<(usize, OwnedRecord)>::new(); // Key, record
-    let mut current_rank = 0_usize;
-    while let Some(rec) = reader.read_next().unwrap() {
-        if ranks_hashset.contains(&current_rank) {
-            found.push((current_rank, rec.to_owned()));
-        }
-        current_rank += 1;
-    }
-
-    if found.len() != ranks_hashset.len(){
-        panic!("Error: Could not find all reads");
-    }
-
-    // Sort by the order in the given ranks
-    let mut ranks_order = std::collections::HashMap::<usize, usize>::new();
-    for (i, r) in ranks.iter().enumerate(){
-        ranks_order.insert(*r, i);
-    }
-
-    found.sort_by_key(|x| ranks_order.get(&x.0).unwrap());
+    let db = reader.into_db().unwrap();
 
     // Print in order to stdout
     let mut writer = jseqio::writer::DynamicFastXWriter::new_to_stdout(reader.filetype(), false);
-    for (_, rec) in found.iter(){
-        writer.write(rec);
+    for rank in ranks {
+        let rec = db.get(*rank).unwrap();
+        writer.write(&rec);
     }
 }
 
