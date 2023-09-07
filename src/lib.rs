@@ -21,26 +21,28 @@ impl<'a> Iterator for LengthIterator<'a>{
 
 pub fn extract_reads_by_names(reader: DynamicFastXReader, names: &Vec<String>){
     let filetype = reader.filetype();
-    let mut names_hashset = std::collections::HashSet::new();
+
+    let db = reader.into_db().unwrap();
+
+    // There may be multiple records with the same name, like in interleaved paired-end fastq data
+
+    let mut name_to_seqs = std::collections::BTreeMap::<Vec<u8>, Vec<RefRecord>>::new();
     for name in names{
-        names_hashset.insert(name.as_bytes());
+        name_to_seqs.insert(name.as_bytes().to_owned(), vec![]);
     }
     
-    let db = reader.into_db().unwrap();
-    let mut found: Vec<RefRecord> = db.iter().filter(|rec| names_hashset.contains(rec.name())).collect();
-
-    // Sort by the order in the given ranks
-    let mut names_order = std::collections::HashMap::<&[u8], usize>::new();
-    for (i, name) in names.iter().enumerate(){
-        names_order.insert(name.as_bytes(), i);
+    for rec in db.iter(){
+        if name_to_seqs.contains_key(rec.name()){
+            name_to_seqs.get_mut(rec.name()).unwrap().push(rec);
+        }
     }
-
-    found.sort_by_key(|x| names_order.get(x.name()).unwrap());
 
     // Print in order to stdout
     let mut writer = jseqio::writer::DynamicFastXWriter::new_to_stdout(filetype, false);
-    for rec in found.iter(){
-        writer.write(rec);
+    for name in names {
+        for rec in name_to_seqs.get(name.as_bytes()).unwrap(){
+            writer.write(rec);
+        }
     }
 
 }
