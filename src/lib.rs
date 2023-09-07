@@ -48,10 +48,11 @@ pub fn extract_reads_by_names(reader: DynamicFastXReader, names: &Vec<String>){
 }
 
 pub fn extract_reads_by_ranks(mut reader: DynamicFastXReader, ranks: &Vec<usize>){
+    let filetype = reader.filetype();
     let db = reader.into_db().unwrap();
 
     // Print in order to stdout
-    let mut writer = jseqio::writer::DynamicFastXWriter::new_to_stdout(reader.filetype(), false);
+    let mut writer = jseqio::writer::DynamicFastXWriter::new_to_stdout(filetype, false);
     for rank in ranks {
         let rec = db.get(*rank).unwrap();
         writer.write(&rec);
