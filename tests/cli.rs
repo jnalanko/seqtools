@@ -170,24 +170,24 @@ fn remove_duplicates() -> Result<(), Box<dyn std::error::Error>>{
         head: b"".to_vec(),
         seq: b"ACGT".to_vec(),
         qual: None,
-    });
+    }).unwrap();
     seqwriter.write(&jseqio::record::OwnedRecord{
         head: b"".to_vec(),
         seq: b"GGG".to_vec(),
         qual: None,
-    });
+    }).unwrap();
     seqwriter.write(&jseqio::record::OwnedRecord{
         head: b"".to_vec(),
         seq: b"ACGT".to_vec(),
         qual: None,
-    });
+    }).unwrap();
     seqwriter.write(&jseqio::record::OwnedRecord{
         head: b"".to_vec(),
         seq: b"ACGT".to_vec(),
         qual: None,
-    });
+    }).unwrap();
 
-    seqwriter.flush();
+    seqwriter.flush().unwrap();
     drop(seqwriter);
     let buf = bufwriter.into_inner().unwrap(); // Take back ownership
 

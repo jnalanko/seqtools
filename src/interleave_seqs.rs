@@ -1,6 +1,6 @@
 
 use jseqio::reader::*;
-use jseqio::writer::DynamicFastXWriter;
+use jseqio::writer::*;
 use std::env;
 
 fn main(){
@@ -16,11 +16,11 @@ fn main(){
 
     while let Some(rec1) = reader1.read_next().unwrap(){
         let rec2 = reader2.read_next().expect("File 2 has fewer records than file 1.").unwrap();
-        writer.write(&rec1);
-        writer.write(&rec2);
+        writer.write(&rec1).unwrap();
+        writer.write(&rec2).unwrap();
     }
 
-    writer.flush();
+    writer.flush().unwrap();
     if reader2.read_next().unwrap().is_some(){
         panic!("File 2 has more records than file 1.")
     }

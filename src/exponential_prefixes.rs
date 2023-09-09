@@ -28,7 +28,7 @@ fn main(){
         // copy `howmany` records to a new file.
         for _ in 0u64..howmany{
             let rec = reader.read_next().unwrap();
-            writer.write(&rec.expect("Not enough records in file"));
+            writer.write(&rec.expect("Not enough records in file")).unwrap();
         }
 
         prev_file = outfile.clone();

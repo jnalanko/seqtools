@@ -40,7 +40,7 @@ pub fn extract_reads_by_names(reader: DynamicFastXReader, names: &Vec<String>){
     let mut writer = jseqio::writer::DynamicFastXWriter::new_to_stdout(filetype, jseqio::CompressionType::None);
     for name in names {
         for rec in name_to_seqs.get(name.as_bytes()).unwrap(){
-            writer.write(rec);
+            writer.write(rec).unwrap();
         }
     }
 
@@ -54,7 +54,7 @@ pub fn extract_reads_by_ranks(reader: DynamicFastXReader, ranks: &Vec<usize>){
     let mut writer = jseqio::writer::DynamicFastXWriter::new_to_stdout(filetype, jseqio::CompressionType::None);
     for rank in ranks {
         let rec = db.get(*rank).unwrap();
-        writer.write(&rec);
+        writer.write(&rec).unwrap();
     }
 }
 
@@ -107,7 +107,7 @@ pub fn remove_duplicates(reader: &mut DynamicFastXReader, writer: &mut DynamicFa
         hasher.update(rec.seq);
         let hashvalue = hasher.finalize_reset();
         if !seen.contains(hashvalue.as_slice()){
-            writer.write(&rec);
+            writer.write(&rec).unwrap();
             seen.insert(hashvalue.to_vec());
         }
     }
@@ -188,7 +188,7 @@ pub fn random_subsample_howmany(mut input: DynamicFastXReader, out: &mut Dynamic
     let mut seq_idx = 0;
     while let Some(rec) = input.read_next().unwrap(){
         if keep_marks[seq_idx] == 1{
-            out.write(&rec);
+            out.write(&rec).unwrap();
         }
         seq_idx += 1;
     }
@@ -210,7 +210,7 @@ pub fn convert(input: &mut DynamicFastXReader, output: &mut DynamicFastXWriter){
             }
             rec.qual = Some(&dummy_qual_values.as_slice()[0..rec.seq.len()]);
         }
-        output.write(&rec);
+        output.write(&rec).unwrap();
     }   
 }
 
@@ -224,7 +224,7 @@ pub fn trim(input: &mut DynamicFastXReader, output: &mut DynamicFastXWriter, fro
                 // Quality values are present -> trim those too
                 rec.qual = Some(&qual[from_start .. qual.len() - from_end]);
             }
-            output.write(&rec);
+            output.write(&rec).unwrap();
         } else{
             // Delete this sequence
             n_deleted += 1;

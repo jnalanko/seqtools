@@ -1,6 +1,6 @@
 
 use jseqio::reader::*;
-use jseqio::writer::DynamicFastXWriter;
+use jseqio::writer::*;
 use std::str;
 
 use std::env;
@@ -26,13 +26,13 @@ fn main(){
             let outfile = format!("{}/{}.fna", outdir, str::from_utf8(accession).unwrap());
 
             if let Some(mut w) = writer {
-                w.flush();
+                w.flush().unwrap();
             }
 
             writer = Some(DynamicFastXWriter::new_to_file(&outfile).unwrap());
             eprintln!("Processing accession {}", String::from_utf8(accession.to_vec()).unwrap());
         }
-        writer.as_mut().unwrap().write(&rec);
+        writer.as_mut().unwrap().write(&rec).unwrap();
         prev = accession.to_owned();
     }
 
