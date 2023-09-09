@@ -53,7 +53,7 @@ pub fn extract_reads_by_ranks(reader: DynamicFastXReader, ranks: &Vec<usize>){
     // Print in order to stdout
     let mut writer = jseqio::writer::DynamicFastXWriter::new_to_stdout(filetype, jseqio::CompressionType::None);
     for rank in ranks {
-        let rec = db.get(*rank).unwrap();
+        let rec = db.get(*rank);
         writer.write(&rec).unwrap();
     }
 }
