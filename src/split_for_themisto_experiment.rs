@@ -1,5 +1,5 @@
 
-use jseqio::reader::DynamicFastXReader;
+use jseqio::reader::*;
 use jseqio::writer::DynamicFastXWriter;
 use std::str;
 

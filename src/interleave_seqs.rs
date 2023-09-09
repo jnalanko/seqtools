@@ -1,12 +1,6 @@
 
-use jseqio::reader::DynamicFastXReader;
-use jseqio::writer::{DynamicFastXWriter};
-
-
-
-
-
-
+use jseqio::reader::*;
+use jseqio::writer::DynamicFastXWriter;
 use std::env;
 
 fn main(){

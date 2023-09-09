@@ -7,6 +7,7 @@ pub fn build_cli() -> Command {
             .long("fasta-out")
             .action(ArgAction::SetTrue)
             .help("Write to stdout in fasta format")
+            .conflicts_with("fastq-out")
             .global(false);
     let stdout_fastq =
         Arg::new("fastq-out")

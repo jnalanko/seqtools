@@ -1,5 +1,4 @@
-use jseqio::{reader::DynamicFastXReader, record::RefRecord, record::OwnedRecord, record::Record};
-use jseqio::writer::DynamicFastXWriter;
+use jseqio::{reader::*, record::*, writer::*};
 
 mod histogram;
 use rand_chacha::rand_core::SeedableRng;
@@ -38,7 +37,7 @@ pub fn extract_reads_by_names(reader: DynamicFastXReader, names: &Vec<String>){
     }
 
     // Print in order to stdout
-    let mut writer = jseqio::writer::DynamicFastXWriter::new_to_stdout(filetype, false);
+    let mut writer = jseqio::writer::DynamicFastXWriter::new_to_stdout(filetype, jseqio::CompressionType::None);
     for name in names {
         for rec in name_to_seqs.get(name.as_bytes()).unwrap(){
             writer.write(rec);
@@ -47,12 +46,12 @@ pub fn extract_reads_by_names(reader: DynamicFastXReader, names: &Vec<String>){
 
 }
 
-pub fn extract_reads_by_ranks(mut reader: DynamicFastXReader, ranks: &Vec<usize>){
+pub fn extract_reads_by_ranks(reader: DynamicFastXReader, ranks: &Vec<usize>){
     let filetype = reader.filetype();
     let db = reader.into_db().unwrap();
 
     // Print in order to stdout
-    let mut writer = jseqio::writer::DynamicFastXWriter::new_to_stdout(filetype, false);
+    let mut writer = jseqio::writer::DynamicFastXWriter::new_to_stdout(filetype, jseqio::CompressionType::None);
     for rank in ranks {
         let rec = db.get(*rank).unwrap();
         writer.write(&rec);
@@ -259,16 +258,18 @@ pub fn get_writer(args: &clap::ArgMatches) -> DynamicFastXWriter{
         // To stdout
         let is_fasta = args.get_flag("fasta-out");
         let is_fastq = args.get_flag("fastq-out");
-        let is_gzip = args.get_flag("gzip-out");
-        if is_fasta && is_fastq {
-            panic!("Error: can't give both fasta and fastq flags.");
-        }
+        let compression_type = match args.get_flag("gzip-out"){
+            true => jseqio::CompressionType::Gzip,
+            false => jseqio::CompressionType::None,
+        };
+
         if !is_fasta && !is_fastq {
             panic!(
                 "Error: must give --fasta-out or --fastq-out and possibly --gzip-out if writing to stdout."
             );
         };
+
         let filetype = if is_fastq {jseqio::FileType::FASTQ} else {jseqio::FileType::FASTA};
-        DynamicFastXWriter::new_to_stdout(filetype, is_gzip)
+        DynamicFastXWriter::new_to_stdout(filetype, compression_type)
     }
 }
