@@ -214,6 +214,25 @@ pub fn convert(input: &mut DynamicFastXReader, output: &mut DynamicFastXWriter){
     }   
 }
 
+pub fn concatenate(input: &mut DynamicFastXReader, output: &mut DynamicFastXWriter, header: &[u8]){
+    let mut seq_concat = Vec::<u8>::new();
+    let mut qual_concat = Vec::<u8>::new();
+
+    while let Some(mut rec) = input.read_next().unwrap(){
+        if matches!(rec.qual, None){
+            qual_concat.extend_from_slice(rec.qual)
+        }
+        seq_concat.extend_from_slice(rec.seq);
+    }
+
+    let rec_out = jseqio::record::RefRecord{
+        head: header_concat, 
+        seq: seq_concat, 
+        qual: if qual_concat.len() > 0 {Some(&qual_concat)} else {None}};
+
+    output.write(&rec_out).unwrap();
+}
+
 pub fn trim(input: &mut DynamicFastXReader, output: &mut DynamicFastXWriter, from_start: usize, from_end: usize, min_final_len: usize){
     let mut n_deleted: u64 = 0;
     while let Some(mut rec) = input.read_next().unwrap(){

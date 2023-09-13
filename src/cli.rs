@@ -132,6 +132,13 @@ pub fn build_cli() -> Command {
                     .long("names-listfile")
                     .help("One sequence name per line. Name is the part of the header that comes before the first space character, without the leading '>' or '@'.")
                 )
+        ).subcommand(Command::new("concat")
+            .about("Concatenate all sequences in the input.")
+            .arg(Arg::new("header")
+                .help("Header for the concatenated sequence. If not given, the header will be empty.")
+                .short('e')
+                .long("header")
+            )
         )
         .subcommand(Command::new("stats").about("Print stats about the input."))
 }
