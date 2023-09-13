@@ -139,6 +139,10 @@ pub fn build_cli() -> Command {
                 .short('e')
                 .long("header")
             )
+            .arg(&output_file)
+            .arg(&stdout_fasta)
+            .arg(&stdout_fastq)
+            .arg(&stdout_gzip),
         )
         .subcommand(Command::new("stats").about("Print stats about the input."))
 }
