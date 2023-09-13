@@ -218,17 +218,17 @@ pub fn concatenate(input: &mut DynamicFastXReader, output: &mut DynamicFastXWrit
     let mut seq_concat = Vec::<u8>::new();
     let mut qual_concat = Vec::<u8>::new();
 
-    while let Some(mut rec) = input.read_next().unwrap(){
-        if matches!(rec.qual, None){
-            qual_concat.extend_from_slice(rec.qual)
+    while let Some(rec) = input.read_next().unwrap(){
+        if let Some(qual) = rec.qual{
+            qual_concat.extend_from_slice(qual)
         }
         seq_concat.extend_from_slice(rec.seq);
     }
 
     let rec_out = jseqio::record::RefRecord{
-        head: header_concat, 
-        seq: seq_concat, 
-        qual: if qual_concat.len() > 0 {Some(&qual_concat)} else {None}};
+        head: header, 
+        seq: &seq_concat, 
+        qual: if !qual_concat.is_empty() {Some(&qual_concat)} else {None}};
 
     output.write(&rec_out).unwrap();
 }
