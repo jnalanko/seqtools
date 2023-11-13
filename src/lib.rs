@@ -170,7 +170,11 @@ fn get_random_permutation(n_elements: usize, seed_option: Option<u64>) -> Vec<us
 // to pass over the data twice. Seed is the random seed. If not given, a seed is generated from the current time.
 pub fn random_subsample(input1: DynamicFastXReader, input2: DynamicFastXReader, out: &mut DynamicFastXWriter, fraction: f64, seed: Option<u64>, paired_interleaved: bool){
     let n_seqs = count_sequences(input1) as usize; // Consumes the input
-    let subsample_seqs: usize = (n_seqs as f64 * fraction) as usize;
+
+    let mut subsample_seqs: usize = (n_seqs as f64 * fraction) as usize;
+    if paired_interleaved && subsample_seqs % 2 > 0{
+        subsample_seqs -= 1; // Get to an even number
+    }
 
     random_subsample_howmany(input2, out, n_seqs, subsample_seqs, seed, paired_interleaved);
 }
@@ -185,17 +189,21 @@ pub fn get_subsample_keep_marks(n_seqs: usize, subsample_seqs: usize, seed: Opti
     keep_marks
 }
 
-pub fn get_subsample_pair_keep_marks(n_seqs: usize, mut subsample_seqs: usize, seed: Option<u64>) -> Vec<u8>{
-    if subsample_seqs % 2 > 0{
-        subsample_seqs -= 1;
+pub fn get_subsample_pair_keep_marks(n_seqs: usize, subsample_seqs: usize, seed: Option<u64>) -> Vec<u8>{
+    if subsample_seqs % 2 != 0{
+        panic!("Error: the number of sequences to subsample must be even when subsampling paired-end interleaved data");
+    }
+    if n_seqs % 2 != 0{
+        panic!("Error: paired-end interleaved data has an odd number of sequences");
     }
 
-    let n_pairs = subsample_seqs / 2;
+    let n_total_pairs = n_seqs / 2;
+    let n_sample_pairs = subsample_seqs / 2;
 
-    let perm = get_random_permutation(n_pairs, seed);
+    let perm = get_random_permutation(n_total_pairs, seed);
 
     let mut keep_marks: Vec<u8> = vec![0u8; n_seqs];
-    for id in perm.iter().take(n_pairs){
+    for id in perm.iter().take(n_sample_pairs){
         keep_marks[2 * id] = 1;
         keep_marks[2 * id + 1] = 1;
     }
@@ -319,5 +327,29 @@ pub fn get_writer(args: &clap::ArgMatches) -> DynamicFastXWriter{
 
         let filetype = if is_fastq {jseqio::FileType::FASTQ} else {jseqio::FileType::FASTA};
         DynamicFastXWriter::new_to_stdout(filetype, compression_type)
+    }
+}
+
+mod tests{
+    use super::*;
+
+    #[test]
+    fn unit_test_paired_subsample(){
+
+        let n_seqs = 100;
+        let subsample_seqs = 50;
+        let seed = Some(1234);
+
+        let marks = get_subsample_pair_keep_marks(n_seqs, subsample_seqs, seed);
+        let marks_sum = marks.iter().fold(0, |sum, x| sum + *x as usize);
+
+        assert_eq!(marks_sum, subsample_seqs);
+
+        // Check that sampling is pairwise
+        for i in 0..n_seqs{
+            if i % 2 == 0 && marks[i] == 1{
+                assert_eq!(marks[i+1], 1);
+            }
+        }
     }
 }

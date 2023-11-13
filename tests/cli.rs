@@ -150,6 +150,18 @@ fn subsample_toomany() -> Result<(), Box<dyn std::error::Error>>{
     Ok(())
 }
 
+#[test]
+fn subsample_paired() -> Result<(), Box<dyn std::error::Error>>{
+    // Test fraction subsampling
+    let mut cmd = Command::cargo_bin("seqtools")?;
+    let child = cmd.arg("subsample").arg("tests/data/reads.fna").arg("--fraction").arg("0.41").arg("--fasta-out").arg("--paired-interleaved").stdout(Stdio::piped()).spawn()?;
+    let child_out = child.wait_with_output()?.stdout;
+
+    let n_lines = child_out.iter().filter(|&&c| c == b'\n').count();
+    assert_eq!(n_lines, 4*2); // 4 sequences and headers
+
+    Ok(())
+}
 
 #[test]
 fn subsample() -> Result<(), Box<dyn std::error::Error>>{
@@ -157,7 +169,7 @@ fn subsample() -> Result<(), Box<dyn std::error::Error>>{
     subsample_frac()?;
     subsample_howmany()?;
     subsample_toomany()?;
-
+    subsample_paired()?;
     Ok(())
 }
 
