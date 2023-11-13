@@ -47,11 +47,8 @@ fn main() {
                 panic!("Can not subsample from stdin because we need to pass over the data twice.");
             }
 
-            let seed = if let Some(f) = sub_matches.get_one::<String>("seed"){
-                Some(f.parse::<u64>().unwrap())
-            } else{
-                None
-            };
+            let seed = sub_matches.get_one::<String>("seed").map(|s| s.parse::<u64>().unwrap());
+            let paired_interleaved = sub_matches.get_flag("paired-interleaved");
 
             if let Some(f) = sub_matches.get_one::<String>("fraction"){
                 let frac = f.parse::<f64>().unwrap();
@@ -59,7 +56,7 @@ fn main() {
                 let input1 = get_reader(&matches).unwrap();
                 let input2 = get_reader(&matches).unwrap();
                 let mut output = get_writer(sub_matches);
-                random_subsample(input1,  input2, &mut output, frac, seed);
+                random_subsample(input1,  input2, &mut output, frac, seed, paired_interleaved);
             }
 
             if let Some(f) = sub_matches.get_one::<String>("howmany"){
@@ -78,7 +75,7 @@ fn main() {
                 // Do the subsampling
                 let input = get_reader(&matches).unwrap();
                 let mut output = get_writer(sub_matches);
-                random_subsample_howmany(input, &mut output, total_seqs as usize, howmany as usize, seed);
+                random_subsample_howmany(input, &mut output, total_seqs as usize, howmany as usize, seed, paired_interleaved);
             }
         }
         Some(("remove-duplicates", sub_matches)) => { // TODO: Untested
