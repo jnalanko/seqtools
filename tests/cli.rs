@@ -160,6 +160,8 @@ fn subsample_paired() -> Result<(), Box<dyn std::error::Error>>{
     let n_lines = child_out.iter().filter(|&&c| c == b'\n').count();
     assert_eq!(n_lines, 4*2); // 4 sequences and headers
 
+    // This does not test that the sampling is paired. But there is a unit test for that.
+
     Ok(())
 }
 
