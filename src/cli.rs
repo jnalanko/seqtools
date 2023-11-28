@@ -75,7 +75,7 @@ pub fn build_cli() -> Command {
                 .arg(&output_file)
                 .arg(&stdout_fasta)
                 .arg(&stdout_fastq)
-                .arg(&stdout_gzip),
+                .arg(&stdout_gzip)
         ).subcommand(
             Command::new("remove-duplicates")
                 .about("Removes reads that have exactly the same nucleotides (headers do not need to match).")
@@ -83,8 +83,16 @@ pub fn build_cli() -> Command {
                 .arg(&output_file)
                 .arg(&stdout_fasta)
                 .arg(&stdout_fastq)
-                .arg(&stdout_gzip),
-            ).subcommand(
+                .arg(&stdout_gzip)
+        ).subcommand(
+            Command::new("reverse-complement")
+                .about("Outputs the reverse complement with the same headers as before.")
+                .arg_required_else_help(true)
+                .arg(&output_file)
+                .arg(&stdout_fasta)
+                .arg(&stdout_fastq)
+                .arg(&stdout_gzip)
+        ).subcommand(
             Command::new("trim")
                 .about("Trim starts and ends of sequences.")
                 .arg_required_else_help(true)

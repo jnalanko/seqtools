@@ -89,6 +89,11 @@ fn main() {
             let mut writer = get_writer(sub_matches);
             convert(&mut reader, &mut writer);
         }
+        Some(("reverse-complement", sub_matches)) => { 
+            let mut reader = get_reader(&matches).unwrap();
+            let mut writer = get_writer(sub_matches);
+            reverse_complement(&mut reader, &mut writer);
+        }
         Some(("concat", sub_matches)) => { 
             let header = match sub_matches.get_one::<String>("header"){
                 Some(header) => header.as_bytes().to_owned(),
