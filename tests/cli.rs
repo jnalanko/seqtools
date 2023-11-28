@@ -217,6 +217,38 @@ fn remove_duplicates() -> Result<(), Box<dyn std::error::Error>>{
 }
 
 #[test]
+fn reverse_complement() -> Result<(), Box<dyn std::error::Error>>{
+    let buf = Vec::<u8>::new();
+    let mut bufwriter = BufWriter::<Vec::<u8>>::new(buf);
+    let mut seqwriter = jseqio::writer::FastXWriter::new(&mut bufwriter, jseqio::FileType::FASTA);
+    seqwriter.write(&jseqio::record::OwnedRecord{
+        head: b"1".to_vec(),
+        seq: b"ACGTAA".to_vec(),
+        qual: None,
+    }).unwrap();
+    seqwriter.write(&jseqio::record::OwnedRecord{
+        head: b"2".to_vec(),
+        seq: b"GGGT".to_vec(),
+        qual: None,
+    }).unwrap();
+
+    seqwriter.flush().unwrap();
+    drop(seqwriter);
+    let buf = bufwriter.into_inner().unwrap(); // Take back ownership
+
+    let mut cmd = Command::cargo_bin("seqtools")?;
+    let mut child = cmd.arg("reverse-complement").arg("--fastq-out").stdout(Stdio::piped()).stdin(Stdio::piped()).spawn()?;
+    child.stdin.take().unwrap().write_all(buf.as_slice()).unwrap();
+    // TODO: Do we need to write eof?
+    let child_out = child.wait_with_output()?.stdout;
+
+    assert_eq!(child_out, b"@1\nTTACGT\n+\nIIIIII\n@2\nACCC\n+\nIIII\n");
+
+    Ok(())
+}
+
+
+#[test]
 fn trim() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("seqtools")?;
 
