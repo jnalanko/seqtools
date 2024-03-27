@@ -16,8 +16,9 @@ fn hash_kmers(filename: &String, k: usize) -> HashSet<Vec<u8>>{
         let k = k as i64;
         let m = max(0, n-k+1) as usize; // Number of kmers in the sequence
         for i in 0..m{
-            let kmer = &seq[i..i + k as usize];
-            kmers.insert(kmer.to_vec());
+            let kmer = seq[i..i + k as usize].to_owned();
+            let rc_kmer = jseqio::reverse_complement(&kmer);
+            kmers.insert(std::cmp::min(kmer, rc_kmer)); // Add the canonical orientation
         }
     }
     kmers
