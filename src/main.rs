@@ -112,6 +112,14 @@ fn main() {
             let min_final_length: usize = sub_matches.get_one::<String>("min-final-length").unwrap().parse().unwrap();
             trim(&mut reader, &mut writer, from_start, from_end, min_final_length);
         }
+        Some(("trim-by-seqs", sub_matches)) => { 
+            let mut reader = get_reader(&matches).unwrap();
+            let mut writer = get_writer(sub_matches);
+            let seqs_file = sub_matches.get_one::<std::path::PathBuf>("seqs").unwrap();
+            let min_final_length: usize = sub_matches.get_one::<String>("min-final-length").unwrap().parse().unwrap();
+            let max_trim_length: usize = sub_matches.get_one::<String>("min-final-length").unwrap().parse().unwrap();
+            seq_tools::trim_by_seqs::trim_by_seqs(&mut reader, &mut writer, seqs_file, max_trim_length, min_final_length);
+        }
         _ => {}
     };
 }
