@@ -9,6 +9,7 @@ fn read_lines(filename: &str) -> Vec<String>{
     std::io::BufRead::lines(reader).map(|s| s.unwrap().to_owned()).collect()
 }
 
+
 fn main() {
 
     let matches = cli::build_cli().get_matches();

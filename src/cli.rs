@@ -111,6 +111,28 @@ pub fn build_cli() -> Command {
                 .arg(&stdout_fastq)
                 .arg(&stdout_gzip),
         ).subcommand(
+            Command::new("trim-by-seqs")
+                .about("Trims the ends to sequences up to the given sequences (including the sequence itself)")
+                .arg_required_else_help(true)
+                .arg(Arg::new("seqs")
+                    .help("Filename to a file that has the sequences to be trimmed to, one per line")
+                    .long("seqs")
+                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                )
+                .arg(Arg::new("max-distance-from-end")
+                    .long("max-distance-from-end")
+                    .default_value("200")
+                    .required(true)
+                )
+                .arg(Arg::new("min-final-length")
+                    .long("min-final-length")
+                    .default_value("1")
+                    .required(true)
+                ).arg(&output_file)
+                .arg(&stdout_fasta)
+                .arg(&stdout_fastq)
+                .arg(&stdout_gzip),
+        ).subcommand(
             Command::new("convert")
                 .about("Convert the input file format into the output file format.")
                 .arg_required_else_help(true)                
