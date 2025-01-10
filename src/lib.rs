@@ -1,7 +1,7 @@
 use jseqio::{reader::*, record::*, writer::*, reverse_complement_in_place};
 
 mod histogram;
-pub mod trim_by_seqs;
+pub mod trim_adapters;
 
 use rand_chacha::rand_core::SeedableRng;
 use std::cmp::{max,min};
