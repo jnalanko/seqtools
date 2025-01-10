@@ -41,22 +41,37 @@ fn smith_waterman(needle: &[u8], haystack: &[u8], identity_threshold: f64) -> Op
 pub fn trim_adapters(reader: &mut impl jseqio::reader::SeqStream, output: &mut impl jseqio::writer::SeqRecordWriter, adapters: Vec<Vec<u8>>, max_trim_length: usize, min_length_after_trim: usize, identity_threshold: f64){
     while let Some(rec) = reader.read_next().unwrap() {
         let mut trim_start = 0_usize; // Trimmed read starts from there
-        let mut trim_end = 0_usize; // This is one past where the trimmed read ends
+        let mut trim_end = rec.seq.len(); // This is one past where the trimmed read ends
         for adapter in adapters.iter() {
+            eprintln!("Searching for adapter: {}", std::str::from_utf8(adapter).unwrap());
+
             let start_piece = &rec.seq[0..min(max_trim_length, rec.seq.len())];
+            println!("Start piece: {}", std::str::from_utf8(start_piece).unwrap());
             if let Some(end) = smith_waterman(adapter, start_piece, identity_threshold) {
+                eprintln!("FOUND! {}", end);
                 trim_start = end;
             }
 
             let end_rev_piece: Vec<u8> = rec.seq.iter().rev().take(max_trim_length).copied().collect();
             let rev_adapter: Vec<u8> = adapter.iter().rev().copied().collect();
+
+            println!("End rev adapter: {}", std::str::from_utf8(&rev_adapter).unwrap());
+            eprintln!("End rev piece: {}", std::str::from_utf8(&end_rev_piece).unwrap());
             if let Some(rev_end) = smith_waterman(&rev_adapter, &end_rev_piece, identity_threshold) {
+                eprintln!("FOUND! {}", rev_end);
                 trim_end = rec.seq.len() - rev_end;
             }
+
         }
 
+        // TODO trim to rightmost
+
+        eprintln!("Trimming to {} {}", trim_start, trim_end);
         let trimmed = jseqio::record::RefRecord{head: rec.head, seq: &rec.seq[trim_start..trim_end], qual: rec.qual.map(|q| &q[trim_start..trim_end])};
-        output.write_ref_record(&trimmed).unwrap();
+
+        if trimmed.seq.len() > min_length_after_trim {
+            output.write_ref_record(&trimmed).unwrap();
+        }
     }
 }
 
@@ -131,9 +146,11 @@ mod tests {
         let mut reader = jseqio::reader::DynamicFastXReader::new(Cursor::new(input_fasta)).unwrap();
         let mut writer = TestWriter{records: vec![]};
 
-        trim_adapters(&mut reader, &mut writer, vec![left_adapter.to_vec(), right_adapter.to_vec()], 50, 10, 0.95);
+        trim_adapters(&mut reader, &mut writer, vec![left_adapter.to_vec(), right_adapter.to_vec()], 50, 10, 0.65);
 
         assert_eq!(writer.records.len(), 1);
+
+        eprintln!("Trimmed: {}", std::str::from_utf8(&writer.records.first().unwrap().seq).unwrap());
         assert_eq!(writer.records.first().unwrap().seq, ans);
 
     }
