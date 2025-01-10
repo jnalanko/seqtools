@@ -132,15 +132,28 @@ mod tests {
         input_fasta.extend_from_slice(s1);
         input_fasta.push(b'\n');
         
-        let mut reader = jseqio::reader::DynamicFastXReader::new(Cursor::new(input_fasta)).unwrap();
-        let mut writer = TestWriter{records: vec![]};
+        { // Test succesful trimming
+            let mut reader = jseqio::reader::DynamicFastXReader::new(Cursor::new(input_fasta.clone())).unwrap();
+            let mut writer = TestWriter{records: vec![]};
 
-        trim_adapters(&mut reader, &mut writer, vec![left_adapter.to_vec(), right_adapter.to_vec()], 50, 10, 0.65);
+            trim_adapters(&mut reader, &mut writer, vec![left_adapter.to_vec(), right_adapter.to_vec()], 50, 10, 0.65);
 
-        assert_eq!(writer.records.len(), 1);
+            assert_eq!(writer.records.len(), 1);
 
-        eprintln!("Trimmed: {}", std::str::from_utf8(&writer.records.first().unwrap().seq).unwrap());
-        assert_eq!(writer.records.first().unwrap().seq, ans);
+            eprintln!("Trimmed: {}", std::str::from_utf8(&writer.records.first().unwrap().seq).unwrap());
+            assert_eq!(writer.records.first().unwrap().seq, ans);
+        }
+
+        { // Test matches too far from ends
+            let mut reader = jseqio::reader::DynamicFastXReader::new(Cursor::new(input_fasta)).unwrap();
+            let mut writer = TestWriter{records: vec![]};
+            trim_adapters(&mut reader, &mut writer, vec![left_adapter.to_vec(), right_adapter.to_vec()], 1, 10, 0.65);
+
+            assert_eq!(writer.records.len(), 1);
+
+            eprintln!("Trimmed: {}", std::str::from_utf8(&writer.records.first().unwrap().seq).unwrap());
+            assert_eq!(writer.records.first().unwrap().seq, s1); // Unchanged from original
+        }
 
     }
 }
