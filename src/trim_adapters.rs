@@ -1,4 +1,4 @@
-use std::cmp::max;
+use std::cmp::{max, min};
 
 // Local alignment of needle against the haystack.
 // Returns one past the ending point of the leftmost match, if exist.
@@ -40,11 +40,23 @@ fn smith_waterman(needle: &[u8], haystack: &[u8], identity_threshold: f64) -> Op
 
 pub fn trim_adapters(reader: &mut jseqio::reader::DynamicFastXReader, output: &mut jseqio::writer::DynamicFastXWriter, adapters: Vec<Vec<u8>>, max_trim_length: usize, min_length_after_trim: usize, identity_threshold: f64){
     while let Some(rec) = reader.read_next().unwrap() {
-        let ownedrec = rec.to_owned();
+        let mut trim_start = 0_usize; // Trimmed read starts from there
+        let mut trim_end = 0_usize; // This is one past where the trimmed read ends
         for adapter in adapters.iter() {
-            if let Some(end) = smith_waterman(adapter, rec.seq, identity_threshold) {
+            let start_piece = &rec.seq[0..min(max_trim_length, rec.seq.len())];
+            if let Some(end) = smith_waterman(adapter, start_piece, identity_threshold) {
+                trim_start = end;
+            }
+
+            let end_rev_piece: Vec<u8> = rec.seq.iter().rev().take(max_trim_length).copied().collect();
+            let rev_adapter: Vec<u8> = adapter.iter().rev().copied().collect();
+            if let Some(rev_end) = smith_waterman(&rev_adapter, &end_rev_piece, identity_threshold) {
+                trim_end = rec.seq.len() - rev_end;
             }
         }
+
+        let trimmed = jseqio::record::RefRecord{head: rec.head, seq: &rec.seq[trim_start..trim_end], qual: rec.qual.map(|q| &q[trim_start..trim_end])};
+        output.write(&trimmed).unwrap();
     }
 }
 
