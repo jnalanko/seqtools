@@ -123,12 +123,12 @@ pub fn trim_adapters(reader: &mut impl jseqio::reader::SeqStream, output: &mut i
         }
 
         bar.inc(rec.seq.len() as u64);
-        bar.set_message(format!("{} bases processed", bar.position()));
+        bar.set_message(format!("{} bases processed", indicatif::HumanCount(bar.position())));
     }
 
     bar.finish();
 
-    println!("Adapter\tFound near start\tFound near end\tMean distance to start\tMean distance from end");
+    println!("Adapter\tFound-near-start\tFound-near-end\tMean-distance-to-start\tMean-distance-from-end");
     for (adapter_idx, adapter) in adapters.iter().enumerate() {
         println!("{}\t{}\t{}\t{}\t{}", std::str::from_utf8(adapter).unwrap(), stats.start_found_counts[adapter_idx], stats.end_found_counts[adapter_idx], stats.total_start_distance[adapter_idx] as f64 / stats.start_found_counts[adapter_idx] as f64, stats.total_end_distance[adapter_idx] as f64 / stats.end_found_counts[adapter_idx] as f64);
     }
