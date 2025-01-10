@@ -83,6 +83,10 @@ pub fn trim_adapters(reader: &mut impl jseqio::reader::SeqStream, output: &mut i
             stats.reads_with_adapter_at_both_ends += 1;
         }
 
+        if trim_start > trim_end { // Overlapping trims
+            trim_start = trim_end; // Remove the overlap. Everything will be trimmed.
+        }
+
         let trimmed = jseqio::record::RefRecord{head: rec.head, seq: &rec.seq[trim_start..trim_end], qual: rec.qual.map(|q| &q[trim_start..trim_end])};
 
         if trimmed.seq.len() > min_length_after_trim {
