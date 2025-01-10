@@ -1,33 +1,7 @@
 use std::cmp::max;
 
-fn backtrace_from(score_matrix: &Vec<Vec<isize>>, needle: &[u8], haystack: &[u8], mut i: usize, mut j: usize) -> usize {
-    while i != 0 {
-        if j == 0 { // We are at the edge. Special case to avoid accidental out of bounds access.
-            assert!(score_matrix[i][j] == i as isize); // Sanity check, otherwise we have a bug
-            i = 0; // The backtrace will just decrement i until done.
-            break;
-        }
-
-        // Here both i > 0 and j > 0, so we all these accesses are in bounds.
-        if needle[i-1] == haystack[j-1] && score_matrix[i-1][j-1] == score_matrix[i][j] - 1 { // Prefer matches
-            i -= 1;
-            j -= 1;
-        } else if score_matrix[i-1][j-1] == score_matrix[i][j] { // Prefer diagonal moves
-            i -= 1;
-            j -= 1;
-        } else if score_matrix[i-1][j] == score_matrix[i][j] - 1 { // Prefer vertical moves
-            i -= 1;
-        } else if score_matrix[i][j-1] == score_matrix[i][j] - 1 {
-            j -= 1;
-        } else {
-            panic!("Bug in Smith-Waterman backtrace");
-        }
-    }
-    j
-}
-
 // Local alignment of needle against the haystack.
-// Returns the starting point of the leftmost and rightmost math, if exist.
+// Returns one past the ending points of the leftmost and rightmost match, if exist.
 // Identity threshold is between 0 and 1.
 fn smith_waterman(needle: &[u8], haystack: &[u8], identity_threshold: f64) -> Option<(usize, usize)> {
     let m = needle.len();
@@ -53,17 +27,13 @@ fn smith_waterman(needle: &[u8], haystack: &[u8], identity_threshold: f64) -> Op
         }
     }
 
-    for line in score_matrix.iter() { // DEBUG
-        eprintln!("{:?}", line);
-    }
-
     let mut leftmost: Option<usize> = None;
     let mut rightmost: Option<usize> = None;
 
     // Backtrace the leftmost match
     for end in 1..=n {
         if score_matrix[m][end] as f64 / m as f64 >= identity_threshold {
-            leftmost = Some(backtrace_from(&score_matrix, needle, haystack, m, end));
+            leftmost = Some(end);
             break;
         }
     }
@@ -71,7 +41,7 @@ fn smith_waterman(needle: &[u8], haystack: &[u8], identity_threshold: f64) -> Op
     // Backtrace the rightmost match
     for end in (1..=n).rev() {
         if score_matrix[m][end] as f64 / m as f64 >= identity_threshold {
-            rightmost = Some(backtrace_from(&score_matrix, needle, haystack, m, end));
+            rightmost = Some(end);
             break;
         }
     }
@@ -103,10 +73,9 @@ mod tests {
         let s2 =      b"ACGTAAGTACGT"; // 1 substitution
         let s3 =      b"ACTACGTACXXGT"; // See below for the optimal solution
 
-
         let (left,right) = smith_waterman(s2, s1, 0.9).unwrap();
-        assert_eq!(left, 5);
-        assert_eq!(right, 5);
+        assert_eq!(left, 17);
+        assert_eq!(right, 17);
 
         assert!(smith_waterman(s2, s1, 0.95).is_none());
 
@@ -118,9 +87,13 @@ mod tests {
         // So the largest match threshold that is positive should be 9/13.
         assert!(smith_waterman(s3, s1, 9.0/13.0 + 0.01).is_none()); // Just above the threshold
         let (left, right) = smith_waterman(s3, s1, 9.0/13.0 - 0.01).unwrap(); // Just below the threshold
-        assert_eq!(left, 5);
-        assert_eq!(right, 5);
+        assert_eq!(left, 19);
+        assert_eq!(right, 19);
 
-        // Backtrace needs to check that there really exists a match!
+        let s4 = b"TAC"; // Has two exatch matches
+        let (left, right) = smith_waterman(s4, s1, 0.999).unwrap(); // Just below the threshold
+        assert_eq!(left, 7);
+        assert_eq!(right, 15);
+
     }
 }
