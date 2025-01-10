@@ -102,15 +102,15 @@ pub fn trim_adapters(reader: &mut impl jseqio::reader::SeqStream, output: &mut i
 
     println!("Total number of bases in input: {}", total_input_length);
     println!("Total number of bases in output: {}", total_output_length);
-    println!("Total fraction of bases removed: {}%", (total_input_length - total_output_length) as f64 / total_input_length as f64 * 100.0);
+    println!("Total fraction of bases removed: {:.2}%", (total_input_length - total_output_length) as f64 / total_input_length as f64 * 100.0);
 
-    println!("Reads with adapter near start: {} ({}%)", stats.reads_with_adapter_at_start, stats.reads_with_adapter_at_start as f64 / n_reads as f64 * 100.0);
-    println!("Reads with adapter near end: {} ({}%)", stats.reads_with_adapter_at_end, stats.reads_with_adapter_at_end as f64 / n_reads as f64 * 100.0);
-    println!("Reads with adapter near both ends: {} ({}%)", stats.reads_with_adapter_at_both_ends, stats.reads_with_adapter_at_both_ends as f64 / n_reads as f64 * 100.0);
+    println!("Reads with adapter near start: {} ({:.2}%)", stats.reads_with_adapter_at_start, stats.reads_with_adapter_at_start as f64 / n_reads as f64 * 100.0);
+    println!("Reads with adapter near end: {} ({:.2}%)", stats.reads_with_adapter_at_end, stats.reads_with_adapter_at_end as f64 / n_reads as f64 * 100.0);
+    println!("Reads with adapter near both ends: {} ({:.2}%)", stats.reads_with_adapter_at_both_ends, stats.reads_with_adapter_at_both_ends as f64 / n_reads as f64 * 100.0);
 
     println!("Bases trimmed from starts: {}", stats.bases_trimmed_from_start);
     println!("Bases trimmed from ends: {}", stats.bases_trimmed_from_end);
-    println!("Discarded reads (too short after possible trimmming): {} ({}%)", stats.discarded_reads, stats.discarded_reads as f64 / n_reads as f64 * 100.0);
+    println!("Discarded reads (too short after possible trimmming): {} ({:.2}%)", stats.discarded_reads, stats.discarded_reads as f64 / n_reads as f64 * 100.0);
     println!("Bases in discarded reads: {}", stats.bases_in_discarded_reads);
 
     stats
