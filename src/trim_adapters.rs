@@ -53,14 +53,18 @@ pub fn trim_adapters(reader: &mut impl jseqio::reader::SeqStream, output: &mut i
     let mut n_reads = 0_usize;
     let mut total_input_length = 0_usize;
     let mut total_output_length = 0_usize;
+
+    let mut start_found_counts = vec![0; adapters.len()];
+    let mut end_found_counts = vec![0; adapters.len()];
     while let Some(rec) = reader.read_next().unwrap() {
         n_reads += 1;
         total_input_length += rec.seq.len();
         let mut trim_start = 0_usize; // Trimmed read starts from there
         let mut trim_end = rec.seq.len(); // This is one past where the trimmed read ends
-        for adapter in adapters.iter() {
+        for (adapter_idx, adapter) in adapters.iter().enumerate() {
             let start_piece = &rec.seq[0..min(max_trim_length, rec.seq.len())];
             if let Some(end) = smith_waterman(adapter, start_piece, identity_threshold) {
+                start_found_counts[adapter_idx] += 1;
                 trim_start = end;
             }
 
@@ -68,6 +72,7 @@ pub fn trim_adapters(reader: &mut impl jseqio::reader::SeqStream, output: &mut i
             let rev_adapter: Vec<u8> = adapter.iter().rev().copied().collect();
 
             if let Some(rev_end) = smith_waterman(&rev_adapter, &end_rev_piece, identity_threshold) {
+                end_found_counts[adapter_idx] += 1;
                 trim_end = rec.seq.len() - rev_end;
             }
 
@@ -98,6 +103,10 @@ pub fn trim_adapters(reader: &mut impl jseqio::reader::SeqStream, output: &mut i
             stats.discarded_reads += 1;
             stats.bases_in_discarded_reads += rec.seq.len();
         }
+    }
+
+    for (adapter_idx, adapter) in adapters.iter().enumerate() {
+        eprintln!("Adapter {}: Found near start: {}, Found near end: {}", std::str::from_utf8(adapter).unwrap(), start_found_counts[adapter_idx], end_found_counts[adapter_idx]);
     }
 
     println!("Total number of bases in input: {}", total_input_length);
