@@ -1,6 +1,6 @@
 use std::cmp::max;
 
-fn backtrace_from(score_matrix: &Vec<Vec<isize>>, mut i: usize, mut j: usize) -> usize {
+fn backtrace_from(score_matrix: &Vec<Vec<isize>>, needle: &[u8], haystack: &[u8], mut i: usize, mut j: usize) -> usize {
     while i != 0 {
         if j == 0 { // We are at the edge. Special case to avoid accidental out of bounds access.
             assert!(score_matrix[i][j] == i as isize); // Sanity check, otherwise we have a bug
@@ -9,10 +9,13 @@ fn backtrace_from(score_matrix: &Vec<Vec<isize>>, mut i: usize, mut j: usize) ->
         }
 
         // Here both i > 0 and j > 0, so we all these accesses are in bounds.
-        if score_matrix[i-1][j-1] >= score_matrix[i][j] - 1 {
+        if needle[i-1] == haystack[j-1] && score_matrix[i-1][j-1] == score_matrix[i][j] - 1 { // Prefer matches
             i -= 1;
             j -= 1;
-        } else if score_matrix[i-1][j] == score_matrix[i][j] - 1 {
+        } else if score_matrix[i-1][j-1] == score_matrix[i][j] { // Prefer diagonal moves
+            i -= 1;
+            j -= 1;
+        } else if score_matrix[i-1][j] == score_matrix[i][j] - 1 { // Prefer vertical moves
             i -= 1;
         } else if score_matrix[i][j-1] == score_matrix[i][j] - 1 {
             j -= 1;
@@ -60,7 +63,7 @@ fn smith_waterman(needle: &[u8], haystack: &[u8], identity_threshold: f64) -> Op
     // Backtrace the leftmost match
     for end in 1..=n {
         if score_matrix[m][end] as f64 / m as f64 >= identity_threshold {
-            leftmost = Some(backtrace_from(&score_matrix, m, end));
+            leftmost = Some(backtrace_from(&score_matrix, needle, haystack, m, end));
             break;
         }
     }
@@ -68,7 +71,7 @@ fn smith_waterman(needle: &[u8], haystack: &[u8], identity_threshold: f64) -> Op
     // Backtrace the rightmost match
     for end in (1..=n).rev() {
         if score_matrix[m][end] as f64 / m as f64 >= identity_threshold {
-            rightmost = Some(backtrace_from(&score_matrix, m, end));
+            rightmost = Some(backtrace_from(&score_matrix, needle, haystack, m, end));
             break;
         }
     }
@@ -98,7 +101,7 @@ mod tests {
     fn test_smith_waterman(){
         let s1 = b"TAGATACGTACGTACGTGAAG";
         let s2 =      b"ACGTAAGTACGT"; // 1 substitution
-        let s3 =      b"ACTACGTACXXGT"; // 1 dels, 2 inserts
+        let s3 =      b"ACTACGTACXXGT"; // See below for the optimal solution
 
 
         let (left,right) = smith_waterman(s2, s1, 0.9).unwrap();
@@ -106,7 +109,6 @@ mod tests {
         assert_eq!(right, 5);
 
         assert!(smith_waterman(s2, s1, 0.95).is_none());
-
 
         // s3 vs s1 optimal solution:
         // TAGATACGTACGTACGTGAAG;
