@@ -38,6 +38,10 @@ fn smith_waterman(needle: &[u8], haystack: &[u8], identity_threshold: f64) -> Op
 
 
 pub fn trim_adapters(reader: &mut impl jseqio::reader::SeqStream, output: &mut impl jseqio::writer::SeqRecordWriter, adapters: Vec<Vec<u8>>, max_trim_length: usize, min_length_after_trim: usize, identity_threshold: f64){
+
+    let mut total_trimmed_from_start = 0_usize;
+    let mut total_trimmed_from_end = 0_usize;
+
     while let Some(rec) = reader.read_next().unwrap() {
         let mut trim_start = 0_usize; // Trimmed read starts from there
         let mut trim_end = rec.seq.len(); // This is one past where the trimmed read ends

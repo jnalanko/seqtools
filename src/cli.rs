@@ -112,7 +112,8 @@ pub fn build_cli() -> Command {
                 .arg(&stdout_gzip),
         ).subcommand(
             Command::new("trim-adapters")
-                .about("Trims the ends to sequences up to the given adapter sequences (including the adapter itself)")
+                .about("Trims the ends to sequences up to the given adapter sequences (including the adapter itself")
+                .long_about("All the given adapters are searched in forward orientation. If you want to also search for reverse complements, please provide those as well. If an adapter is found within max-trim-length bases from the start, all bases up to the end of it are trimmed. If an adapter if found within max-trim-length bases from the end, all bases from the start of the adater to the end of the sequence are trimmed.")
                 .arg_required_else_help(true)
                 .arg(Arg::new("adapters")
                     .help("Filename to a file that has the sequences to be trimmed to, one per line")
@@ -120,7 +121,7 @@ pub fn build_cli() -> Command {
                     .value_parser(clap::value_parser!(std::path::PathBuf))
                 )
                 .arg(Arg::new("identity-threshold")
-                    .help("How closely must the adapter match the read? Between 0 and 1.")
+                    .help("How closely must the adapter match the read? Between 0 and 1. Currently the indentity score is the score from a Smith-Waterman alignment with match score 1, mismatch score 0, gap score -1, all divided by the length of the adapter. A perfect match thus has a score of 1.")
                     .long("identity-threshold")
                     .default_value("0.9")
                     .value_parser(value_parser!(f64))
