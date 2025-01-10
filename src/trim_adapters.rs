@@ -70,6 +70,8 @@ pub fn trim_adapters(reader: &mut impl jseqio::reader::SeqStream, output: &mut i
     let mut total_output_length = 0_usize;
 
     let bar = indicatif::ProgressBar::new(0);
+    bar.set_style(indicatif::ProgressStyle::with_template("[{elapsed_precise}] {msg}")
+    .unwrap());
     while let Some(rec) = reader.read_next().unwrap() {
         n_reads += 1;
         total_input_length += rec.seq.len();
@@ -121,6 +123,7 @@ pub fn trim_adapters(reader: &mut impl jseqio::reader::SeqStream, output: &mut i
         }
 
         bar.inc(rec.seq.len() as u64);
+        bar.set_message(format!("{} bases processed", bar.position()));
     }
 
     bar.finish();
