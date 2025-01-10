@@ -1,7 +1,7 @@
 use std::cmp::{max, min};
 
 // Local alignment of needle against the haystack.
-// Returns one past the ending point of the leftmost match, if exist.
+// Returns one past the ending point of the rightmost match, if exist.
 // Identity threshold is between 0 and 1.
 fn smith_waterman(needle: &[u8], haystack: &[u8], identity_threshold: f64) -> Option<usize> {
     let m = needle.len();
@@ -27,8 +27,7 @@ fn smith_waterman(needle: &[u8], haystack: &[u8], identity_threshold: f64) -> Op
         }
     }
 
-    // Backtrace the leftmost match
-    for end in 1..=n {
+    for end in (1..=n).rev() {
         if score_matrix[m][end] as f64 / m as f64 >= identity_threshold {
             return Some(end);
         }
@@ -43,30 +42,20 @@ pub fn trim_adapters(reader: &mut impl jseqio::reader::SeqStream, output: &mut i
         let mut trim_start = 0_usize; // Trimmed read starts from there
         let mut trim_end = rec.seq.len(); // This is one past where the trimmed read ends
         for adapter in adapters.iter() {
-            eprintln!("Searching for adapter: {}", std::str::from_utf8(adapter).unwrap());
-
             let start_piece = &rec.seq[0..min(max_trim_length, rec.seq.len())];
-            println!("Start piece: {}", std::str::from_utf8(start_piece).unwrap());
             if let Some(end) = smith_waterman(adapter, start_piece, identity_threshold) {
-                eprintln!("FOUND! {}", end);
                 trim_start = end;
             }
 
             let end_rev_piece: Vec<u8> = rec.seq.iter().rev().take(max_trim_length).copied().collect();
             let rev_adapter: Vec<u8> = adapter.iter().rev().copied().collect();
 
-            println!("End rev adapter: {}", std::str::from_utf8(&rev_adapter).unwrap());
-            eprintln!("End rev piece: {}", std::str::from_utf8(&end_rev_piece).unwrap());
             if let Some(rev_end) = smith_waterman(&rev_adapter, &end_rev_piece, identity_threshold) {
-                eprintln!("FOUND! {}", rev_end);
                 trim_end = rec.seq.len() - rev_end;
             }
 
         }
 
-        // TODO trim to rightmost
-
-        eprintln!("Trimming to {} {}", trim_start, trim_end);
         let trimmed = jseqio::record::RefRecord{head: rec.head, seq: &rec.seq[trim_start..trim_end], qual: rec.qual.map(|q| &q[trim_start..trim_end])};
 
         if trimmed.seq.len() > min_length_after_trim {
@@ -127,7 +116,7 @@ mod tests {
 
         let s4 = b"TAC"; // Has two exact matches
         let end = smith_waterman(s4, s1, 0.999).unwrap(); // Just below the threshold
-        assert_eq!(end, 7);
+        assert_eq!(end, 15);
     }
 
     #[test]
@@ -135,7 +124,7 @@ mod tests {
         let s1 =     b"TAGATACGTACGTACGTGAAGNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNAACCGGTTAACCGGTTAACCGGTT";
         let left_adapter = b"ACTACGTACXXGT";
         let right_adapter =                                                   b"AACCGGTTAACCGGTT";
-        let ans =                       b"AGNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN";
+        let ans =                       b"AGNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN";
 
         let mut input_fasta = Vec::<u8>::new();
         input_fasta.push(b'>');
