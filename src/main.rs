@@ -131,7 +131,7 @@ fn main() {
             }
 
             let ascii_adapters: Vec<Vec<u8>> = adapters.into_iter().map(|s| s.as_bytes().to_vec()).collect();
-            seq_tools::trim_by_seqs::trim_by_seqs(&mut reader, &mut writer, ascii_adapters, max_trim_length, min_final_length);
+            seq_tools::trim_adapters::trim_adapters(&mut reader, &mut writer, ascii_adapters, max_trim_length, min_final_length);
         }
         _ => {}
     };
