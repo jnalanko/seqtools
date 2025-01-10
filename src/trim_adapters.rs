@@ -69,7 +69,7 @@ pub fn trim_adapters(reader: &mut impl jseqio::reader::SeqStream, output: &mut i
     let mut total_input_length = 0_usize;
     let mut total_output_length = 0_usize;
 
-    let spinner = indicatif::ProgressBar::new_spinner();
+    let bar = indicatif::ProgressBar::new(0);
     while let Some(rec) = reader.read_next().unwrap() {
         n_reads += 1;
         total_input_length += rec.seq.len();
@@ -120,10 +120,10 @@ pub fn trim_adapters(reader: &mut impl jseqio::reader::SeqStream, output: &mut i
             stats.bases_in_discarded_reads += rec.seq.len();
         }
 
-        spinner.inc(rec.seq.len() as u64);
+        bar.inc(rec.seq.len() as u64);
     }
 
-    spinner.finish();
+    bar.finish();
 
     println!("Adapter\tFound near start\tFound near end\tMean distance to start\tMean distance from end");
     for (adapter_idx, adapter) in adapters.iter().enumerate() {
