@@ -1,4 +1,4 @@
-use clap::{Arg, ArgAction, Command};
+use clap::{value_parser, Arg, ArgAction, Command};
 
 pub fn build_cli() -> Command {
     
@@ -118,6 +118,12 @@ pub fn build_cli() -> Command {
                     .help("Filename to a file that has the sequences to be trimmed to, one per line")
                     .long("adapters")
                     .value_parser(clap::value_parser!(std::path::PathBuf))
+                )
+                .arg(Arg::new("identity-threshold")
+                    .help("How closely must the adapter match the read? Between 0 and 1.")
+                    .long("identity-threshold")
+                    .default_value("0.9")
+                    .value_parser(value_parser!(f64))
                 )
                 .arg(Arg::new("max-trim-length")
                     .help("Only search for adapters within this distance from the ends")

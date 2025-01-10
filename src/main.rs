@@ -118,6 +118,7 @@ fn main() {
             let adapter_file = sub_matches.get_one::<std::path::PathBuf>("adapters").unwrap();
             let min_final_length: usize = sub_matches.get_one::<String>("min-final-length").unwrap().parse().unwrap();
             let max_trim_length: usize = sub_matches.get_one::<String>("min-final-length").unwrap().parse().unwrap();
+            let identity_threshold = *sub_matches.get_one::<f64>("identity-threshold").unwrap();
 
             let adapters: Vec<String> = read_lines(adapter_file.to_str().unwrap());
 
@@ -131,7 +132,7 @@ fn main() {
             }
 
             let ascii_adapters: Vec<Vec<u8>> = adapters.into_iter().map(|s| s.as_bytes().to_vec()).collect();
-            seq_tools::trim_adapters::trim_adapters(&mut reader, &mut writer, ascii_adapters, max_trim_length, min_final_length);
+            seq_tools::trim_adapters::trim_adapters(&mut reader, &mut writer, ascii_adapters, max_trim_length, min_final_length, identity_threshold);
         }
         _ => {}
     };
