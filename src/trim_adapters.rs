@@ -140,7 +140,7 @@ pub fn trim_adapters(reader: &mut impl jseqio::reader::SeqStream, output: &mut i
 
     println!("Adapter\tTrim-mode\tFound-near-start\tFound-near-end\tMean-distance-to-start\tMean-distance-from-end");
     for (adapter_idx, (adapter, trim_mode)) in adapters.iter().enumerate() {
-        println!("{}\t{:?}\t{}\t{}\t{}\t{}", std::str::from_utf8(adapter).unwrap(), trim_mode, stats.start_found_counts[adapter_idx], stats.end_found_counts[adapter_idx], stats.total_start_distance[adapter_idx] as f64 / stats.start_found_counts[adapter_idx] as f64, stats.total_end_distance[adapter_idx] as f64 / stats.end_found_counts[adapter_idx] as f64);
+        println!("{}\t{:?}\t{}\t{}\t{:.2}\t{:.2}", std::str::from_utf8(adapter).unwrap(), trim_mode, stats.start_found_counts[adapter_idx], stats.end_found_counts[adapter_idx], stats.total_start_distance[adapter_idx] as f64 / stats.start_found_counts[adapter_idx] as f64, stats.total_end_distance[adapter_idx] as f64 / stats.end_found_counts[adapter_idx] as f64);
     }
 
     println!("Total number of bases in input: {}", total_input_length);
