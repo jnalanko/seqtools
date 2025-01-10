@@ -117,7 +117,7 @@ fn main() {
             let mut writer = get_writer(sub_matches);
             let adapter_file = sub_matches.get_one::<std::path::PathBuf>("adapters").unwrap();
             let min_final_length: usize = sub_matches.get_one::<String>("min-final-length").unwrap().parse().unwrap();
-            let max_trim_length: usize = sub_matches.get_one::<String>("min-final-length").unwrap().parse().unwrap();
+            let max_trim_length: usize = sub_matches.get_one::<String>("max-trim-length").unwrap().parse().unwrap();
             let identity_threshold = *sub_matches.get_one::<f64>("identity-threshold").unwrap();
 
             let adapters: Vec<String> = read_lines(adapter_file.to_str().unwrap());
