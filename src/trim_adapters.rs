@@ -38,7 +38,7 @@ fn smith_waterman(needle: &[u8], haystack: &[u8], identity_threshold: f64) -> Op
 }
 
 
-pub fn trim_adapters(reader: &mut jseqio::reader::DynamicFastXReader, output: &mut jseqio::writer::DynamicFastXWriter, adapters: Vec<Vec<u8>>, max_trim_length: usize, min_length_after_trim: usize, identity_threshold: f64){
+pub fn trim_adapters(reader: &mut impl jseqio::reader::SeqStream, output: &mut impl jseqio::writer::SeqRecordWriter, adapters: Vec<Vec<u8>>, max_trim_length: usize, min_length_after_trim: usize, identity_threshold: f64){
     while let Some(rec) = reader.read_next().unwrap() {
         let mut trim_start = 0_usize; // Trimmed read starts from there
         let mut trim_end = 0_usize; // This is one past where the trimmed read ends
@@ -56,13 +56,15 @@ pub fn trim_adapters(reader: &mut jseqio::reader::DynamicFastXReader, output: &m
         }
 
         let trimmed = jseqio::record::RefRecord{head: rec.head, seq: &rec.seq[trim_start..trim_end], qual: rec.qual.map(|q| &q[trim_start..trim_end])};
-        output.write(&trimmed).unwrap();
+        output.write_ref_record(&trimmed).unwrap();
     }
 }
 
 
 #[cfg(test)]
 mod tests {
+
+    use std::io::Cursor;
 
     use assert_cmd::assert;
 
@@ -92,5 +94,30 @@ mod tests {
         let s4 = b"TAC"; // Has two exact matches
         let end = smith_waterman(s4, s1, 0.999).unwrap(); // Just below the threshold
         assert_eq!(end, 7);
+    }
+
+    #[test]
+    fn test_trim_adapters(){
+        let s1 =     b"TAGATACGTACGTACGTGAAGNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNAACCGGTTAACCGGTTAACCGGTT";
+        let left_adapter = b"ACTACGTACXXGT";
+        let right_adapter =                                                   b"AACCGGTTAACCGGTT";
+        let ans =                       b"AGNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN";
+
+        let mut input_fasta = Vec::<u8>::new();
+        input_fasta.push(b'>');
+        input_fasta.push(b'\n');
+        input_fasta.extend_from_slice(s1);
+        input_fasta.push(b'\n');
+        
+        let mut reader = jseqio::reader::DynamicFastXReader::new(Cursor::new(input_fasta)).unwrap();
+        let output_buf = Vec::<u8>::new();
+        let output = Cursor::new(output_buf);
+        let mut writer = jseqio::writer::FastXWriter::new(output, jseqio::FileType::FASTA);
+
+        trim_adapters(&mut reader, &mut writer, vec![left_adapter.to_vec(), right_adapter.to_vec()], 50, 10, 0.95);
+
+        let output = writer.into_inner().unwrap().into_inner(); // Retrieve the output buffer
+        assert_eq!(output.as_slice(), ans);
+
     }
 }
