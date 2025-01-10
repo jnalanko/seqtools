@@ -64,6 +64,25 @@ pub fn trim_adapters(reader: &mut impl jseqio::reader::SeqStream, output: &mut i
 #[cfg(test)]
 mod tests {
 
+    struct TestWriter {
+        records: Vec<jseqio::record::OwnedRecord>
+    }
+
+    impl jseqio::writer::SeqRecordWriter for TestWriter {
+        fn flush(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+            Ok(())  // No need to do anything
+        }
+
+        fn write_owned_record(&mut self, rec: &jseqio::record::OwnedRecord) -> Result<(), Box<dyn std::error::Error>> {
+            todo!(); 
+        }
+
+        fn write_ref_record(&mut self, rec: &jseqio::record::RefRecord) -> Result<(), Box<dyn std::error::Error>> {
+            self.records.push(rec.to_owned());
+            Ok(())
+        }
+    }
+
     use std::io::Cursor;
 
     use assert_cmd::assert;
@@ -110,14 +129,12 @@ mod tests {
         input_fasta.push(b'\n');
         
         let mut reader = jseqio::reader::DynamicFastXReader::new(Cursor::new(input_fasta)).unwrap();
-        let output_buf = Vec::<u8>::new();
-        let output = Cursor::new(output_buf);
-        let mut writer = jseqio::writer::FastXWriter::new(output, jseqio::FileType::FASTA);
+        let mut writer = TestWriter{records: vec![]};
 
         trim_adapters(&mut reader, &mut writer, vec![left_adapter.to_vec(), right_adapter.to_vec()], 50, 10, 0.95);
 
-        let output = writer.into_inner().unwrap().into_inner(); // Retrieve the output buffer
-        assert_eq!(output.as_slice(), ans);
+        assert_eq!(writer.records.len(), 1);
+        assert_eq!(writer.records.first().unwrap().seq, ans);
 
     }
 }
