@@ -36,13 +36,26 @@ fn smith_waterman(needle: &[u8], haystack: &[u8], identity_threshold: f64) -> Op
     return None;
 }
 
+pub struct TrimStats {
+    pub bases_trimmed_from_start: usize,
+    pub bases_trimmed_from_end: usize,
+    pub reads_with_adapter_at_start: usize,
+    pub reads_with_adapter_at_end: usize,
+    pub reads_with_adapter_at_both_ends: usize,
+    pub discarded_reads: usize,
+    pub bases_in_discarded_reads: usize,
+}
 
-pub fn trim_adapters(reader: &mut impl jseqio::reader::SeqStream, output: &mut impl jseqio::writer::SeqRecordWriter, adapters: Vec<Vec<u8>>, max_trim_length: usize, min_length_after_trim: usize, identity_threshold: f64){
+pub fn trim_adapters(reader: &mut impl jseqio::reader::SeqStream, output: &mut impl jseqio::writer::SeqRecordWriter, adapters: Vec<Vec<u8>>, max_trim_length: usize, min_length_after_trim: usize, identity_threshold: f64) -> TrimStats {
 
-    let mut total_trimmed_from_start = 0_usize;
-    let mut total_trimmed_from_end = 0_usize;
+    let mut stats = TrimStats{bases_trimmed_from_start: 0, bases_trimmed_from_end: 0, reads_with_adapter_at_start: 0, reads_with_adapter_at_end: 0, reads_with_adapter_at_both_ends: 0, discarded_reads: 0, bases_in_discarded_reads: 0};
 
+    let mut n_reads = 0_usize;
+    let mut total_input_length = 0_usize;
+    let mut total_output_length = 0_usize;
     while let Some(rec) = reader.read_next().unwrap() {
+        n_reads += 1;
+        total_input_length += rec.seq.len();
         let mut trim_start = 0_usize; // Trimmed read starts from there
         let mut trim_end = rec.seq.len(); // This is one past where the trimmed read ends
         for adapter in adapters.iter() {
@@ -59,14 +72,47 @@ pub fn trim_adapters(reader: &mut impl jseqio::reader::SeqStream, output: &mut i
             }
 
         }
+        
+        if trim_start != 0 {
+            stats.reads_with_adapter_at_start += 1;
+        }
+        if trim_end != rec.seq.len() {
+            stats.reads_with_adapter_at_end += 1;
+        }
+        if trim_start != 0 && trim_end != rec.seq.len() {
+            stats.reads_with_adapter_at_both_ends += 1;
+        }
 
         let trimmed = jseqio::record::RefRecord{head: rec.head, seq: &rec.seq[trim_start..trim_end], qual: rec.qual.map(|q| &q[trim_start..trim_end])};
 
         if trimmed.seq.len() > min_length_after_trim {
             output.write_ref_record(&trimmed).unwrap();
+            total_output_length += trimmed.seq.len();
+            stats.bases_trimmed_from_start += trim_start;
+            stats.bases_trimmed_from_end += rec.seq.len() - trim_end;
+        } else {
+            stats.discarded_reads += 1;
+            stats.bases_in_discarded_reads += rec.seq.len();
         }
     }
+
+    println!("Total number of bases in input: {}", total_input_length);
+    println!("Total number of bases in output: {}", total_output_length);
+    println!("Total fraction of bases removed: {}%", (total_input_length - total_output_length) as f64 / total_input_length as f64 * 100.0);
+
+    println!("Reads with adapter near start: {} ({}%)", stats.reads_with_adapter_at_start, stats.reads_with_adapter_at_start as f64 / n_reads as f64 * 100.0);
+    println!("Reads with adapter near end: {} ({}%)", stats.reads_with_adapter_at_end, stats.reads_with_adapter_at_end as f64 / n_reads as f64 * 100.0);
+    println!("Reads with adapter near both ends: {} ({}%)", stats.reads_with_adapter_at_both_ends, stats.reads_with_adapter_at_both_ends as f64 / n_reads as f64 * 100.0);
+
+    println!("Bases trimmed from starts: {}", stats.bases_trimmed_from_start);
+    println!("Bases trimmed from ends: {}", stats.bases_trimmed_from_end);
+    println!("Discarded reads (too short after possible trimmming): {} ({}%)", stats.discarded_reads, stats.discarded_reads as f64 / n_reads as f64 * 100.0);
+    println!("Bases in discarded reads: {}", stats.bases_in_discarded_reads);
+
+    stats
+
 }
+
 
 
 #[cfg(test)]
