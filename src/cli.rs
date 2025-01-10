@@ -116,7 +116,7 @@ pub fn build_cli() -> Command {
                 .long_about("All the given adapters are searched in forward orientation. If you want to also search for reverse complements, please provide those as well. If an adapter is found within max-trim-length bases from the start, all bases up to the end of it are trimmed. If an adapter if found within max-trim-length bases from the end, all bases from the start of the adater to the end of the sequence are trimmed.")
                 .arg_required_else_help(true)
                 .arg(Arg::new("adapters")
-                    .help("Filename to a file that has the sequences to be trimmed to, one per line")
+                    .help("Filename to a file specifying the adapters and how to trim them. On each line there are two space-separated strings: first either the string 'upto' or 'from', then the adapter sequence. If 'upto' is given, the adapter is searched from the start of the sequence and everything up to the adapter, including the adapter, is trimmed. If 'from' is given, the adapter is searched from the end of the sequence and everything from the adapter to the end, including the adapter, is trimmed.")
                     .long("adapters")
                     .value_parser(clap::value_parser!(std::path::PathBuf))
                 )

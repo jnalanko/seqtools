@@ -36,6 +36,12 @@ fn smith_waterman(needle: &[u8], haystack: &[u8], identity_threshold: f64) -> Op
     return None;
 }
 
+#[derive(Debug)]
+pub enum TrimMode {
+    Upto,
+    From,
+}
+
 pub struct TrimStats {
     pub bases_trimmed_from_start: usize,
     pub bases_trimmed_from_end: usize,
@@ -50,7 +56,7 @@ pub struct TrimStats {
     pub total_end_distance: Vec<usize>,
 }
 
-pub fn trim_adapters(reader: &mut impl jseqio::reader::SeqStream, output: &mut impl jseqio::writer::SeqRecordWriter, adapters: Vec<Vec<u8>>, max_trim_length: usize, min_length_after_trim: usize, identity_threshold: f64) -> TrimStats {
+pub fn trim_adapters(reader: &mut impl jseqio::reader::SeqStream, output: &mut impl jseqio::writer::SeqRecordWriter, adapters: Vec<(Vec<u8>, TrimMode)>, max_trim_length: usize, min_length_after_trim: usize, identity_threshold: f64) -> TrimStats {
 
     let mut stats = TrimStats{
         bases_trimmed_from_start: 0, 
@@ -77,23 +83,27 @@ pub fn trim_adapters(reader: &mut impl jseqio::reader::SeqStream, output: &mut i
         total_input_length += rec.seq.len();
         let mut trim_start = 0_usize; // Trimmed read starts from there
         let mut trim_end = rec.seq.len(); // This is one past where the trimmed read ends
-        for (adapter_idx, adapter) in adapters.iter().enumerate() {
-            let start_piece = &rec.seq[0..min(max_trim_length, rec.seq.len())];
-            if let Some(end) = smith_waterman(adapter, start_piece, identity_threshold) {
-                stats.start_found_counts[adapter_idx] += 1;
-                stats.total_start_distance[adapter_idx] += end;
-                trim_start = end;
+        for (adapter_idx, (adapter, trim_mode)) in adapters.iter().enumerate() {
+            match trim_mode {
+                TrimMode::Upto => {
+                    let start_piece = &rec.seq[0..min(max_trim_length, rec.seq.len())];
+                    if let Some(end) = smith_waterman(adapter, start_piece, identity_threshold) {
+                        stats.start_found_counts[adapter_idx] += 1;
+                        stats.total_start_distance[adapter_idx] += end;
+                        trim_start = end;
+                    }
+                }
+                TrimMode::From => {
+                    let end_rev_piece: Vec<u8> = rec.seq.iter().rev().take(max_trim_length).copied().collect();
+                    let rev_adapter: Vec<u8> = adapter.iter().rev().copied().collect();
+
+                    if let Some(rev_end) = smith_waterman(&rev_adapter, &end_rev_piece, identity_threshold) {
+                        stats.end_found_counts[adapter_idx] += 1;
+                        stats.total_end_distance[adapter_idx] += rev_end;
+                        trim_end = rec.seq.len() - rev_end;
+                    }
+                }
             }
-
-            let end_rev_piece: Vec<u8> = rec.seq.iter().rev().take(max_trim_length).copied().collect();
-            let rev_adapter: Vec<u8> = adapter.iter().rev().copied().collect();
-
-            if let Some(rev_end) = smith_waterman(&rev_adapter, &end_rev_piece, identity_threshold) {
-                stats.end_found_counts[adapter_idx] += 1;
-                stats.total_end_distance[adapter_idx] += rev_end;
-                trim_end = rec.seq.len() - rev_end;
-            }
-
         }
         
         if trim_start != 0 {
@@ -128,9 +138,9 @@ pub fn trim_adapters(reader: &mut impl jseqio::reader::SeqStream, output: &mut i
 
     bar.finish();
 
-    println!("Adapter\tFound-near-start\tFound-near-end\tMean-distance-to-start\tMean-distance-from-end");
-    for (adapter_idx, adapter) in adapters.iter().enumerate() {
-        println!("{}\t{}\t{}\t{}\t{}", std::str::from_utf8(adapter).unwrap(), stats.start_found_counts[adapter_idx], stats.end_found_counts[adapter_idx], stats.total_start_distance[adapter_idx] as f64 / stats.start_found_counts[adapter_idx] as f64, stats.total_end_distance[adapter_idx] as f64 / stats.end_found_counts[adapter_idx] as f64);
+    println!("Adapter\tTrim-mode\tFound-near-start\tFound-near-end\tMean-distance-to-start\tMean-distance-from-end");
+    for (adapter_idx, (adapter, trim_mode)) in adapters.iter().enumerate() {
+        println!("{}\t{:?}\t{}\t{}\t{}\t{}", std::str::from_utf8(adapter).unwrap(), trim_mode, stats.start_found_counts[adapter_idx], stats.end_found_counts[adapter_idx], stats.total_start_distance[adapter_idx] as f64 / stats.start_found_counts[adapter_idx] as f64, stats.total_end_distance[adapter_idx] as f64 / stats.end_found_counts[adapter_idx] as f64);
     }
 
     println!("Total number of bases in input: {}", total_input_length);
@@ -164,7 +174,7 @@ mod tests {
             Ok(())  // No need to do anything
         }
 
-        fn write_owned_record(&mut self, rec: &jseqio::record::OwnedRecord) -> Result<(), Box<dyn std::error::Error>> {
+        fn write_owned_record(&mut self, _rec: &jseqio::record::OwnedRecord) -> Result<(), Box<dyn std::error::Error>> {
             todo!(); 
         }
 
@@ -175,8 +185,6 @@ mod tests {
     }
 
     use std::io::Cursor;
-
-    use assert_cmd::assert;
 
     use super::*;
 
@@ -223,7 +231,7 @@ mod tests {
             let mut reader = jseqio::reader::DynamicFastXReader::new(Cursor::new(input_fasta.clone())).unwrap();
             let mut writer = TestWriter{records: vec![]};
 
-            trim_adapters(&mut reader, &mut writer, vec![left_adapter.to_vec(), right_adapter.to_vec()], 50, 10, 0.65);
+            trim_adapters(&mut reader, &mut writer, vec![(left_adapter.to_vec(), TrimMode::Upto), (right_adapter.to_vec(), TrimMode::From)], 50, 10, 0.65);
 
             assert_eq!(writer.records.len(), 1);
 
@@ -234,7 +242,7 @@ mod tests {
         { // Test matches too far from ends
             let mut reader = jseqio::reader::DynamicFastXReader::new(Cursor::new(input_fasta.clone())).unwrap();
             let mut writer = TestWriter{records: vec![]};
-            trim_adapters(&mut reader, &mut writer, vec![left_adapter.to_vec(), right_adapter.to_vec()], 1, 10, 0.65);
+            trim_adapters(&mut reader, &mut writer, vec![(left_adapter.to_vec(), TrimMode::Upto), (right_adapter.to_vec(), TrimMode::From)], 1, 10, 0.65);
 
             assert_eq!(writer.records.len(), 1);
 
@@ -245,7 +253,7 @@ mod tests {
         { // Test becomes too short
             let mut reader = jseqio::reader::DynamicFastXReader::new(Cursor::new(input_fasta)).unwrap();
             let mut writer = TestWriter{records: vec![]};
-            trim_adapters(&mut reader, &mut writer, vec![left_adapter.to_vec(), right_adapter.to_vec()], 50, 100, 0.65);
+            trim_adapters(&mut reader, &mut writer, vec![(left_adapter.to_vec(), TrimMode::Upto), (right_adapter.to_vec(), TrimMode::From)], 50, 100, 0.65);
 
             assert_eq!(writer.records.len(), 0); // Was filtered out
         }

@@ -1,6 +1,7 @@
 extern crate flate2;
 
 use seq_tools::*;
+use trim_adapters::TrimMode;
 
 mod cli;
 
@@ -120,19 +121,30 @@ fn main() {
             let max_trim_length: usize = sub_matches.get_one::<String>("max-trim-length").unwrap().parse().unwrap();
             let identity_threshold = *sub_matches.get_one::<f64>("identity-threshold").unwrap();
 
-            let adapters: Vec<String> = read_lines(adapter_file.to_str().unwrap());
-
-            // Validate adapter alphabet
-            for adapter in adapters.iter(){
-                eprintln!("Loaded adapter: {}", adapter);
+            let adapter_lines: Vec<String> = read_lines(adapter_file.to_str().unwrap());
+            let adapters: Vec<(Vec<u8>, TrimMode)> = adapter_lines.into_iter().map(|line| {
+                let mut parts = line.split_whitespace();
+                assert_eq!(parts.clone().count(), 2);
+                let mode_string = parts.next().unwrap();
+                let mode = match mode_string {
+                    "upto" => TrimMode::Upto,
+                    "from" => TrimMode::From,
+                    _ => panic!("Invalid trim mode {}: should be 'upto' or 'from'", mode_string),
+                };
+                let adapter = parts.next().unwrap().as_bytes().to_vec();
                 assert!(adapter.is_ascii());
-                for c in adapter.chars(){
-                    assert!(c == 'A' || c == 'C' || c == 'G' || c == 'T' || c == 'N');
+                (adapter, mode)
+            }).collect();
+
+            // Print loaded adapters and their trim modes 
+            for (adapter, trim_mode) in adapters.iter(){
+                eprintln!("Loaded adapter: {}, trim mode {:?}", String::from_utf8_lossy(adapter), trim_mode);
+                for &c in adapter{
+                    assert!(c == b'A' || c == b'C' || c == b'G' || c == b'T' || c == b'N');
                 }
             }
 
-            let ascii_adapters: Vec<Vec<u8>> = adapters.into_iter().map(|s| s.as_bytes().to_vec()).collect();
-            seq_tools::trim_adapters::trim_adapters(&mut reader, &mut writer, ascii_adapters, max_trim_length, min_final_length, identity_threshold);
+            seq_tools::trim_adapters::trim_adapters(&mut reader, &mut writer, adapters, max_trim_length, min_final_length, identity_threshold);
         }
         _ => {}
     };
