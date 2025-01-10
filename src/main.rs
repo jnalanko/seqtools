@@ -138,7 +138,7 @@ fn main() {
 
             // Print loaded adapters and their trim modes 
             for (adapter, trim_mode) in adapters.iter(){
-                eprintln!("Loaded adapter: {}, trim mode {:?}", String::from_utf8_lossy(adapter), trim_mode);
+                eprintln!("Loaded adapter: {}, Trim mode: {:?}", String::from_utf8_lossy(adapter), trim_mode);
                 for &c in adapter{
                     assert!(c == b'A' || c == b'C' || c == b'G' || c == b'T' || c == b'N');
                 }
