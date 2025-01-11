@@ -90,7 +90,7 @@ pub fn trim_adapters(reader: &mut impl jseqio::reader::SeqStream, output: &mut i
                     if let Some(end) = smith_waterman(adapter, start_piece, identity_threshold) {
                         stats.start_found_counts[adapter_idx] += 1;
                         stats.total_start_distance[adapter_idx] += end;
-                        trim_start = end;
+                        trim_start = max(trim_start, end); // Keeping the rightmost match
                     }
                 }
                 TrimMode::From => {
@@ -100,7 +100,7 @@ pub fn trim_adapters(reader: &mut impl jseqio::reader::SeqStream, output: &mut i
                     if let Some(rev_end) = smith_waterman(&rev_adapter, &end_rev_piece, identity_threshold) {
                         stats.end_found_counts[adapter_idx] += 1;
                         stats.total_end_distance[adapter_idx] += rev_end;
-                        trim_end = rec.seq.len() - rev_end;
+                        trim_end = min(trim_end, rec.seq.len() - rev_end); // Keeping the leftmost match
                     }
                 }
             }
