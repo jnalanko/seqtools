@@ -48,16 +48,39 @@ pub fn extract_reads_by_names(reader: DynamicFastXReader, names: &Vec<String>){
 
 }
 
-pub fn extract_reads_by_ranks(reader: DynamicFastXReader, ranks: &Vec<usize>){
+pub fn extract_reads_by_ranks(mut reader: DynamicFastXReader, ranks: &Vec<usize>){
     let filetype = reader.filetype();
-    let db = reader.into_db().unwrap();
 
     // Print in order to stdout
     let mut writer = jseqio::writer::DynamicFastXWriter::new_to_stdout(filetype, jseqio::CompressionType::None);
-    for rank in ranks {
-        let rec = db.get(*rank);
-        writer.write(&rec).unwrap();
+
+    if ranks.is_sorted() {
+        // Can stream the records
+        let mut seq_idx = 0_usize;
+        let mut ranks_idx = 0_usize;
+        while let Some(rec) = reader.read_next().unwrap() {
+            while seq_idx == ranks[ranks_idx] { // While-loop so we are okay with duplicate ranks
+                writer.write(&rec).unwrap();
+                ranks_idx += 1;
+                if ranks_idx == ranks.len() { // Done
+                    return;
+                }
+            }
+            seq_idx += 1;
+        }
+        panic!("Error: did not find read with rank {}", ranks[ranks_idx]);
+    } else {
+        // Can not stream the reads because we want to print the raads in the order
+        // they come in the ranks vector.
+
+        let db = reader.into_db().unwrap(); // Read all reads to memory
+        for rank in ranks {
+            let rec = db.get(*rank);
+            writer.write(&rec).unwrap();
+        }
+
     }
+
 }
 
 pub fn print_stats(reader: &mut DynamicFastXReader){
