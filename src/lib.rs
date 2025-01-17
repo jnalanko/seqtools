@@ -278,9 +278,7 @@ pub fn convert(input: &mut DynamicFastXReader, output: &mut DynamicFastXWriter){
 
 pub fn reverse_complement(input: &mut DynamicFastXReader, output: &mut DynamicFastXWriter){
     let mut dummy_qual_values: Vec<u8> = vec![]; // A buffer for dummy quality values for fasta -> fastq conversion 
-    let mut rc_seq_buf = Vec::<u8>::new();
-    let mut rc_record = RefRecord{head: b"", seq: b"", qual: None};
-    while let Some(mut rec) = input.read_next().unwrap(){
+    while let Some(mut rec) = input.read_next_mut().unwrap(){
         if matches!(rec.qual, None){
             // Potentially doing Fasta to Fastq conversion.
             // Put dummy quality values to rec.qual.
@@ -290,28 +288,12 @@ pub fn reverse_complement(input: &mut DynamicFastXReader, output: &mut DynamicFa
                 // Some software may break if they see quality values larger than 'I'.
                 // Hence, we use 'I' as the a dummy value.
             }
-            rec.qual = Some(&dummy_qual_values.as_slice()[0..rec.seq.len()]);
+            rec.qual = Some(&mut dummy_qual_values.as_mut_slice()[0..rec.seq.len()]);
         }
+        reverse_complement_in_place(rec.seq);
+        rec.qual.as_mut().map(|q| q.reverse()); // Also reverse the quality values
 
-        let n = rec.seq.len();
-
-        // Grow the reverse complement buffer if needed
-        while rc_seq_buf.len() < n {
-            rc_seq_buf.push(0);
-        }
-
-        // Copy rec.seq to rc_buf and reverse-complement in place
-        rc_seq_buf[0..n].copy_from_slice(rec.seq);
-        reverse_complement_in_place(&mut rc_seq_buf[0..n]);
-
-        // Write out
-        rc_record.head = rec.head;
-        rc_record.seq = &rc_seq_buf[0..n];
-        rc_record.qual = rec.qual;
-        output.write(&rc_record).unwrap();
-
-        // Release the references to rec and rc_seq_buf to please the borrow checker
-        rc_record = RefRecord{head: b"", seq: b"", qual: None};
+        output.write(&rec.into_shared_ref()).unwrap();
     }   
 }
 
