@@ -19,6 +19,10 @@ name = "interleave_seqs"
 path = "src/interleave_seqs.rs"
 
 [[bin]]
+name = "deinterleave_seqs"
+path = "src/deinterleave_seqs.rs"
+
+[[bin]]
 name = "revcomp"    
 path = "src/revcomp.rs"
 
@@ -39,18 +43,20 @@ path = "src/split_for_themisto_experiment.rs"
 flate2 = "1.0.24"
 clap = { version = "4.0.26", features = ["derive"] }
 clap_complete = "4.0.6"
-rand = "*"
+rand = "0.9.0"
 jseqio = "0.1.4"
 sha2 = "0.10.7"
-rand_chacha = "0.3.1"
+rand_chacha = "0.9.0"
 indicatif = "0.17.9"
 
 [build-dependencies]
 flate2 = "1.0.24"
 clap = { version = "4.0.26", features = ["derive"] }
 clap_complete = "4.0.6"
+rand = "0.9.0"
 
 [dev-dependencies]
 assert_cmd = "2.0"
 predicates = "2.1"
 tempfile = "3.3.0"
+rand = "0.9.0"
