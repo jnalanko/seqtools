@@ -23,6 +23,10 @@ fn main() {
             let nbins: i64 = sub_matches.get_one::<String>("nbins").unwrap().parse::<i64>().unwrap();
             print_length_histogram(&mut reader, min, max, nbins);
         }
+        Some(("print-lengths", sub_matches)) => { 
+            let mut reader = get_reader(&matches).unwrap();
+            print_lengths(&mut reader);
+        }
         Some(("stats", _)) => { 
             let mut reader = get_reader(&matches).unwrap();
             print_stats(&mut reader);

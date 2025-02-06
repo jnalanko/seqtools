@@ -83,6 +83,12 @@ pub fn extract_reads_by_ranks(mut reader: DynamicFastXReader, ranks: &Vec<usize>
 
 }
 
+pub fn print_lengths(reader: &mut DynamicFastXReader){
+    while let Some(rec) = reader.read_next().unwrap() {
+        println!("{}", rec.seq.len());
+    }
+}
+
 pub fn print_stats(reader: &mut DynamicFastXReader){
     let mut total_length: u64 = 0;
     let mut number_of_sequences: u64 = 0;

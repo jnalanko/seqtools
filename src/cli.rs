@@ -46,7 +46,13 @@ pub fn build_cli() -> Command {
                 .arg(Arg::new("min").long("min").default_value("0").help("Minimum value"))
                 .arg(Arg::new("max").long("max").default_value("1000").help("Maximum value"))
                 .arg(Arg::new("nbins").long("nbins").default_value("20").help("Number of bins")),
-        ).subcommand(
+        )
+        .subcommand(
+            Command::new("print-lengths")
+                .about("Prints the lengths of all sequences in the input, one per line.")
+                .arg_required_else_help(true)
+        )
+        .subcommand(
             Command::new("subsample")
                 .about("Randomly subsample a given fraction of sequences.")
                 .arg_required_else_help(true)
