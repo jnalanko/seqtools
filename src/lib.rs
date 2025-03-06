@@ -89,6 +89,26 @@ pub fn print_lengths(reader: &mut DynamicFastXReader){
     }
 }
 
+pub fn gc_content(reader: &mut DynamicFastXReader){
+    let mut n_GC = 0_usize;
+    let mut n_AT = 0_usize;
+    let mut n_other = 0_usize;
+    while let Some(rec) = reader.read_next().unwrap() {
+        for c in rec.seq {
+            match c.to_ascii_uppercase() {
+                b'G' => n_GC += 1, 
+                b'C' => n_GC += 1, 
+                b'A' => n_AT += 1,
+                b'T' => n_AT += 1,
+                _ => n_other += 1
+            }
+        }
+    }
+    println!("{} nucleotides ignored ({}%)", n_other, n_other as f64 / (n_other + n_GC + n_AT) as f64 * 100.0); 
+    println!("GC content: {:.2}%", n_GC as f64 / (n_GC + n_AT) as f64 * 100.0);
+
+}
+
 pub fn print_stats(reader: &mut DynamicFastXReader){
     let mut total_length: u64 = 0;
     let mut number_of_sequences: u64 = 0;

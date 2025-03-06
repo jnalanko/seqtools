@@ -31,6 +31,11 @@ fn main() {
             let mut reader = get_reader(&matches).unwrap();
             print_stats(&mut reader);
         }
+
+        Some(("gc-content", _)) => { 
+            let mut reader = get_reader(&matches).unwrap();
+            gc_content(&mut reader);
+        }
         Some(("extract-reads", sub_matches)) => { 
             let reader = get_reader(&matches).unwrap();
             if let Some(ranks) = sub_matches.get_many::<String>("rank"){
