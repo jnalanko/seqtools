@@ -195,6 +195,10 @@ pub fn build_cli() -> Command {
                     .help("End of the region (inclusive)")
                     .value_parser(clap::value_parser!(usize))
                 )
+            .arg(&output_file)
+            .arg(&stdout_fasta)
+            .arg(&stdout_fastq)
+            .arg(&stdout_gzip),
         )
         .subcommand(Command::new("concat")
             .about("Concatenate all sequences in the input.")
