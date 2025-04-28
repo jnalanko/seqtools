@@ -20,6 +20,20 @@ impl<'a> Iterator for LengthIterator<'a>{
     }
 }
 
+pub fn extract_region(mut reader: DynamicFastXReader, mut writer: DynamicFastXWriter, start: usize, end: usize){
+    let rec = reader.read_next().unwrap().expect("First sequence not found");
+    let seq = rec.seq;
+    if end >= seq.len() {
+        panic!("Ending point {} past the end of a sequence of length {}", end, seq.len());
+    }
+
+    let region_seq = &seq[start..end+1]; // End is inclusive
+    let region_qual = rec.qual.map(|q| &q[start..end+1]);
+
+    let region_rec = RefRecord{seq: region_seq, qual: region_qual, head: rec.head};
+    writer.write_ref_record(&region_rec).unwrap();
+}
+
 pub fn extract_reads_by_names(reader: DynamicFastXReader, names: &Vec<String>){
     let filetype = reader.filetype();
 

@@ -53,6 +53,13 @@ fn main() {
                 extract_reads_by_names(reader, &list);
             }
         }
+        Some(("extract-region", sub_matches)) => { 
+            let reader = get_reader(&matches).unwrap();
+            let writer = get_writer(&matches);
+            let s = sub_matches.get_one::<usize>("start").unwrap();
+            let e = sub_matches.get_one::<usize>("end").unwrap();
+            extract_region(reader, writer, s, e);
+        }
         Some(("subsample", sub_matches)) => { // TODO: Untested
             if matches.get_one::<String>("input").is_none() {
                 panic!("Can not subsample from stdin because we need to pass over the data twice.");
