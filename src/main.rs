@@ -55,7 +55,7 @@ fn main() {
         }
         Some(("extract-region", sub_matches)) => { 
             let reader = get_reader(&matches).unwrap();
-            let writer = get_writer(&matches);
+            let writer = get_writer(&sub_matches);
             let s = *sub_matches.get_one::<usize>("start").unwrap();
             let e = *sub_matches.get_one::<usize>("end").unwrap();
             extract_region(reader, writer, s, e);

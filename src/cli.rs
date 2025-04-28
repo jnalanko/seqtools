@@ -198,7 +198,7 @@ pub fn build_cli() -> Command {
             .arg(&output_file)
             .arg(&stdout_fasta)
             .arg(&stdout_fastq)
-            .arg(&stdout_gzip),
+            .arg(&stdout_gzip)
         )
         .subcommand(Command::new("concat")
             .about("Concatenate all sequences in the input.")
@@ -210,7 +210,7 @@ pub fn build_cli() -> Command {
             .arg(&output_file)
             .arg(&stdout_fasta)
             .arg(&stdout_fastq)
-            .arg(&stdout_gzip),
+            .arg(&stdout_gzip)
         )
         .subcommand(Command::new("gc-content").about("Compute the GC content of the sample. Non-ACGT characters are ignored."))
         .subcommand(Command::new("stats").about("Print stats about the input."))
